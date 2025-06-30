@@ -1,0 +1,186 @@
+---
+
+---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="viewport" content="width=device-width" />
+		<meta name="generator" content={Astro.generator} />
+		<title>ShaderCoy</title>
+	</head>
+	<body>
+		<main id="app">
+			<div id="canvasContainer">
+				<canvas id="mainCanvas" />
+			</div>
+			<div id="sidebar">
+				Imagine that this is a tab bar :3
+				<div id="editor-container" />
+			</div>
+		</main>
+	</body>
+</html>
+
+<script>
+	import { EditorState } from "@codemirror/state"
+	import {
+		EditorView, keymap, highlightSpecialChars, drawSelection,
+		highlightActiveLine, dropCursor, rectangularSelection,
+		crosshairCursor, lineNumbers, highlightActiveLineGutter
+	} from "@codemirror/view"
+	import { defaultHighlightStyle, syntaxHighlighting, indentOnInput, bracketMatching, foldGutter, foldKeymap } from "@codemirror/language"
+	import { defaultKeymap, history, historyKeymap } from "@codemirror/commands"
+	import { searchKeymap, highlightSelectionMatches } from "@codemirror/search"
+	import { autocompletion, completionKeymap, closeBrackets, closeBracketsKeymap } from "@codemirror/autocomplete"
+	import { lintKeymap } from "@codemirror/lint"
+	import { oneDark, oneDarkHighlightStyle, oneDarkTheme } from "@codemirror/theme-one-dark"
+
+	const view = new EditorView({
+		// doc: "a != b\nHI GOOBERS I AM TESTING MY APP (why in uppercase? idk) AND THIS IS MEANT TO BE A REALLY LONG LINE SO I CAN TEST WRAPPING!!!! (and stuff like that)\nBOOM!! NEW LINE! Exciting, right?\n\nThis is a new paragraph, with some more text to test the editor's capabilities. Let's see how it handles this!\n\nAnd another line to make sure we have enough content to scroll through.\n\nAnd one more line for good measure.\n\nAnd another one, just to be sure that we have enough content to test the scrolling and wrapping features of the editor.\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+		doc: "meow",
+		parent: document.querySelector("#editor-container")!,
+		extensions: [
+			[oneDarkTheme, syntaxHighlighting(oneDarkHighlightStyle)],
+
+			// A line number gutter
+			lineNumbers(),
+			// A gutter with code folding markers
+			foldGutter(),
+			// Replace non-printable characters with placeholders
+			highlightSpecialChars(),
+			// The undo history
+			history(),
+			// Replace native cursor/selection with our own
+			drawSelection(),
+			// Show a drop cursor when dragging over the editor
+			dropCursor(),
+			// Allow multiple cursors/selections
+			EditorState.allowMultipleSelections.of(true),
+			// Re-indent lines when typing specific input
+			indentOnInput(),
+			// Highlight syntax with a default style
+			syntaxHighlighting(defaultHighlightStyle),
+			// Highlight matching brackets near cursor
+			bracketMatching(),
+			// Automatically close brackets
+			closeBrackets(),
+			// Load the autocompletion system
+			autocompletion(),
+			// Allow alt-drag to select rectangular regions
+			rectangularSelection(),
+			// Change the cursor to a crosshair when holding alt
+			crosshairCursor(),
+			// Style the current line specially
+			highlightActiveLine(),
+			// Style the gutter for current line specially
+			highlightActiveLineGutter(),
+			// Highlight text that matches the selected text
+			highlightSelectionMatches(),
+			keymap.of([
+				// Closed-brackets aware backspace
+				...closeBracketsKeymap,
+				// A large set of basic bindings
+				...defaultKeymap,
+				// Search-related keys
+				...searchKeymap,
+				// Redo/undo keys
+				...historyKeymap,
+				// Code folding bindings
+				...foldKeymap,
+				// Autocompletion keys
+				...completionKeymap,
+				// Keys related to the linter system
+				...lintKeymap
+			]),
+		]
+	})
+</script>
+
+
+<style>
+	#app {
+		display: flex;
+		flex-direction: row;
+		width: 100%;
+		height: 100%;
+		min-height: 100%;
+	}
+	#canvasContainer {
+		flex-grow: 1;
+		flex-shrink: 1;
+		/* background: repeating-conic-gradient(#666666 0 25%, #999999 0 50%) 50% / 20px 20px; */ /* GIMP */
+		background: repeating-conic-gradient(#21252b 0 25%, #282c34 0 50%) 50% / 20px 20px; /* One Dark */
+		background-color: #21252b;
+		background-position: top right;
+	}
+	#mainCanvas {
+		width: 100%;
+		height: 100%;
+		display: block;
+	}
+	#sidebar {
+		flex-grow: 0
+		flex-shrink: 0;
+		display: flex;
+		flex-direction: column;
+		width: 600px;
+	}
+	#editor-container {
+		flex-grow: 1;
+		flex-shrink: 1;
+		
+		.cm-editor {
+			height: 100%;
+			max-height: 100%;
+		}
+		.cm-scroller {
+			overflow: auto;
+		}
+		.cm-content {
+			padding-bottom: 4em; /* I prefer having the last line not be at the absolute bottom of my monitor */
+		}
+	}
+
+	@media screen and (max-width: 800px) {
+		#app {
+			flex-direction: column;
+		}
+		#canvasContainer {
+			flex-grow: 0;
+			flex-shrink: 1;
+			flex-basis: 100vw;
+			background-position: bottom right;
+		}
+		#sidebar {
+			width: 100%;
+			flex-grow: 1;
+			flex-shrink: 0;
+			min-height: 300px;
+		}
+	}
+</style>
+
+<style is:global>
+	@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+	@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital@0;1&display=swap');
+	
+	* {
+		margin: 0;
+		padding: 0;
+		box-sizing: border-box;
+	}
+	html, body {
+		width: 100%;
+		height: 100%;
+		font-family: 'Roboto', sans-serif;
+	}
+	code, .cm-editor * {
+		font-family: "JetBrains Mono", monospace;
+  		font-size: 13px;
+		line-height: 1.2;
+		font-variant-ligatures: normal;
+	}
+</style>
+

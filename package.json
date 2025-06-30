@@ -1,0 +1,16 @@
+{
+  "name": "shadercoy",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@codemirror/theme-one-dark": "^6.1.3",
+    "astro": "^5.10.1",
+    "codemirror": "^6.0.2"
+  }
+}
