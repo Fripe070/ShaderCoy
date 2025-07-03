@@ -1,0 +1,114 @@
+---
+import "../styles/tabs.css";
+
+export const primitiveModels = [
+    { id: "viewport", icon_name: "2d", text: "Viewport" },
+    { id: "cube", icon_name: "deployed_code", text: "Cube" },
+    { id: "sphere", icon_name: "circle", text: "Sphere" },
+    { id: "torus", icon_name: "donut_small", text: "Torus" },
+    { id: "suzanne", icon_name: "mood", text: "Suzanne" },
+];
+---
+
+<button id="model-select" class="tab square" popovertarget="model-select-dialog">
+    <span class="material-symbols-outlined">art_track</span>
+    <div id="model-select-dialog" popover="auto"></div>
+    <div id="model-select-real">
+        {
+            primitiveModels.map((element) => (
+                <div class="row" id={element.id}>
+                    <span class="text">{element.text}</span>
+                    <span class="square">
+                        <span class="icon material-symbols-outlined">{element.icon_name}</span>
+                    </span>
+                </div>
+            ))
+        }
+        <label for="modelUploadButton" class="row">
+            <span class="text">Upload Model</span>
+            <span class="square">
+                <span class="icon material-symbols-outlined">upload</span>
+            </span>
+            <input type="file" id="modelUploadButton" accept=".glb,.gltf" />
+        </label>
+    </div>
+</button>
+
+<script>
+    const modelUploadButton = document.getElementById("modelUploadButton") as HTMLInputElement;
+    modelUploadButton.onchange = (event) => {
+        const button = event.target as HTMLInputElement | null;
+        if (!button?.files?.length) return;
+        const file = button.files[0];
+        // Load file content into the editor
+        const reader = new FileReader();
+        reader.onload = () => {
+            // TODO: Load the model into the canvas. Needs to work for both text and binary formats
+            const modelData = reader.result;
+            // For now, just log the model data
+            console.log("Model data loaded:", modelData);
+        };
+        reader.readAsText(file);
+    };
+</script>
+
+<style>
+    #model-select {
+        position: relative;
+        --border-width: 2px;
+    }
+
+    #model-select-dialog {
+    }
+    #model-select-dialog:popover-open + * {
+        display: flex;
+    }
+    #model-select-real {
+        display: none;
+        z-index: 1;
+        position: absolute;
+        top: 100%;
+        left: auto;
+        right: calc(0px - var(--border-width));
+
+        background: var(--bg-normal);
+        color: var(--text);
+        box-sizing: border-box;
+        border: var(--border-width) solid var(--bg-dark);
+
+        flex-direction: column;
+
+        > .row {
+            text-wrap: nowrap;
+            padding-left: 4px;
+            display: flex;
+            align-items: center;
+            .icon {
+                transition: font-variation-settings 0.1s ease-in-out;
+                font-variation-settings: "FILL" 0;
+            }
+            &:hover .icon {
+                font-variation-settings: "FILL" 1;
+            }
+            > .text {
+                flex-grow: 1;
+            }
+            &:nth-child(odd) {
+                background: var(--bg-light);
+            }
+            input[type="file"] {
+                display: none;
+            }
+        }
+    }
+    #model-select::before {
+        content: "";
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 100%;
+        height: var(--border-width);
+        background: inherit;
+        z-index: 2;
+    }
+</style>

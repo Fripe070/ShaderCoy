@@ -1,410 +1,404 @@
 ---
 import GLCanvas from "../components/GLCanvas.astro";
+import ModelSelect from "../components/ModelSelect.astro";
+
+import "../styles/tabs.css";
 ---
 
 <html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>ShaderCoy</title>
+    <head>
+        <meta charset="utf-8" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <meta name="viewport" content="width=device-width" />
+        <meta name="generator" content={Astro.generator} />
+        <title>ShaderCoy</title>
+    </head>
+    <body>
+        <main id="app">
+            {/* TODO: allow toggling class="reversed" in settings */}
+            {
+                /* TODO: Break canvas and sidebar into separate components. Requires sharing styles between tab bars */
+            }
+            <div id="canvasContainer">
+                <div id="canvasControls" class="tab-bar">
+                    <button class="tab square" id="pauseButton">
+                        <span class="material-symbols-outlined pauseIcon">pause</span>
+                        <span class="material-symbols-outlined playIcon">play_arrow</span>
+                    </button>
+                    <span id="performanceArea" class="tab mono">
+                        <span id="milisecondsValue">0.00</span>ms&nbsp;(<span id="fpsValue">0</span
+                        >&nbsp;FPS)
+                    </span>
 
-		<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:FILL@0..1" />
-	</head>
-	<body>
-		<main id="app"> {/* TODO: allow toggling class="reversed" in settings */}
-			{/* TODO: Break canvas and sidebar into separate components. Requires sharing styles between tab bars */}
-			<div id="canvasContainer">
-				<div id="canvasControls" class="tab-bar">
-					<button class="tab square" id="pauseButton">
-						<span class="material-symbols-outlined pauseIcon">pause</span>
-						<span class="material-symbols-outlined playIcon">play_arrow</span>
-					</button>
-					<span id="performanceArea" class="tab mono">
-						<span id="milisecondsValue">0.00</span>ms&nbsp;(<span id="fpsValue">0</span>&nbsp;FPS)
-					</span>
-					<span class="push-right" /> <!-- Push following buttons to the right -->
-					<label for="modelUploadButton" class="tab square button"><span class="material-symbols-outlined">upload</span></label>
-					<input type="file" id="modelUploadButton" accept=".glb,.gltf" />
-					<button class="tab square material-symbols-outlined" id="modelToggle">deployed_code</button>					
-					<button class="tab square material-symbols-outlined" id="fullscreenButton">fullscreen</button>
-					<script>
-						if (document.fullscreenEnabled === false) {
-							document.getElementById("fullscreenButton")?.classList.add("disabled");
-						}
-					</script>
-				</div>
-				 <GLCanvas id="mainCanvas" />
-			</div>
-			<div id="sidebar">
-				<div class="tab-bar">
-					<button class="tab active">Editor</button>
-					<span class="push-right" /> <!-- Push following buttons to the right -->
-					<label for="codeUploadButton" class="tab square button"><span class="material-symbols-outlined">upload_file</span></label>
-					<input type="file" id="codeUploadButton" accept=".glsl,.frag,.fs" />
-					<button class="tab square"><span class="material-symbols-outlined" id="settingsButton">settings</span></button>
-				</div>
-				<div id="editor-container" />
-			</div>
-		</main>
+                    <span class="push-right"></span>
+                    <ModelSelect />
+                    <button class="tab square material-symbols-outlined" id="fullscreenButton">
+                        fullscreen
+                    </button>
+                    <script>
+                        if (document.fullscreenEnabled === false) {
+                            document.getElementById("fullscreenButton")?.classList.add("disabled");
+                        }
+                    </script>
+                </div>
+                <GLCanvas id="mainCanvas" />
+            </div>
+            <div id="sidebar">
+                <div class="tab-bar">
+                    {/* TODO: Addm ore tabs for asset management */}
+                    <button class="tab">Fragment</button>
+                    <button class="tab">Vertex</button>
 
-		<dialog id="settingsModal" closedby="any">
-			<div>
-				<h2>Settings</h2>
-				<p>:3</p>
-				<form method="dialog">
-					<button type="submit">Close</button>
-				</form>
-			</div>
-		</dialog>
-	</body>
+                    <span class="push-right"></span>
+                    <!-- Push following buttons to the right -->
+                    <label for="codeUploadButton" class="tab square button">
+                        <span class="material-symbols-outlined">upload_file</span>
+                    </label>
+                    <input type="file" id="codeUploadButton" accept=".glsl,.frag,.fs" />
+                    {/* Make it just show up in the sidebar instead of a modal */}
+                    <button class="tab square">
+                        <span class="material-symbols-outlined" id="settingsButton">settings</span>
+                    </button>
+                </div>
+                <div id="editor-container"></div>
+            </div>
+        </main>
+
+        <dialog id="settingsModal" closedby="any">
+            <div>
+                <h2>Settings</h2>
+                <p>:3</p>
+                <form method="dialog">
+                    <button type="submit">Close</button>
+                </form>
+            </div>
+        </dialog>
+    </body>
 </html>
 
 <script>
-	import { EditorView, keymap } from "@codemirror/view";
-	import { EditorState, Compartment } from "@codemirror/state";
-	import { indentUnit, syntaxHighlighting } from "@codemirror/language";
-	import { indentWithTab, redo } from "@codemirror/commands";
-	import { oneDarkHighlightStyle, oneDarkTheme } from "@codemirror/theme-one-dark";
-	import { basicSetup } from "codemirror";
-	import type { GlCanvas } from "../scripts/GLCanvasScript";
-	import { glsl } from "codemirror-lang-glsl";
+    import { EditorView, keymap } from "@codemirror/view";
+    import { EditorState, Compartment } from "@codemirror/state";
+    import { indentUnit, syntaxHighlighting } from "@codemirror/language";
+    import { indentWithTab, redo } from "@codemirror/commands";
+    import { oneDarkHighlightStyle, oneDarkTheme } from "@codemirror/theme-one-dark";
+    import { basicSetup } from "codemirror";
+    import { glsl } from "codemirror-lang-glsl";
+    import { getMainCanvas } from "../scripts/util";
+    import defaultFragSource from "../scripts/shaders/defaultFrag";
 
-	const themeCompartment = new Compartment();
-	const tabSizeCompartment = new Compartment();
-	const lineWrappingCompartment = new Compartment();
+    const editorContainer = document.getElementById("editor-container")!;
+    const canvas = getMainCanvas();
 
-	const state = EditorState.create({
-		doc: "int main() {\n    return vec4(1.0, 1.0, 1.0, 1.0);\n}\n",
-		extensions: [
-			basicSetup,
-			glsl(),
-			keymap.of([
-				indentWithTab,
-			    { key: "Mod-Shift-z", run: redo, preventDefault: true },
-			]),
+    const themeCompartment = new Compartment();
+    const tabSizeCompartment = new Compartment();
+    const lineWrappingCompartment = new Compartment();
 
-			themeCompartment.of([oneDarkTheme, syntaxHighlighting(oneDarkHighlightStyle)]),
-			tabSizeCompartment.of(indentUnit.of(" ".repeat(4))),
-			lineWrappingCompartment.of([]), // No wrapping by default
-			// TODO: Style search/replace
-		]
-	});
+    const state = EditorState.create({
+        doc: defaultFragSource,
+        extensions: [
+            basicSetup,
+            glsl(),
+            keymap.of([indentWithTab, { key: "Mod-Shift-z", run: redo, preventDefault: true }]),
 
-	const editorContainer = document.getElementById("editor-container")!;
-	const view = new EditorView({
-		state,
-		parent: editorContainer,
-	});
+            themeCompartment.of([oneDarkTheme, syntaxHighlighting(oneDarkHighlightStyle)]),
+            tabSizeCompartment.of(indentUnit.of(" ".repeat(4))),
+            lineWrappingCompartment.of([]), // No wrapping by default
+            // TODO: Style search/replace
 
-	const canvas = document.getElementById("mainCanvas") as GlCanvas;
+            EditorView.updateListener.of((update) => {
+                if (update.docChanged) {
+                    const newCode = update.state.doc.toString();
+                    canvas.setAttribute("data-glsl", newCode);
+                }
+            }),
+        ],
+    });
 
-	const settingsButton = document.getElementById("settingsButton") as HTMLButtonElement;
-	const settingsModal = document.getElementById("settingsModal") as HTMLDialogElement;
-	settingsButton.onclick = () => {
-		settingsModal.open ? settingsModal.close() : settingsModal.showModal();
-	};
+    const view = new EditorView({
+        state,
+        parent: editorContainer,
+    });
 
-	view.dispatch({
-		// Toggle line wrapping
-		effects: lineWrappingCompartment.reconfigure(
-			lineWrappingCompartment.get(state) === EditorView.lineWrapping ? [] : [EditorView.lineWrapping]
-		)
-	});
+    const settingsButton = document.getElementById("settingsButton") as HTMLButtonElement;
+    const settingsModal = document.getElementById("settingsModal") as HTMLDialogElement;
+    settingsButton.onclick = () => {
+        if (settingsModal.open) {
+            settingsModal.close();
+        } else {
+            settingsModal.showModal();
+        }
+    };
 
-	const modelToggleButton = document.getElementById("modelToggle") as HTMLButtonElement;
-	modelToggleButton.onclick = () => {
-		const shouldToggle: boolean = modelToggleButton.classList.toggle("active");
-		canvas.setAttribute("data-use-model", shouldToggle ? "true" : "false");
-	};
+    view.dispatch({
+        // Toggle line wrapping
+        effects: lineWrappingCompartment.reconfigure(
+            lineWrappingCompartment.get(state) === EditorView.lineWrapping
+                ? []
+                : [EditorView.lineWrapping],
+        ),
+    });
 
-	const fullscreenButton = document.getElementById("fullscreenButton") as HTMLButtonElement;
-	fullscreenButton.onclick = () => {
-		document.fullscreenElement ? document.exitFullscreen() : canvas.requestFullscreen();
-	};
-	const pauseButton = document.getElementById("pauseButton") as HTMLButtonElement;
-	pauseButton.onclick = () => {
-		const shouldPause: boolean = canvas.getAttribute("data-paused") !== "true";
-		canvas.setAttribute("data-paused", shouldPause ? "true" : "false");
-		pauseButton.classList.toggle("is-paused", shouldPause);
-	};
+    const fullscreenButton = document.getElementById("fullscreenButton") as HTMLButtonElement;
+    fullscreenButton.onclick = () => {
+        if (document.fullscreenElement) {
+            document.exitFullscreen();
+        } else {
+            canvas.requestFullscreen();
+        }
+    };
+    const pauseButton = document.getElementById("pauseButton") as HTMLButtonElement;
+    pauseButton.onclick = () => {
+        const shouldPause: boolean = canvas.getAttribute("data-paused") !== "true";
+        canvas.setAttribute("data-paused", shouldPause ? "true" : "false");
+        pauseButton.classList.toggle("is-paused", shouldPause);
+    };
 
-	const codeUploadButton = document.getElementById("codeUploadButton") as HTMLInputElement;
-	codeUploadButton.onchange = (event) => {
-		const button = event.target as HTMLInputElement | null;
-		if (!button?.files?.length) return;
-		const file = button.files[0];
-		// Load file content into the editor
-		const reader = new FileReader();
-		reader.onload = () => {
-			const code = reader.result as string;
-			view.dispatch({
-				changes: {
-					from: 0,
-					to: view.state.doc.length,
-					insert: code,
-				},
-			});
-		};
-		reader.readAsText(file);
-	};
-
-	const modelUploadButton = document.getElementById("modelUploadButton") as HTMLInputElement;
-	modelUploadButton.onchange = (event) => {
-		const button = event.target as HTMLInputElement | null;
-		if (!button?.files?.length) return;
-		const file = button.files[0];
-		// Load file content into the editor
-		const reader = new FileReader();
-		reader.onload = () => {
-			// TODO: Load the model into the canvas. Needs to work for both text and binary formats
-			const modelData = reader.result;
-			// For now, just log the model data
-			console.log("Model data loaded:", modelData);
-		};
-		reader.readAsText(file);
-	};
+    const codeUploadButton = document.getElementById("codeUploadButton") as HTMLInputElement;
+    codeUploadButton.onchange = (event) => {
+        const button = event.target as HTMLInputElement | null;
+        if (!button?.files?.length) return;
+        const file = button.files[0];
+        // Load file content into the editor
+        const reader = new FileReader();
+        reader.onload = () => {
+            const code = reader.result as string;
+            view.dispatch({
+                changes: {
+                    from: 0,
+                    to: view.state.doc.length,
+                    insert: code,
+                },
+            });
+        };
+        reader.readAsText(file);
+    };
 </script>
 
 <style>
-	#app {
-		display: flex;
-		flex-direction: row;
-		width: 100%;
-		height: 100%;
-		min-height: 100%;
-	}
-	#app.reversed {
-		flex-direction: row-reverse;
-	}
+    #app {
+        display: flex;
+        flex-direction: row;
+        width: 100%;
+        height: 100%;
+        min-height: 100%;
+    }
+    #app.reversed {
+        flex-direction: row-reverse;
+    }
 
-	#canvasContainer {
-		flex-grow: 1;
-		flex-shrink: 1;
-		display: flex;
-		flex-direction: column;
-	}
-	#mainCanvas {
-		background: repeating-conic-gradient(var(--bg-dark) 0 25%, var(--bg-normal) 0 50%) 50% / 20px 20px; /* One Dark */
-		background-color: var(--bg-dark);
-		background-position: top right;
+    #canvasContainer {
+        flex-grow: 1;
+        flex-shrink: 1;
+        display: flex;
+        flex-direction: column;
+        > #mainCanvas {
+            background: repeating-conic-gradient(var(--bg-dark) 0 25%, var(--bg-normal) 0 50%) 50% /
+                20px 20px; /* One Dark */
+            background-color: var(--bg-dark);
+            background-position: top right;
 
-		display: block;
-		flex-grow: 1;
-		flex-shrink: 1;
-	}
-	#canvasControls {
-		display: flex;
-		flex-direction: row;
-		align-items: center;
-		
-		#milisecondsValue {
-			min-width: 5ch; /* Fixed width for alignment */
-			text-align: right; /* Align text to the right */
-		}
-		#performanceArea {
-			user-select: text;
-		}
+            display: block;
+            flex-grow: 1;
+            flex-shrink: 1;
+            max-height: calc(100vh - 30px);
+        }
+    }
+    #canvasControls {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
 
-		#modelToggle {
-			transition: font-variation-settings 0.2s ease-in-out;
-			font-variation-settings: "FILL" 0;
-		}
-		#modelToggle.active {
-			font-variation-settings: "FILL" 1;
-		}
-	}
+        #performanceArea {
+            user-select: text;
+            #milisecondsValue {
+                min-width: 5ch; /* Fixed width for alignment */
+                text-align: right; /* Align text to the right */
+            }
+        }
+    }
 
-	.material-symbols-outlined {
-		font-variation-settings: "FILL" 1;
-	}
+    #sidebar {
+        flex-grow: 0;
+        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+        min-width: 600px;
+        border-left: 1px solid var(--bg-dark);
+        > .tab-bar > .tab:not(.active) {
+            background: var(--bg-dark);
+        }
+    }
+    #editor-container {
+        flex-grow: 1;
+        flex-shrink: 1;
+        max-height: calc(100vh - 30px);
+        /* Can be briefly visible before the editor is fully populated */
+        background: var(--bg-normal);
 
+        .cm-editor {
+            height: 100%;
+            max-height: 100%;
+        }
+        .cm-scroller {
+            overflow: auto;
+        }
+        .cm-content {
+            /* I prefer having the last line not be at the absolute bottom of my monitor */
+            padding-bottom: 4em;
+        }
+    }
 
-	#sidebar {
-		flex-grow: 0
-		flex-shrink: 0;
-		display: flex;
-		flex-direction: column;
-		min-width: 600px;
-		border-left: 1px solid var(--bg-dark);
-	}
-	#editor-container {
-		flex-grow: 1;
-		flex-shrink: 1;
-		background: var(--bg-normal); /* Can be briefly visible before the editor is fully populated */
-		
-		.cm-editor {
-			height: 100%;
-			max-height: 100%;
-		}
-		.cm-scroller {
-			overflow: auto;
-		}
-		.cm-content {
-			padding-bottom: 4em; /* I prefer having the last line not be at the absolute bottom of my monitor */
-		}
-	}
-	.tab-bar {
-		background-color: var(--bg-dark);
-		display: flex;
-		flex-direction: row;
-		align-items: center;
-		height: 30px;
-		user-select: none;
-	}
+    #pauseButton {
+        > * {
+            transition: opacity 0.2s ease-in-out;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+    }
+    #pauseButton > .pauseIcon {
+        opacity: 1;
+    }
+    #pauseButton > .playIcon {
+        opacity: 0;
+    }
+    #pauseButton.is-paused > .pauseIcon {
+        opacity: 0;
+    }
+    #pauseButton.is-paused > .playIcon {
+        opacity: 1;
+    }
+    #pauseButton.is-paused {
+        background-color: color-mix(in oklab, var(--bg-normal), #f55 20%);
+    }
 
-	.tab {
-		position: relative;
-		display: flex;
-		align-items: center;
-		justify-content: center;
+    #settingsModal {
+        display: fixed;
+        top: 15px;
+        left: 50%;
+        transform: translateX(-50%);
 
-		height: 100%;
-		padding: 0 10px;
+        width: calc(600px - 60px);
+        padding: 10px;
 
-		display: flex;
-		align-items: center;
-		justify-content: center;
+        color: var(--text);
+        background: var(--bg-normal);
+        border: none;
+        border-radius: 8px;
 
-		&:is(button, .button) {
-			cursor: pointer;
-			font-weight: bold;
-			background-color: var(--bg-normal);
-			&:hover {
-				background-color: var(--bg-normal-hover);
-			}
-		}
-	}
+        &::backdrop {
+            background: rgba(0, 0, 0, 0.5);
+        }
+        > div {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+    }
 
-	.tab.square {
-		width: 30px;
-		padding: 0;
-		box-sizing: border-box;
-	}
-	.push-right {
-		margin-left: auto;
-	}
-	.disabled {
-		opacity: 0.5;
-		pointer-events: none;
-		background-color: #f003 !important;
-		color: #f00a !important;
-	}
-
-	label.tab + input[type="file"] {
-		display: none;
-	}
-
-	#pauseButton  {
-		> * {
-			transition: opacity 0.2s ease-in-out;
-			position: absolute;
-			top: 50%;
-			left: 50%;
-			transform: translate(-50%, -50%);
-		}
-	}
-	#pauseButton > .pauseIcon { opacity: 1; }
-	#pauseButton > .playIcon  { opacity: 0; }
-	#pauseButton.is-paused > .pauseIcon { opacity: 0; }
-	#pauseButton.is-paused > .playIcon  { opacity: 1; }
-	#pauseButton.is-paused {
-		background-color: color-mix(in oklab, var(--bg-normal), #f55 20%);
-	}
-
-	#settingsModal {
-		display: fixed;
-		top: 15px;
-		left: 50%;
-		transform: translateX(-50%);
-
-		width: calc(600px - 60px);
-		padding: 10px;
-
-		color: var(--text);
-		background: var(--bg-normal);
-		border: none;
-		border-radius: 8px;
-
-		&::backdrop {
-			background: rgba(0, 0, 0, 0.5);
-		}
-		> div {
-			display: flex;
-			flex-direction: column;
-			gap: 5px;
-		}
-	}
-
-	@media screen and (max-width: 800px) {
-		#app, #app.reversed {
-			flex-direction: column;
-		}
-		#canvasContainer {
-			flex-grow: 0;
-			flex-shrink: 1;
-			flex-basis: 100vw;
-			flex-direction: column-reverse;
-		}
-		#mainCanvas {
-			background-position: bottom right;
-		}
-		#sidebar {
-			min-width: unset;
-			width: 100%;
-			flex-grow: 1;
-			flex-shrink: 0;
-			min-height: 300px;
-			border-left: none;
-		}
-		#settingsModal {
-			width: calc(100% - 30px);
-		}
-	}
+    @media screen and (max-width: 800px) {
+        #app,
+        #app.reversed {
+            flex-direction: column;
+        }
+        #canvasContainer {
+            flex-grow: 0;
+            flex-shrink: 1;
+            flex-basis: 100vw;
+            flex-direction: column-reverse;
+        }
+        #mainCanvas {
+            background-position: bottom right;
+        }
+        #sidebar {
+            min-width: unset;
+            width: 100%;
+            flex-grow: 1;
+            flex-shrink: 0;
+            min-height: 300px;
+            border-left: none;
+        }
+        #settingsModal {
+            width: calc(100% - 30px);
+        }
+    }
 </style>
 
 <style is:global>
-	@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
-	@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital@0;1&display=swap');
+    @import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap");
+    @import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital@0;1&display=swap");
+    @import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:FILL@0..1");
 
-	:root {
-		--bg-dark:   hsl(216, 13%, 15%);
-		--bg-normal: hsl(220, 13%, 18%);
-		--bg-light:  hsl(220, 13%, 23%);
+    :root {
+        --bg-dark: hsl(216, 13%, 15%);
+        --bg-normal: hsl(220, 13%, 18%);
+        --bg-light: hsl(220, 13%, 23%);
 
-		--text: hsl(220.01, 13%, 66%);
+        --text: hsl(220.01, 13%, 66%);
 
-		--bg-normal-hover: color-mix(in oklch, var(--bg-normal), var(--bg-light));
-	}
+        --bg-normal-hover: color-mix(in oklch, var(--bg-normal), var(--bg-light));
 
-	* {
-		margin: 0;
-		padding: 0;
-		box-sizing: border-box;
-	}
-	html, body {
-		width: 100%;
-		height: 100%;
-	}
-	.sans-serif, body {
-		font-family: 'Roboto', sans-serif;
-		color: var(--text);
-	}
+        --font-normal: "Roboto", sans-serif;
+        --font-mono: "JetBrains Mono", monospace;
+        --font-icons: "Material Symbols Outlined";
+    }
 
-	.cm-editor * {
-		font-size: 13px;
-		line-height: 1.2;
-		&, .mono {
-			font-family: "JetBrains Mono", monospace;
-			font-variant-ligatures: normal;
-		}
-	}
+    @media (prefers-color-scheme: light) {
+        :root {
+            --bg-dark: hsl(240, 2%, 92%);
+            --bg-normal: hsl(0, 0%, 98%);
+            --bg-light: hsl(0, 0%, 98%);
 
-	button {
-		all: unset;
-		cursor: pointer;
-		background: var(--bg-light);
-	}
+            --text: hsl(228, 8%, 24%);
+        }
+    }
+    /* High contrast mode */
+    @media (prefers-contrast: more) {
+        :root {
+            --bg-dark: #000;
+            --bg-normal: #000;
+            --bg-light: #000;
+
+            --text: #fff;
+        }
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    html,
+    body {
+        width: 100%;
+        height: 100%;
+    }
+    .sans-serif,
+    body {
+        font-family: var(--font-normal);
+        color: var(--text);
+    }
+
+    .cm-editor * {
+        font-size: 13px;
+        line-height: 1.2;
+        &,
+        .mono {
+            font-family: var(--font-mono);
+            font-variant-ligatures: normal;
+        }
+    }
+
+    button {
+        all: unset;
+        cursor: pointer;
+        background: var(--bg-light);
+    }
+
+    .material-symbols-outlined {
+        font-family: var(--font-icons) !important;
+        font-variation-settings: "FILL" 1;
+    }
 </style>
-

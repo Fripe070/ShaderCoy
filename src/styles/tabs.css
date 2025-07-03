@@ -1,0 +1,54 @@
+:root {
+    --tab-height: 30px;
+}
+
+.tab-bar {
+    background-color: var(--bg-dark);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    height: var(--tab-height);
+    user-select: none;
+}
+
+.tab {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    height: 100%;
+    padding: 0 10px;
+
+    &:is(button, .button) {
+        cursor: pointer;
+        font-weight: bold;
+        background-color: var(--bg-normal);
+        &:hover {
+            background-color: var(--bg-normal-hover);
+        }
+    }
+}
+
+.square {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: var(--tab-height);
+    padding: 0;
+    box-sizing: border-box;
+}
+.push-right {
+    margin-left: auto;
+}
+.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+    background-color: #f003 !important;
+    color: #f00a !important;
+}
+
+label.tab + input[type="file"] {
+    display: none;
+}

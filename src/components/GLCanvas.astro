@@ -1,12 +1,10 @@
 ---
 interface Props {
     id: string;
-    [key: string]: any;
+    [key: string]: unknown;
 }
-const { 
-    id,
-    ...extraProps
- } = Astro.props;
+const { id, ...extraProps } = Astro.props;
+import defaultFragSource from "../scripts/shaders/defaultFrag";
 ---
 
 <canvas
@@ -14,12 +12,11 @@ const {
     id={id}
     data-paused="false"
     data-use-model="false"
-    data-glsl="void main() { gl_FragColor = vec4(1.0, 0.0, 1.0, 1.0); }"
-    { ...extraProps }
-/>
+    data-glsl={defaultFragSource}
+    {...extraProps}></canvas>
 
 <script>
-    import { GlCanvas } from "../scripts/GLCanvasScript";
+    import { GlCanvas } from "./GLCanvasScript";
     customElements.define("gl-canvas", GlCanvas, { extends: "canvas" });
 </script>
 
