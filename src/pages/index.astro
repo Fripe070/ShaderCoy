@@ -56,10 +56,10 @@
 	import { EditorView, keymap } from "@codemirror/view";
 	import { EditorState, Compartment } from "@codemirror/state";
 	import { indentUnit, syntaxHighlighting } from "@codemirror/language";
-	import { indentWithTab } from "@codemirror/commands";
+	import { indentWithTab, redo } from "@codemirror/commands";
 	import { oneDarkHighlightStyle, oneDarkTheme } from "@codemirror/theme-one-dark";
 	import { basicSetup } from "codemirror";
-	// import {  } from "@codemirror/lang-glsl"
+	import { glsl } from "codemirror-lang-glsl";
 
 	const themeCompartment = new Compartment();
 	const tabSizeCompartment = new Compartment();
@@ -69,18 +69,23 @@
 		doc: "totes real glsl code :3c\n\nbeep boop\n",
 		extensions: [
 			basicSetup,
+			glsl(),
 			keymap.of([
 				indentWithTab,
+			    { key: "Mod-Shift-z", run: redo, preventDefault: true },
 			]),
 
 			themeCompartment.of([oneDarkTheme, syntaxHighlighting(oneDarkHighlightStyle)]),
 			tabSizeCompartment.of(indentUnit.of(" ".repeat(4))),
 			lineWrappingCompartment.of([]), // No wrapping by default
+			// TODO: Style search/replace
 		]
 	});
+
+	const editorContainer = document.getElementById("editor-container")!;
 	const view = new EditorView({
 		state,
-		parent: document.querySelector("#editor-container")!,
+		parent: editorContainer,
 	});
 
 	const canvas = document.getElementById("mainCanvas") as HTMLCanvasElement;
