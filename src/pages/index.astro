@@ -1,4 +1,5 @@
 ---
+import GLCanvas from "../components/GLCanvas.astro";
 ---
 
 <html lang="en">
@@ -9,17 +10,24 @@
 		<meta name="generator" content={Astro.generator} />
 		<title>ShaderCoy</title>
 
-		<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:FILL@1" />
+		<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:FILL@0..1" />
 	</head>
 	<body>
-		<main id="app"> <!-- TODO: allow toggling class="reversed" in settings --> 
+		<main id="app"> {/* TODO: allow toggling class="reversed" in settings */}
+			{/* TODO: Break canvas and sidebar into separate components. Requires sharing styles between tab bars */}
 			<div id="canvasContainer">
 				<div id="canvasControls" class="tab-bar">
-					<button class="tab square material-symbols-outlined" id="pauseButton">pause</button>
+					<button class="tab square" id="pauseButton">
+						<span class="material-symbols-outlined pauseIcon">pause</span>
+						<span class="material-symbols-outlined playIcon">play_arrow</span>
+					</button>
 					<span id="performanceArea" class="tab mono">
 						<span id="milisecondsValue">0.00</span>ms&nbsp;(<span id="fpsValue">0</span>&nbsp;FPS)
 					</span>
 					<span class="push-right" /> <!-- Push following buttons to the right -->
+					<label for="modelUploadButton" class="tab square button"><span class="material-symbols-outlined">upload</span></label>
+					<input type="file" id="modelUploadButton" accept=".glb,.gltf" />
+					<button class="tab square material-symbols-outlined" id="modelToggle">deployed_code</button>					
 					<button class="tab square material-symbols-outlined" id="fullscreenButton">fullscreen</button>
 					<script>
 						if (document.fullscreenEnabled === false) {
@@ -27,14 +35,15 @@
 						}
 					</script>
 				</div>
-				<canvas id="mainCanvas" />
+				 <GLCanvas id="mainCanvas" />
 			</div>
 			<div id="sidebar">
 				<div class="tab-bar">
 					<button class="tab active">Editor</button>
-					<button class="tab square push-right">
-						<span id="settingsButton" class="material-symbols-outlined">settings</span>
-					</button>
+					<span class="push-right" /> <!-- Push following buttons to the right -->
+					<label for="codeUploadButton" class="tab square button"><span class="material-symbols-outlined">upload_file</span></label>
+					<input type="file" id="codeUploadButton" accept=".glsl,.frag,.fs" />
+					<button class="tab square"><span class="material-symbols-outlined" id="settingsButton">settings</span></button>
 				</div>
 				<div id="editor-container" />
 			</div>
@@ -59,6 +68,7 @@
 	import { indentWithTab, redo } from "@codemirror/commands";
 	import { oneDarkHighlightStyle, oneDarkTheme } from "@codemirror/theme-one-dark";
 	import { basicSetup } from "codemirror";
+	import type { GlCanvas } from "../scripts/GLCanvasScript";
 	import { glsl } from "codemirror-lang-glsl";
 
 	const themeCompartment = new Compartment();
@@ -66,7 +76,7 @@
 	const lineWrappingCompartment = new Compartment();
 
 	const state = EditorState.create({
-		doc: "totes real glsl code :3c\n\nbeep boop\n",
+		doc: "int main() {\n    return vec4(1.0, 1.0, 1.0, 1.0);\n}\n",
 		extensions: [
 			basicSetup,
 			glsl(),
@@ -88,7 +98,7 @@
 		parent: editorContainer,
 	});
 
-	const canvas = document.getElementById("mainCanvas") as HTMLCanvasElement;
+	const canvas = document.getElementById("mainCanvas") as GlCanvas;
 
 	const settingsButton = document.getElementById("settingsButton") as HTMLButtonElement;
 	const settingsModal = document.getElementById("settingsModal") as HTMLDialogElement;
@@ -103,8 +113,57 @@
 		)
 	});
 
-	document.getElementById("fullscreenButton")!.onclick = () => {
+	const modelToggleButton = document.getElementById("modelToggle") as HTMLButtonElement;
+	modelToggleButton.onclick = () => {
+		const shouldToggle: boolean = modelToggleButton.classList.toggle("active");
+		canvas.setAttribute("data-use-model", shouldToggle ? "true" : "false");
+	};
+
+	const fullscreenButton = document.getElementById("fullscreenButton") as HTMLButtonElement;
+	fullscreenButton.onclick = () => {
 		document.fullscreenElement ? document.exitFullscreen() : canvas.requestFullscreen();
+	};
+	const pauseButton = document.getElementById("pauseButton") as HTMLButtonElement;
+	pauseButton.onclick = () => {
+		const shouldPause: boolean = canvas.getAttribute("data-paused") !== "true";
+		canvas.setAttribute("data-paused", shouldPause ? "true" : "false");
+		pauseButton.classList.toggle("is-paused", shouldPause);
+	};
+
+	const codeUploadButton = document.getElementById("codeUploadButton") as HTMLInputElement;
+	codeUploadButton.onchange = (event) => {
+		const button = event.target as HTMLInputElement | null;
+		if (!button?.files?.length) return;
+		const file = button.files[0];
+		// Load file content into the editor
+		const reader = new FileReader();
+		reader.onload = () => {
+			const code = reader.result as string;
+			view.dispatch({
+				changes: {
+					from: 0,
+					to: view.state.doc.length,
+					insert: code,
+				},
+			});
+		};
+		reader.readAsText(file);
+	};
+
+	const modelUploadButton = document.getElementById("modelUploadButton") as HTMLInputElement;
+	modelUploadButton.onchange = (event) => {
+		const button = event.target as HTMLInputElement | null;
+		if (!button?.files?.length) return;
+		const file = button.files[0];
+		// Load file content into the editor
+		const reader = new FileReader();
+		reader.onload = () => {
+			// TODO: Load the model into the canvas. Needs to work for both text and binary formats
+			const modelData = reader.result;
+			// For now, just log the model data
+			console.log("Model data loaded:", modelData);
+		};
+		reader.readAsText(file);
 	};
 </script>
 
@@ -147,14 +206,27 @@
 		#performanceArea {
 			user-select: text;
 		}
+
+		#modelToggle {
+			transition: font-variation-settings 0.2s ease-in-out;
+			font-variation-settings: "FILL" 0;
+		}
+		#modelToggle.active {
+			font-variation-settings: "FILL" 1;
+		}
 	}
+
+	.material-symbols-outlined {
+		font-variation-settings: "FILL" 1;
+	}
+
 
 	#sidebar {
 		flex-grow: 0
 		flex-shrink: 0;
 		display: flex;
 		flex-direction: column;
-		width: 600px;
+		min-width: 600px;
 		border-left: 1px solid var(--bg-dark);
 	}
 	#editor-container {
@@ -179,18 +251,24 @@
 		flex-direction: row;
 		align-items: center;
 		height: 30px;
+		user-select: none;
 	}
 
 	.tab {
+		position: relative;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+
 		height: 100%;
 		padding: 0 10px;
-		user-select: none;
 
 		display: flex;
 		align-items: center;
 		justify-content: center;
 
-		&:is(button) {
+		&:is(button, .button) {
+			cursor: pointer;
 			font-weight: bold;
 			background-color: var(--bg-normal);
 			&:hover {
@@ -200,7 +278,9 @@
 	}
 
 	.tab.square {
-		padding: 0 5px;
+		width: 30px;
+		padding: 0;
+		box-sizing: border-box;
 	}
 	.push-right {
 		margin-left: auto;
@@ -210,6 +290,27 @@
 		pointer-events: none;
 		background-color: #f003 !important;
 		color: #f00a !important;
+	}
+
+	label.tab + input[type="file"] {
+		display: none;
+	}
+
+	#pauseButton  {
+		> * {
+			transition: opacity 0.2s ease-in-out;
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%);
+		}
+	}
+	#pauseButton > .pauseIcon { opacity: 1; }
+	#pauseButton > .playIcon  { opacity: 0; }
+	#pauseButton.is-paused > .pauseIcon { opacity: 0; }
+	#pauseButton.is-paused > .playIcon  { opacity: 1; }
+	#pauseButton.is-paused {
+		background-color: color-mix(in oklab, var(--bg-normal), #f55 20%);
 	}
 
 	#settingsModal {
@@ -250,6 +351,7 @@
 			background-position: bottom right;
 		}
 		#sidebar {
+			min-width: unset;
 			width: 100%;
 			flex-grow: 1;
 			flex-shrink: 0;

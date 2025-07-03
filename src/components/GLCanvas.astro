@@ -1,0 +1,37 @@
+---
+interface Props {
+    id: string;
+    [key: string]: any;
+}
+const { 
+    id,
+    ...extraProps
+ } = Astro.props;
+---
+
+<canvas
+    is="gl-canvas"
+    id={id}
+    data-paused="false"
+    data-use-model="false"
+    data-glsl="void main() { gl_FragColor = vec4(1.0, 0.0, 1.0, 1.0); }"
+    { ...extraProps }
+/>
+
+<script>
+    import { GlCanvas } from "../scripts/GLCanvasScript";
+    customElements.define("gl-canvas", GlCanvas, { extends: "canvas" });
+</script>
+
+<style>
+    .unsupported-gl {
+        color: red;
+        font-size: 48px;
+        font-weight: bold;
+        text-align: center;
+        display: flex !important;
+        justify-content: center;
+        align-items: center;
+        word-wrap: break-word;
+    }
+</style>
