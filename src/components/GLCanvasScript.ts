@@ -7,10 +7,8 @@ import defaultFragSource from "../scripts/shaders/defaultFrag";
 
 export class GlCanvas extends HTMLCanvasElement {
     static readonly GLSL_ATTR_KEY: string = "data-glsl";
-    static readonly PAUSED_ATTR_KEY: string = "data-paused";
-    static readonly USE_MODEL_ATTR_KEY: string = "data-use-model";
     static get observedAttributes(): string[] {
-        return [this.GLSL_ATTR_KEY, this.PAUSED_ATTR_KEY, this.USE_MODEL_ATTR_KEY];
+        return [this.GLSL_ATTR_KEY];
     }
 
     private gl: WebGLRenderingContext | null = null;
@@ -23,6 +21,17 @@ export class GlCanvas extends HTMLCanvasElement {
     }
 
     connectedCallback() {
+        // This is insane but I was going mad trying to make the stupid element not push on its parents
+        const anchorElement = this.parentElement!;
+        const resizeObserver = new ResizeObserver(() => {
+            const dpr = window.devicePixelRatio || 1;
+            const rect = anchorElement.getBoundingClientRect();
+
+            this.width = Math.floor(rect.width * dpr);
+            this.height = Math.floor(rect.height * dpr);
+        });
+        resizeObserver.observe(anchorElement);
+
         // Initialize WebGL context or any other setup
         this.gl = this.getContext("webgl");
         if (!this.gl) {
@@ -47,8 +56,6 @@ export class GlCanvas extends HTMLCanvasElement {
                 if (this.isConnected && this.gl) {
                     this.updateShader(this.gl, this.currentShaderCode);
                 }
-                break;
-            case (GlCanvas.PAUSED_ATTR_KEY, GlCanvas.PAUSED_ATTR_KEY):
                 break;
             default:
                 console.debug(`Unhandled attribute change: ${name}`);
@@ -103,15 +110,15 @@ export class GlCanvas extends HTMLCanvasElement {
     // TODO: Oh god I am going to have to support orbiting or some sort of model navigation
 
     get isPaused(): boolean {
-        return this.getAttribute(GlCanvas.PAUSED_ATTR_KEY) === "true";
+        return this.dataset.paused === "true";
     }
     set isPaused(value: boolean) {
-        this.setAttribute(GlCanvas.PAUSED_ATTR_KEY, value ? "true" : "false");
+        this.dataset.paused = value ? "true" : "false";
     }
-    get useModel(): boolean {
-        return this.getAttribute(GlCanvas.USE_MODEL_ATTR_KEY) === "true";
+    get isModel(): boolean {
+        return this.dataset.useModel === "true";
     }
-    set useModel(value: boolean) {
-        this.setAttribute(GlCanvas.USE_MODEL_ATTR_KEY, value ? "true" : "false");
+    set isModel(value: boolean) {
+        this.dataset.useModel = value ? "true" : "false";
     }
 }

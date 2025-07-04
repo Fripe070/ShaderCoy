@@ -10,6 +10,7 @@ import defaultFragSource from "../scripts/shaders/defaultFrag";
 <canvas
     is="gl-canvas"
     id={id}
+    class="gl-canvas"
     data-paused="false"
     data-use-model="false"
     data-glsl={defaultFragSource}
@@ -21,6 +22,14 @@ import defaultFragSource from "../scripts/shaders/defaultFrag";
 </script>
 
 <style>
+    .gl-canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }
+
     .unsupported-gl {
         color: red;
         font-size: 48px;
