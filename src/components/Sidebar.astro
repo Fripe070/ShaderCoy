@@ -1,0 +1,248 @@
+---
+import SettingsPanel from "./SettingsPanel.astro";
+import TexturePanel from "./TexturePanel.astro";
+---
+
+<div id="sidebar">
+    <div class="tab-bar">
+        {/* TODO: Addm ore tabs for asset management */}
+        <button
+            id="sidebar-tab-fragment"
+            class="tab wide-tab selectible-tab editor-tab active"
+            data-buffer="fragment"
+            data-tab-body="tab-body-editor"
+        >
+            <span class="icon material-symbols-outlined">manga</span>
+            Fragment
+        </button>
+        <button
+            id="sidebar-tab-vertex"
+            class="tab wide-tab selectible-tab editor-tab"
+            data-buffer="vertex"
+            data-tab-body="tab-body-editor"
+        >
+            <span class="icon material-symbols-outlined">view_in_ar</span>
+            Vertex
+        </button>
+        <button
+            id="sidebar-tab-texture"
+            class="tab wide-tab selectible-tab"
+            data-tab-body="tab-body-texture"
+        >
+            <span class="icon material-symbols-outlined">image</span>
+            Texture
+        </button>
+
+        <span class="push-right"></span>
+        <!-- Push following buttons to the right -->
+        <label for="codeUploadButton" class="tab square button">
+            <span class="material-symbols-outlined">upload_file</span>
+        </label>
+        <input type="file" id="codeUploadButton" accept=".glsl,.frag,.fs" />
+
+        <button
+            id="settings-button"
+            class="tab square selectible-tab"
+            data-tab-body="tab-body-settings"
+        >
+            <span class="icon material-symbols-outlined">settings</span>
+        </button>
+    </div>
+    <div id="sidebar-body">
+        <div class="tab-body active" id="tab-body-editor" data-current-buffer="fragment"></div>
+        <div class="tab-body" id="tab-body-texture"><TexturePanel /></div>
+        <div class="tab-body" id="tab-body-settings"><SettingsPanel /></div>
+    </div>
+</div>
+
+<script>
+    import { EditorView, keymap } from "@codemirror/view";
+    import { EditorState, Compartment } from "@codemirror/state";
+    import { indentUnit, syntaxHighlighting } from "@codemirror/language";
+    import { indentWithTab, redo } from "@codemirror/commands";
+    import { oneDarkHighlightStyle, oneDarkTheme } from "@codemirror/theme-one-dark";
+    import { basicSetup } from "codemirror";
+    import { glsl } from "codemirror-lang-glsl";
+    import { getMainCanvas } from "../scripts/util";
+
+    import defaultFragSource from "../scripts/shaders/defaultFrag";
+    import defaultVertSource from "../scripts/shaders/defaultVert";
+
+    const themeCompartment = new Compartment();
+    const tabSizeCompartment = new Compartment();
+    const lineWrappingCompartment = new Compartment();
+
+    const state = EditorState.create({
+        doc: defaultFragSource,
+        extensions: [
+            basicSetup,
+            glsl(),
+            keymap.of([indentWithTab, { key: "Mod-Shift-z", run: redo, preventDefault: true }]),
+
+            themeCompartment.of([oneDarkTheme, syntaxHighlighting(oneDarkHighlightStyle)]),
+            tabSizeCompartment.of(indentUnit.of(" ".repeat(4))),
+            lineWrappingCompartment.of([]), // No wrapping by default
+            // TODO: Style search/replace
+
+            EditorView.updateListener.of((update) => {
+                if (update.docChanged) {
+                    const newCode = update.state.doc.toString();
+                    // canvas.setAttribute("data-glsl", newCode);
+                }
+            }),
+        ],
+    });
+
+    const editorContainer = document.getElementById("tab-body-editor")!;
+
+    const view = new EditorView({
+        state,
+        parent: editorContainer,
+    });
+
+    // view.dispatch({
+    //     // Toggle line wrapping
+    //     effects: lineWrappingCompartment.reconfigure(
+    //         lineWrappingCompartment.get(state) === EditorView.lineWrapping
+    //             ? []
+    //             : [EditorView.lineWrapping],
+    //     ),
+    // });
+
+    const selectibleTabs = document.querySelectorAll(".selectible-tab") as NodeListOf<HTMLElement>;
+    const tabBodies = document.querySelectorAll(".tab-body") as NodeListOf<HTMLElement>;
+    selectibleTabs.forEach((tab) => {
+        tab.addEventListener("click", () => {
+            const tabBodyId = tab.dataset.tabBody;
+            if (!tabBodyId) {
+                console.error(`Editor tab ${tab.id} must have a valid data-tab-body attribute`);
+                return;
+            }
+            const tabBody = document.getElementById(tabBodyId)!;
+            console.log(`Switching to tab body: ${tabBodyId}`);
+            console.log(`Clicked tab: ${tab}`);
+
+            tabBodies.forEach((t) => t.classList.remove("active"));
+            tabBody.classList.add("active");
+
+            selectibleTabs.forEach((t) => t.classList.remove("active"));
+            tab.classList.add("active");
+        });
+    });
+
+    const editorTabBody = document.getElementById("tab-body-editor")!;
+    const editorContentBuffers: Record<string, string> = {
+        fragment: defaultFragSource,
+        vertex: defaultVertSource,
+    };
+    const editorTabs = document.querySelectorAll(".editor-tab") as NodeListOf<HTMLElement>;
+    editorTabs.forEach((tab) => {
+        tab.addEventListener("click", () => {
+            const bufferId = tab.dataset.buffer;
+            if (!bufferId) {
+                console.error(`Editor tab ${tab.id} must have a valid data-buffer attribute`);
+                return;
+            }
+            const editorCurrentBuffer = editorTabBody.dataset.currentBuffer!;
+            const code = editorContentBuffers[bufferId];
+
+            editorContentBuffers[editorCurrentBuffer] = view.state.doc.toString();
+            view.dispatch({
+                changes: {
+                    from: 0,
+                    to: view.state.doc.length,
+                    insert: code,
+                },
+            });
+            editorTabBody.dataset.currentBuffer = bufferId;
+        });
+    });
+
+    const codeUploadButton = document.getElementById("codeUploadButton") as HTMLInputElement;
+    codeUploadButton.onchange = (event) => {
+        const button = event.target as HTMLInputElement | null;
+        if (!button?.files?.length) return;
+        const file = button.files[0];
+        // Load file content into the editor
+        const reader = new FileReader();
+        reader.onload = () => {
+            const code = reader.result as string;
+            view.dispatch({
+                changes: {
+                    from: 0,
+                    to: view.state.doc.length,
+                    insert: code,
+                },
+            });
+        };
+        reader.readAsText(file);
+    };
+</script>
+
+<style>
+    #sidebar {
+        --body-height: calc(var(--sidebar-height) - var(--tab-height));
+
+        flex-grow: 0;
+        flex-shrink: 0;
+        width: var(--sidebar-width);
+        border-left: 1px solid var(--bg-dark);
+    }
+
+    #sidebar-body {
+        height: var(--body-height);
+        background: var(--bg-normal);
+        position: relative;
+        > * {
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+    }
+
+    @media screen and (max-width: 850px) {
+        #sidebar {
+            min-width: unset;
+            width: 100%;
+            border-left: none;
+        }
+    }
+    @media screen and (max-width: 420px) {
+        .wide-tab {
+            .icon {
+                display: none;
+            }
+        }
+    }
+
+    .selectible-tab:not(.active) {
+        background: var(--bg-dark);
+    }
+    .selectible-tab:not(.active):hover {
+        background: color-mix(in oklch, var(--bg-normal), var(--bg-dark));
+    }
+    .wide-tab > .icon {
+        margin-right: 8px;
+    }
+
+    .tab-body:not(.active) {
+        display: none;
+    }
+
+    #tab-body-editor {
+        .cm-editor {
+            height: 100%;
+            max-height: 100%;
+        }
+        .cm-scroller {
+            overflow: auto;
+        }
+        .cm-content {
+            /* I prefer having the last line not be at the absolute bottom of my monitor */
+            padding-bottom: 4em;
+        }
+    }
+</style>

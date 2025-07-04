@@ -1,6 +1,8 @@
 ---
+import CanvasPanel from "../components/CanvasPanel.astro";
 import GLCanvas from "../components/GLCanvas.astro";
 import ModelSelect from "../components/ModelSelect.astro";
+import Sidebar from "../components/Sidebar.astro";
 
 import "../styles/tabs.css";
 ---
@@ -14,326 +16,31 @@ import "../styles/tabs.css";
         <title>ShaderCoy</title>
     </head>
     <body>
+        {/* TODO: allow toggling class="reversed" in settings */}
         <main id="app">
-            {/* TODO: allow toggling class="reversed" in settings */}
-            {
-                /* TODO: Break canvas and sidebar into separate components. Requires sharing styles between tab bars */
-            }
-            <div id="canvasContainer">
-                <div id="canvasControls" class="tab-bar">
-                    <button class="tab square" id="pauseButton">
-                        <span class="material-symbols-outlined pauseIcon">pause</span>
-                        <span class="material-symbols-outlined playIcon">play_arrow</span>
-                    </button>
-                    <span id="performanceArea" class="tab mono">
-                        <span id="milisecondsValue">0.00</span>ms&nbsp;(<span id="fpsValue">0</span
-                        >&nbsp;FPS)
-                    </span>
-
-                    <span class="push-right"></span>
-                    <ModelSelect />
-                    <button class="tab square material-symbols-outlined" id="fullscreenButton">
-                        fullscreen
-                    </button>
-                    <script>
-                        if (document.fullscreenEnabled === false) {
-                            document.getElementById("fullscreenButton")?.classList.add("disabled");
-                        }
-                    </script>
-                </div>
-                <div id="mainCanvasContainer">
-                    <GLCanvas id="mainCanvas" />
-                </div>
-            </div>
-            <div id="sidebar">
-                <div class="tab-bar">
-                    {/* TODO: Addm ore tabs for asset management */}
-                    <button class="tab sidebar-tab active">Fragment</button>
-                    <button class="tab sidebar-tab">Vertex</button>
-
-                    <span class="push-right"></span>
-                    <!-- Push following buttons to the right -->
-                    <label for="codeUploadButton" class="tab square button">
-                        <span class="material-symbols-outlined">upload_file</span>
-                    </label>
-                    <input type="file" id="codeUploadButton" accept=".glsl,.frag,.fs" />
-                    {/* Make it just show up in the sidebar instead of a modal */}
-                    <button id="settingsButton" class="tab square material-symbols-outlined">
-                        settings
-                    </button>
-                </div>
-                <div id="editor-container"></div>
-            </div>
+            <CanvasPanel />
+            <Sidebar />
         </main>
-
-        <dialog id="settingsModal" closedby="any">
-            <div>
-                <h2>Settings</h2>
-                <p>:3</p>
-                <form method="dialog">
-                    <button type="submit">Close</button>
-                </form>
-            </div>
-        </dialog>
     </body>
 </html>
-
-<script>
-    import { EditorView, keymap } from "@codemirror/view";
-    import { EditorState, Compartment } from "@codemirror/state";
-    import { indentUnit, syntaxHighlighting } from "@codemirror/language";
-    import { indentWithTab, redo } from "@codemirror/commands";
-    import { oneDarkHighlightStyle, oneDarkTheme } from "@codemirror/theme-one-dark";
-    import { basicSetup } from "codemirror";
-    import { glsl } from "codemirror-lang-glsl";
-    import { getMainCanvas } from "../scripts/util";
-    import defaultFragSource from "../scripts/shaders/defaultFrag";
-
-    const editorContainer = document.getElementById("editor-container")!;
-    const canvas = getMainCanvas();
-
-    const themeCompartment = new Compartment();
-    const tabSizeCompartment = new Compartment();
-    const lineWrappingCompartment = new Compartment();
-
-    const state = EditorState.create({
-        doc: defaultFragSource,
-        extensions: [
-            basicSetup,
-            glsl(),
-            keymap.of([indentWithTab, { key: "Mod-Shift-z", run: redo, preventDefault: true }]),
-
-            themeCompartment.of([oneDarkTheme, syntaxHighlighting(oneDarkHighlightStyle)]),
-            tabSizeCompartment.of(indentUnit.of(" ".repeat(4))),
-            lineWrappingCompartment.of([]), // No wrapping by default
-            // TODO: Style search/replace
-
-            EditorView.updateListener.of((update) => {
-                if (update.docChanged) {
-                    const newCode = update.state.doc.toString();
-                    canvas.setAttribute("data-glsl", newCode);
-                }
-            }),
-        ],
-    });
-
-    const view = new EditorView({
-        state,
-        parent: editorContainer,
-    });
-
-    const settingsButton = document.getElementById("settingsButton") as HTMLButtonElement;
-    const settingsModal = document.getElementById("settingsModal") as HTMLDialogElement;
-    settingsButton.onclick = () => {
-        if (settingsModal.open) {
-            settingsModal.close();
-        } else {
-            settingsModal.showModal();
-        }
-    };
-
-    view.dispatch({
-        // Toggle line wrapping
-        effects: lineWrappingCompartment.reconfigure(
-            lineWrappingCompartment.get(state) === EditorView.lineWrapping
-                ? []
-                : [EditorView.lineWrapping],
-        ),
-    });
-
-    const fullscreenButton = document.getElementById("fullscreenButton") as HTMLButtonElement;
-    fullscreenButton.onclick = () => {
-        if (document.fullscreenElement) {
-            document.exitFullscreen();
-        } else {
-            canvas.requestFullscreen();
-        }
-    };
-    const pauseButton = document.getElementById("pauseButton") as HTMLButtonElement;
-    pauseButton.onclick = () => {
-        const shouldPause: boolean = canvas.getAttribute("data-paused") !== "true";
-        canvas.setAttribute("data-paused", shouldPause ? "true" : "false");
-        pauseButton.classList.toggle("is-paused", shouldPause);
-    };
-
-    const codeUploadButton = document.getElementById("codeUploadButton") as HTMLInputElement;
-    codeUploadButton.onchange = (event) => {
-        const button = event.target as HTMLInputElement | null;
-        if (!button?.files?.length) return;
-        const file = button.files[0];
-        // Load file content into the editor
-        const reader = new FileReader();
-        reader.onload = () => {
-            const code = reader.result as string;
-            view.dispatch({
-                changes: {
-                    from: 0,
-                    to: view.state.doc.length,
-                    insert: code,
-                },
-            });
-        };
-        reader.readAsText(file);
-    };
-</script>
 
 <style>
     #app {
         display: flex;
         flex-direction: row;
-        width: 100%;
-        height: 100%;
-        min-height: 100%;
+        width: 100vw;
+        height: 100vh;
+        min-height: 100vh;
+        max-height: 100vh%;
     }
     #app.reversed {
         flex-direction: row-reverse;
-    }
-
-    #canvasContainer {
-        flex-grow: 1;
-        flex-shrink: 1;
-        display: flex;
-        flex-direction: column;
-        > #mainCanvasContainer {
-            background: repeating-conic-gradient(var(--bg-dark) 0 25%, var(--bg-normal) 0 50%) 50% /
-                20px 20px; /* One Dark */
-            background-color: var(--bg-dark);
-            background-position: top right;
-
-            display: block;
-            flex-grow: 1;
-            flex-shrink: 1;
-            max-height: calc(100vh - 30px);
-            position: relative;
-        }
-    }
-    #canvasControls {
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-
-        #performanceArea {
-            user-select: text;
-            #milisecondsValue {
-                min-width: 5ch; /* Fixed width for alignment */
-                text-align: right; /* Align text to the right */
-            }
-        }
-    }
-
-    :root {
-        --sidebar-preferred-width: 600px;
-        --sidebar-min-width: 300px;
-        --sidebar-width: min(var(--sidebar-preferred-width), max(var(--sidebar-min-width), 50vw));
-    }
-
-    #sidebar {
-        flex-grow: 0;
-        flex-shrink: 0;
-        display: flex;
-        flex-direction: column;
-        min-width: var(--sidebar-width);
-        border-left: 1px solid var(--bg-dark);
-        .sidebar-tab:not(.active) {
-            background: var(--bg-dark);
-        }
-        .sidebar-tab:not(.active):hover {
-            background: color-mix(in oklch, var(--bg-normal), var(--bg-dark));
-        }
-    }
-    #editor-container {
-        flex-grow: 1;
-        flex-shrink: 1;
-        max-height: calc(100vh - 30px);
-        /* Can be briefly visible before the editor is fully populated */
-        background: var(--bg-normal);
-
-        .cm-editor {
-            height: 100%;
-            max-height: 100%;
-        }
-        .cm-scroller {
-            overflow: auto;
-        }
-        .cm-content {
-            /* I prefer having the last line not be at the absolute bottom of my monitor */
-            padding-bottom: 4em;
-        }
-    }
-
-    #pauseButton {
-        > * {
-            transition: opacity 0.2s ease-in-out;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-    }
-    #pauseButton > .pauseIcon {
-        opacity: 1;
-    }
-    #pauseButton > .playIcon {
-        opacity: 0;
-    }
-    #pauseButton.is-paused > .pauseIcon {
-        opacity: 0;
-    }
-    #pauseButton.is-paused > .playIcon {
-        opacity: 1;
-    }
-    #pauseButton.is-paused {
-        background-color: color-mix(in oklab, var(--bg-normal), #f55 20%);
-    }
-
-    #settingsModal {
-        display: fixed;
-        top: 15px;
-        left: 50%;
-        transform: translateX(-50%);
-
-        width: calc(600px - 60px);
-        padding: 10px;
-
-        color: var(--text);
-        background: var(--bg-normal);
-        border: none;
-        border-radius: 8px;
-
-        &::backdrop {
-            background: rgba(0, 0, 0, 0.5);
-        }
-        > div {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
     }
 
     @media screen and (max-width: 850px) {
         #app,
         #app.reversed {
             flex-direction: column;
-        }
-        #canvasContainer {
-            flex-grow: 0;
-            flex-shrink: 1;
-            flex-basis: min(100vw, 50vh);
-            flex-direction: column-reverse;
-            > #mainCanvasContainer {
-                background-position: bottom right;
-            }
-        }
-        #sidebar {
-            min-width: unset;
-            width: 100%;
-            flex-grow: 1;
-            flex-shrink: 0;
-            min-height: 300px;
-            border-left: none;
-        }
-        #settingsModal {
-            width: calc(100% - 30px);
         }
     }
 </style>
@@ -355,6 +62,19 @@ import "../styles/tabs.css";
         --font-normal: "Roboto", sans-serif;
         --font-mono: "JetBrains Mono", monospace;
         --font-icons: "Material Symbols Outlined";
+
+        --sidebar-preferred-width: 800px;
+        --sidebar-min-width: 300px;
+        --sidebar-width: min(var(--sidebar-preferred-width), max(var(--sidebar-min-width), 50vw));
+
+        --canvas-height: 100%;
+        --sidebar-height: 100%;
+    }
+    @media screen and (max-width: 850px) {
+        :root {
+            --canvas-height: min(100vw, 45vh);
+            --sidebar-height: calc(100vh - var(--canvas-height));
+        }
     }
 
     @media (prefers-color-scheme: light) {

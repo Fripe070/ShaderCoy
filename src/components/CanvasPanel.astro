@@ -1,0 +1,114 @@
+---
+import "../styles/tabs.css";
+
+import GLCanvas from "./GLCanvas.astro";
+import ModelSelect from "./ModelSelect.astro";
+---
+
+<div id="canvas-container">
+    <div id="canvasControls" class="tab-bar">
+        <button class="tab square" id="pauseButton">
+            <span class="material-symbols-outlined pauseIcon">pause</span>
+            <span class="material-symbols-outlined playIcon">play_arrow</span>
+        </button>
+        <span id="performanceArea" class="tab mono">
+            <span id="milisecondsValue">0.00</span>ms&nbsp;(<span id="fpsValue">0</span>&nbsp;FPS)
+        </span>
+
+        <span class="push-right"></span>
+        <ModelSelect />
+        <button class="tab square" id="fullscreenButton">
+            <span class="material-symbols-outlined">fullscreen</span>
+        </button>
+        <script>
+            if (document.fullscreenEnabled === false) {
+                document.getElementById("fullscreenButton")?.classList.add("disabled");
+            }
+        </script>
+    </div>
+    <div id="main-canvas-body">
+        <GLCanvas id="mainCanvas" />
+    </div>
+</div>
+
+<script>
+    import { getMainCanvas } from "../scripts/util";
+
+    const canvas = getMainCanvas();
+
+    const fullscreenButton = document.getElementById("fullscreenButton") as HTMLButtonElement;
+    fullscreenButton.onclick = () => {
+        if (document.fullscreenElement) {
+            document.exitFullscreen();
+        } else {
+            canvas.requestFullscreen();
+        }
+    };
+    const pauseButton = document.getElementById("pauseButton") as HTMLButtonElement;
+    pauseButton.onclick = () => {
+        const shouldPause: boolean = canvas.getAttribute("data-paused") !== "true";
+        canvas.setAttribute("data-paused", shouldPause ? "true" : "false");
+        pauseButton.classList.toggle("is-paused", shouldPause);
+    };
+</script>
+
+<style>
+    #canvas-container {
+        --body-height: calc(var(--canvas-height) - var(--tab-height));
+
+        flex-grow: 1;
+        flex-shrink: 1;
+    }
+    #main-canvas-body {
+        height: var(--body-height);
+        position: relative;
+
+        background-color: var(--bg-dark);
+        background: repeating-conic-gradient(var(--bg-dark) 0 25%, var(--bg-normal) 0 50%) 50% /
+            20px 20px;
+        background-position: top right;
+    }
+
+    @media screen and (max-width: 850px) {
+        #canvas-container {
+            height: var(--canvas-height);
+            flex-direction: column-reverse;
+        }
+        #main-canvas-body {
+            background-position: bottom right;
+        }
+    }
+
+    #performanceArea {
+        user-select: text;
+        #milisecondsValue {
+            min-width: 5ch; /* Fixed width for alignment */
+            text-align: right; /* Align text to the right */
+        }
+    }
+
+    #pauseButton {
+        > * {
+            transition: opacity 0.2s ease-in-out;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+    }
+    #pauseButton > .pauseIcon {
+        opacity: 1;
+    }
+    #pauseButton > .playIcon {
+        opacity: 0;
+    }
+    #pauseButton.is-paused > .pauseIcon {
+        opacity: 0;
+    }
+    #pauseButton.is-paused > .playIcon {
+        opacity: 1;
+    }
+    #pauseButton.is-paused {
+        background-color: color-mix(in oklab, var(--bg-normal), #f55 20%);
+    }
+</style>
