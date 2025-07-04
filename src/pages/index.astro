@@ -48,8 +48,8 @@ import "../styles/tabs.css";
             <div id="sidebar">
                 <div class="tab-bar">
                     {/* TODO: Addm ore tabs for asset management */}
-                    <button class="tab">Fragment</button>
-                    <button class="tab">Vertex</button>
+                    <button class="tab sidebar-tab active">Fragment</button>
+                    <button class="tab sidebar-tab">Vertex</button>
 
                     <span class="push-right"></span>
                     <!-- Push following buttons to the right -->
@@ -58,8 +58,8 @@ import "../styles/tabs.css";
                     </label>
                     <input type="file" id="codeUploadButton" accept=".glsl,.frag,.fs" />
                     {/* Make it just show up in the sidebar instead of a modal */}
-                    <button class="tab square">
-                        <span class="material-symbols-outlined" id="settingsButton">settings</span>
+                    <button id="settingsButton" class="tab square material-symbols-outlined">
+                        settings
                     </button>
                 </div>
                 <div id="editor-container"></div>
@@ -234,8 +234,11 @@ import "../styles/tabs.css";
         flex-direction: column;
         min-width: var(--sidebar-width);
         border-left: 1px solid var(--bg-dark);
-        > .tab-bar > .tab:not(.active) {
+        .sidebar-tab:not(.active) {
             background: var(--bg-dark);
+        }
+        .sidebar-tab:not(.active):hover {
+            background: color-mix(in oklch, var(--bg-normal), var(--bg-dark));
         }
     }
     #editor-container {
