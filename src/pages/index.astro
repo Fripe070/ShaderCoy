@@ -218,12 +218,18 @@ import "../styles/tabs.css";
         }
     }
 
+    :root {
+        --sidebar-preferred-width: 600px;
+        --sidebar-min-width: 300px;
+        --sidebar-width: min(var(--sidebar-preferred-width), max(var(--sidebar-min-width), 50vw));
+    }
+
     #sidebar {
         flex-grow: 0;
         flex-shrink: 0;
         display: flex;
         flex-direction: column;
-        min-width: 600px;
+        min-width: var(--sidebar-width);
         border-left: 1px solid var(--bg-dark);
         > .tab-bar > .tab:not(.active) {
             background: var(--bg-dark);
@@ -298,7 +304,7 @@ import "../styles/tabs.css";
         }
     }
 
-    @media screen and (max-width: 800px) {
+    @media screen and (max-width: 850px) {
         #app,
         #app.reversed {
             flex-direction: column;
@@ -306,11 +312,11 @@ import "../styles/tabs.css";
         #canvasContainer {
             flex-grow: 0;
             flex-shrink: 1;
-            flex-basis: 100vw;
+            flex-basis: min(100vw, 50vh);
             flex-direction: column-reverse;
-        }
-        #mainCanvas {
-            background-position: bottom right;
+            > #mainCanvas {
+                background-position: bottom right;
+            }
         }
         #sidebar {
             min-width: unset;
@@ -379,6 +385,7 @@ import "../styles/tabs.css";
     body {
         font-family: var(--font-normal);
         color: var(--text);
+        background: var(--bg-normal);
     }
 
     .cm-editor * {
