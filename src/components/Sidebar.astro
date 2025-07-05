@@ -35,10 +35,10 @@ import TexturePanel from "./TexturePanel.astro";
 
         <span class="push-right"></span>
         <!-- Push following buttons to the right -->
-        <label for="codeUploadButton" class="tab square button">
+        <label id="codeUploadButton" for="codeUploadInput" class="tab square button">
             <span class="material-symbols-outlined">upload_file</span>
         </label>
-        <input type="file" id="codeUploadButton" accept=".glsl,.frag,.fs" />
+        <input type="file" id="codeUploadInput" accept=".glsl,.frag,.fs" />
 
         <button
             id="settings-button"
@@ -69,6 +69,7 @@ import TexturePanel from "./TexturePanel.astro";
     import defaultFragSource from "../scripts/shaders/defaultFrag";
     import defaultVertSource from "../scripts/shaders/defaultVert";
     import { GlCanvas } from "./GLCanvasScript";
+    import { imageConfig } from "astro:assets";
 
     type BufferId = "fragment" | "vertex";
 
@@ -86,6 +87,8 @@ import TexturePanel from "./TexturePanel.astro";
     const editorTabs = document.querySelectorAll(".editor-tab") as NodeListOf<HTMLElement>;
     const selectibleTabs = document.querySelectorAll(".selectible-tab") as NodeListOf<HTMLElement>;
     const tabBodies = document.querySelectorAll(".tab-body") as NodeListOf<HTMLElement>;
+    const codeUploadButton = document.getElementById("codeUploadButton") as HTMLInputElement;
+    const codeUploadInput = document.getElementById("codeUploadInput") as HTMLInputElement;
 
     const themeCompartment = new Compartment();
     const tabSizeCompartment = new Compartment();
@@ -138,6 +141,7 @@ import TexturePanel from "./TexturePanel.astro";
     selectibleTabs.forEach((tab) => {
         tab.addEventListener("click", () => {
             const tabBodyId = tab.dataset.tabBody;
+            codeUploadButton.classList.toggle("hidden", tabBodyId !== "tab-body-editor");
             if (!tabBodyId) {
                 console.error(`Editor tab ${tab.id} must have a valid data-tab-body attribute`);
                 return;
@@ -177,8 +181,7 @@ import TexturePanel from "./TexturePanel.astro";
         });
     });
 
-    const codeUploadButton = document.getElementById("codeUploadButton") as HTMLInputElement;
-    codeUploadButton.onchange = (event) => {
+    codeUploadInput.onchange = (event) => {
         const button = event.target as HTMLInputElement | null;
         if (!button?.files?.length) return;
         const file = button.files[0];
@@ -263,5 +266,9 @@ import TexturePanel from "./TexturePanel.astro";
             /* I prefer having the last line not be at the absolute bottom of my monitor */
             padding-bottom: 4em;
         }
+    }
+
+    .hidden {
+        display: none;
     }
 </style>
