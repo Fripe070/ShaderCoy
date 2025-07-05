@@ -20,30 +20,32 @@ import ModelSelect from "./ModelSelect.astro";
         <button class="tab square" id="fullscreenButton">
             <span class="material-symbols-outlined">fullscreen</span>
         </button>
-        <script>
-            if (document.fullscreenEnabled === false) {
-                document.getElementById("fullscreenButton")?.classList.add("disabled");
-            }
-        </script>
     </div>
     <div id="main-canvas-body">
-        <GLCanvas id="mainCanvas" />
+        <GLCanvas id="main-canvas" />
     </div>
 </div>
 
 <script>
-    import { getMainCanvas } from "../scripts/util";
+    import { getMainCanvas } from "../scripts/accessors.ts";
 
     const canvas = getMainCanvas();
 
     const fullscreenButton = document.getElementById("fullscreenButton") as HTMLButtonElement;
-    fullscreenButton.onclick = () => {
-        if (document.fullscreenElement) {
-            document.exitFullscreen();
-        } else {
-            canvas.requestFullscreen();
-        }
-    };
+    if (document.fullscreenEnabled === false) {
+        fullscreenButton.classList.add("disabled");
+    } else {
+        fullscreenButton.addEventListener("click", () => {
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            } else {
+                canvas.requestFullscreen().catch((err) => {
+                    console.error("Error attempting to enable full-screen mode:", err);
+                });
+            }
+        });
+    }
+
     const pauseButton = document.getElementById("pauseButton") as HTMLButtonElement;
     pauseButton.onclick = () => {
         const shouldPause: boolean = canvas.getAttribute("data-paused") !== "true";

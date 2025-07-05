@@ -49,6 +49,7 @@ import TexturePanel from "./TexturePanel.astro";
         </button>
     </div>
     <div id="sidebar-body">
+        <!-- TODO: Try fix getting stuck during tab navigation -->
         <div class="tab-body active" id="tab-body-editor" data-current-buffer="fragment"></div>
         <div class="tab-body" id="tab-body-texture"><TexturePanel /></div>
         <div class="tab-body" id="tab-body-settings"><SettingsPanel /></div>
@@ -63,10 +64,28 @@ import TexturePanel from "./TexturePanel.astro";
     import { oneDarkHighlightStyle, oneDarkTheme } from "@codemirror/theme-one-dark";
     import { basicSetup } from "codemirror";
     import { glsl } from "codemirror-lang-glsl";
-    import { getMainCanvas } from "../scripts/util";
+    import { getMainCanvas } from "../scripts/accessors";
 
     import defaultFragSource from "../scripts/shaders/defaultFrag";
     import defaultVertSource from "../scripts/shaders/defaultVert";
+    import { GlCanvas } from "./GLCanvasScript";
+
+    type BufferId = "fragment" | "vertex";
+
+    const editorContentBuffers: Record<BufferId, string> = {
+        fragment: defaultFragSource,
+        vertex: defaultVertSource,
+    };
+    const bufferCanvasMap: Record<BufferId, string> = {
+        fragment: GlCanvas.FRAG_ATTR_KEY,
+        vertex: GlCanvas.VERT_ATTR_KEY,
+    };
+
+    const canvas = getMainCanvas();
+    const editorTabBody = document.getElementById("tab-body-editor")!;
+    const editorTabs = document.querySelectorAll(".editor-tab") as NodeListOf<HTMLElement>;
+    const selectibleTabs = document.querySelectorAll(".selectible-tab") as NodeListOf<HTMLElement>;
+    const tabBodies = document.querySelectorAll(".tab-body") as NodeListOf<HTMLElement>;
 
     const themeCompartment = new Compartment();
     const tabSizeCompartment = new Compartment();
@@ -87,7 +106,14 @@ import TexturePanel from "./TexturePanel.astro";
             EditorView.updateListener.of((update) => {
                 if (update.docChanged) {
                     const newCode = update.state.doc.toString();
-                    // canvas.setAttribute("data-glsl", newCode);
+                    if (!canvas) {
+                        console.error("No canvas found");
+                        return;
+                    }
+                    // Update canvas attributes based on the current buffer
+                    const currentBuffer = editorTabBody.dataset.currentBuffer as BufferId;
+                    canvas.setAttribute(bufferCanvasMap[currentBuffer], newCode);
+                    editorContentBuffers[currentBuffer] = newCode;
                 }
             }),
         ],
@@ -109,8 +135,6 @@ import TexturePanel from "./TexturePanel.astro";
     //     ),
     // });
 
-    const selectibleTabs = document.querySelectorAll(".selectible-tab") as NodeListOf<HTMLElement>;
-    const tabBodies = document.querySelectorAll(".tab-body") as NodeListOf<HTMLElement>;
     selectibleTabs.forEach((tab) => {
         tab.addEventListener("click", () => {
             const tabBodyId = tab.dataset.tabBody;
@@ -130,23 +154,19 @@ import TexturePanel from "./TexturePanel.astro";
         });
     });
 
-    const editorTabBody = document.getElementById("tab-body-editor")!;
-    const editorContentBuffers: Record<string, string> = {
-        fragment: defaultFragSource,
-        vertex: defaultVertSource,
-    };
-    const editorTabs = document.querySelectorAll(".editor-tab") as NodeListOf<HTMLElement>;
     editorTabs.forEach((tab) => {
         tab.addEventListener("click", () => {
-            const bufferId = tab.dataset.buffer;
-            if (!bufferId) {
+            const newBufferId = tab.dataset.buffer as BufferId | undefined;
+            if (!newBufferId) {
                 console.error(`Editor tab ${tab.id} must have a valid data-buffer attribute`);
                 return;
             }
-            const editorCurrentBuffer = editorTabBody.dataset.currentBuffer!;
-            const code = editorContentBuffers[bufferId];
+            const oldBuffer = editorTabBody.dataset.currentBuffer as BufferId;
+            const code = editorContentBuffers[newBufferId];
 
-            editorContentBuffers[editorCurrentBuffer] = view.state.doc.toString();
+            editorContentBuffers[oldBuffer] = view.state.doc.toString();
+
+            editorTabBody.dataset.currentBuffer = newBufferId;
             view.dispatch({
                 changes: {
                     from: 0,
@@ -154,7 +174,6 @@ import TexturePanel from "./TexturePanel.astro";
                     insert: code,
                 },
             });
-            editorTabBody.dataset.currentBuffer = bufferId;
         });
     });
 

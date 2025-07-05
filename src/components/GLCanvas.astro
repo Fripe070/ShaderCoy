@@ -5,6 +5,7 @@ interface Props {
 }
 const { id, ...extraProps } = Astro.props;
 import defaultFragSource from "../scripts/shaders/defaultFrag";
+import defaultVertSource from "../scripts/shaders/defaultVert";
 ---
 
 <canvas
@@ -13,8 +14,10 @@ import defaultFragSource from "../scripts/shaders/defaultFrag";
     class="gl-canvas"
     data-paused="false"
     data-use-model="false"
-    data-glsl={defaultFragSource}
+    data-vertex={defaultVertSource}
+    data-fragment={defaultFragSource}
     {...extraProps}></canvas>
+<div class="gl-canvas-error" id={id + "-error-reporter"}></div>
 
 <script>
     import { GlCanvas } from "./GLCanvasScript";
@@ -29,15 +32,37 @@ import defaultFragSource from "../scripts/shaders/defaultFrag";
         width: 100%;
         height: 100%;
     }
+    .gl-canvas-error {
+        display: none; /* Overriden by JS */
 
+        position: absolute;
+        --margin: 10px;
+        --padding: 10px;
+
+        top: var(--margin);
+        right: var(--margin);
+        max-width: calc(100% - var(--margin) * 2);
+        max-height: min(400px, calc(100% - var(--margin) * 2));
+        padding: var(--padding);
+        overflow: auto;
+        word-wrap: break-word;
+
+        background-color: #200c;
+        border: 1px solid red;
+    }
+</style>
+
+<style is:global>
     .unsupported-gl {
+        height: 100%;
+        width: 100%;
+        background-color: #a002;
         color: red;
         font-size: 48px;
         font-weight: bold;
         text-align: center;
-        display: flex !important;
-        justify-content: center;
-        align-items: center;
         word-wrap: break-word;
+        display: flex;
+        align-items: center;
     }
 </style>
