@@ -1,13 +1,6 @@
 ---
 import defaultFragSource from "../scripts/shaders/defaultFrag";
 import defaultVertSource from "../scripts/shaders/defaultVert";
-
-export type ShaderPair = {
-    vert: string;
-    frag: string;
-};
-export const VERT_ATTR_KEY: string = "data-vertex";
-export const FRAG_ATTR_KEY: string = "data-fragment";
 ---
 
 <canvas
@@ -20,245 +13,24 @@ export const FRAG_ATTR_KEY: string = "data-fragment";
 
 <script>
     import {
-        getShaderInfo,
-        loadFragmentShader,
-        loadVertexShader,
-        type ShaderInfo,
-        type ShaderStage,
-    } from "../scripts/3d/shader";
-    import { ShaderError, UserError } from "../scripts/errors";
-    import { type ShaderPair } from "./GLCanvas.astro";
-    import defaultFragSource from "../scripts/shaders/defaultFrag";
-    import defaultVertSource from "../scripts/shaders/defaultVert";
-    const VERT_ATTR_KEY: string = "data-vertex";
-    const FRAG_ATTR_KEY: string = "data-fragment";
+        OpenGLCanvas,
+        ErrorReporter,
+        openGlCanvasState,
+    } from "../scripts/rendering/OpenGLCanvas";
 
-    export class GlCanvas {
-        private gl: WebGLRenderingContext | null = null;
-        private shaderProgram: WebGLProgram | null = null;
-        private shaderInfo: ShaderInfo | null = null;
-
-        private currentVert: string = defaultVertSource;
-        private currentFrag: string = defaultFragSource;
-
-        private runTime: number = 0;
-        private frameCount: bigint = 0n;
-
-        constructor(
-            private readonly canvas: HTMLCanvasElement,
-            private readonly errorReporter: HTMLElement,
-        ) {
-            const anchorElement = this.canvas.parentElement!;
-            const resizeObserver = new ResizeObserver(() => {
-                const dpr = window.devicePixelRatio || 1;
-                const rect = anchorElement.getBoundingClientRect();
-
-                this.canvas.width = Math.floor(rect.width * dpr);
-                this.canvas.height = Math.floor(rect.height * dpr);
-            });
-            resizeObserver.observe(anchorElement);
-
-            this.gl = this.canvas.getContext("webgl2");
-            // TODO: Add some mode to toggle between WebGL1 and WebGL2 and fallback with a warning.
-            // TODO: (req for above) Implement a more robust error reporting system that supports temporary errors/warnings
-            if (!this.gl) {
-                this.reportError(
-                    new UserError(
-                        "This site will not function as your system or browser does not support WebGL 2.0. " +
-                            "\nWhile support for WebGL 1.0 is planned, it is not yet implemented. " +
-                            "\nIn the meantime, please upgrade or switch to a modern browser. ",
-                    ),
-                );
-                return;
-            }
-
-            // Initialize WebGL context or any other setup
-            this.setupGL(this.gl);
-            this.updateShader({
-                vert: this.currentVert,
-                frag: this.currentFrag,
-            });
-
-            const observer = new MutationObserver((mutationList) => {
-                for (const mutation of mutationList) {
-                    if (mutation.type !== "attributes") continue;
-                    if (!mutation.attributeName) continue;
-                    if (![VERT_ATTR_KEY, FRAG_ATTR_KEY].includes(mutation.attributeName)) continue;
-
-                    const newValue: string = (
-                        this.canvas.getAttribute(mutation.attributeName) || ""
-                    ).trim();
-
-                    switch (mutation.attributeName) {
-                        case VERT_ATTR_KEY:
-                            if (newValue === this.currentVert) continue;
-                            this.currentVert = newValue;
-                            break;
-                        case FRAG_ATTR_KEY:
-                            if (newValue === this.currentFrag) continue;
-                            this.currentFrag = newValue;
-                            break;
-                        default:
-                            console.error(
-                                `Unexpected attribute mutation: ${mutation.attributeName}`,
-                            );
-                            continue;
-                    }
-
-                    if (this.gl) {
-                        this.updateShader({
-                            vert: this.currentVert,
-                            frag: this.currentFrag,
-                        });
-                    }
-                }
-            });
-            observer.observe(this.canvas, {
-                attributes: true,
-                attributeFilter: [VERT_ATTR_KEY, FRAG_ATTR_KEY],
-            });
-        }
-
-        setupGL(glCtx: WebGLRenderingContext): void {
-            glCtx.clearColor(0.0, 0.0, 0.0, 0.0);
-            glCtx.clear(glCtx.COLOR_BUFFER_BIT | glCtx.DEPTH_BUFFER_BIT);
-
-            glCtx.enable(glCtx.DEPTH_TEST);
-            glCtx.depthFunc(glCtx.LEQUAL);
-
-            glCtx.viewport(0, 0, this.canvas.width, this.canvas.height);
-        }
-
-        updateShader(shaderPair: ShaderPair): void {
-            this.reportError(null);
-
-            if (!this.gl) {
-                console.warn("WebGL context not initialized.");
-                return;
-            }
-            if (!shaderPair || !shaderPair.frag || !shaderPair.vert) {
-                console.warn("No shader code provided.");
-                this.shaderProgram = null;
-                this.shaderInfo = null;
-                return;
-            }
-            let vertexShader: WebGLShader | null = null;
-            let fragmentShader: WebGLShader | null = null;
-
-            console.log("Updating shaders");
-
-            try {
-                vertexShader = loadVertexShader(this.gl, shaderPair.vert);
-                fragmentShader = loadFragmentShader(this.gl, shaderPair.frag);
-            } catch (error) {
-                this.reportError(error);
-                return;
-            }
-
-            const shaderProgram = this.gl.createProgram();
-            this.gl.attachShader(shaderProgram, vertexShader);
-            this.gl.attachShader(shaderProgram, fragmentShader);
-            this.gl.linkProgram(shaderProgram);
-            if (!this.gl.getProgramParameter(shaderProgram, this.gl.LINK_STATUS)) {
-                alert(
-                    "Unable to initialize the shader program: " +
-                        this.gl.getProgramInfoLog(shaderProgram),
-                );
-            }
-
-            this.gl.useProgram(shaderProgram);
-            if (this.shaderProgram) {
-                this.gl.deleteProgram(this.shaderProgram);
-                this.shaderProgram = null;
-            }
-            this.shaderProgram = shaderProgram;
-            this.shaderInfo = getShaderInfo(this.gl, shaderProgram);
-            // TODO: Populate shaderdata
-
-            console.log("Shader program loaded successfully.");
-        }
-
-        render(deltaTime: number): void {
-            if (!this.gl || !this.shaderProgram) {
-                console.warn("WebGL context or shader program not initialized.");
-                return;
-            }
-            if (this.isPaused) {
-                return;
-            }
-
-            this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
-            this.gl.useProgram(this.shaderProgram);
-
-            // TODO: Draw the scene
-
-            this.runTime += deltaTime;
-            this.frameCount++;
-        }
-
-        reportError(error: unknown | null): void {
-            if (!this.errorReporter) {
-                console.error("Error reporter element not found");
-                return;
-            }
-            this.errorReporter.innerHTML = "";
-            this.errorReporter.style.display = "none";
-            if (!error) return;
-            this.errorReporter.style.display = "block";
-
-            if (!(error instanceof UserError)) {
-                console.error(error);
-                this.errorReporter.innerHTML = /* html */ `
-                <h3>Error!</h3>
-                <p>An unexpected error occurred. Please check the console for details.</p>
-            `;
-                return;
-            }
-
-            const shaderStageMapping: Record<ShaderStage, string> = {
-                [WebGLRenderingContext.VERTEX_SHADER]: "Vertex",
-                [WebGLRenderingContext.FRAGMENT_SHADER]: "Fragment",
-            };
-
-            const header = document.createElement("h3");
-            if (error instanceof ShaderError) {
-                header.textContent = `${shaderStageMapping[error.shaderType]} Shader Error`;
-            } else {
-                header.textContent = "Error";
-            }
-            this.errorReporter.appendChild(header);
-            const message = document.createElement("pre");
-            message.textContent = error.message;
-            this.errorReporter.appendChild(message);
-
-            throw error; // Re-throw the error to propagate it up
-        }
-
-        // TODO: Oh god I am going to have to support orbiting or some sort of model navigation
-
-        get isPaused(): boolean {
-            return this.canvas.dataset.paused === "true";
-        }
-        set isPaused(value: boolean) {
-            this.canvas.dataset.paused = value ? "true" : "false";
-        }
-        get isModel(): boolean {
-            return this.canvas.dataset.useModel === "true";
-        }
-        set isModel(value: boolean) {
-            this.canvas.dataset.useModel = value ? "true" : "false";
-        }
-    }
-
-    const glCanvas = document.getElementById("gl-canvas") as HTMLCanvasElement;
-    if (!glCanvas) {
-        throw new Error("GLCanvas element not found");
-    }
-    const errorReporter = document.getElementById("gl-canvas-error");
-    if (!errorReporter) {
+    const errorElement = document.getElementById("gl-canvas-error");
+    if (!errorElement) {
         throw new Error("Error reporter element not found");
     }
-    const glCanvasInstance = new GlCanvas(glCanvas, errorReporter);
+    const canvasElement = document.getElementById("gl-canvas") as HTMLCanvasElement;
+    if (!canvasElement) {
+        throw new Error("OpenGL canvas element not found");
+    }
+
+    const errorReporter = new ErrorReporter(errorElement);
+    const glCanvasInstance = new OpenGLCanvas(canvasElement, errorReporter);
+    openGlCanvasState.openGLCanvas = glCanvasInstance;
+    openGlCanvasState.errorReporter = errorReporter;
 
     let lastTime: DOMHighResTimeStamp = performance.now();
     function frameCallback(time: DOMHighResTimeStamp): void {

@@ -27,14 +27,14 @@ import ModelSelect from "./ModelSelect.astro";
 </div>
 
 <script>
-    import { getMainCanvas } from "../scripts/accessors.ts";
+    import applicationState from "../scripts/state";
 
     const canvasContainer = document.getElementById("main-canvas-body")!;
-    const canvas = getMainCanvas();
+    const canvas = applicationState.openGLCanvas;
 
     const fullscreenButton = document.getElementById("fullscreenButton") as HTMLButtonElement;
     if (document.fullscreenEnabled === false) {
-        fullscreenButton.classList.add("disabled");
+        fullscreenButton.style.display = "none";
     } else {
         fullscreenButton.addEventListener("click", () => {
             if (document.fullscreenElement) {
@@ -49,9 +49,9 @@ import ModelSelect from "./ModelSelect.astro";
 
     const pauseButton = document.getElementById("pauseButton") as HTMLButtonElement;
     pauseButton.onclick = () => {
-        const shouldPause: boolean = canvas.getAttribute("data-paused") !== "true";
-        canvas.setAttribute("data-paused", shouldPause ? "true" : "false");
+        const shouldPause: boolean = !canvas?.isPaused;
         pauseButton.classList.toggle("is-paused", shouldPause);
+        if (canvas) canvas.isPaused = !shouldPause;
     };
 </script>
 

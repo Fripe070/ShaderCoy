@@ -7,12 +7,19 @@ export class UserError extends Error {
     }
 }
 
-export class ShaderError extends UserError {
+export class ShaderCompileError extends UserError {
     constructor(
         public readonly shaderType: ShaderStage,
         message: string,
     ) {
         super(message);
         this.name = "ShaderError";
+    }
+}
+
+export class ShaderLinkError extends UserError {
+    constructor(message: string) {
+        super(message);
+        this.name = "ShaderLinkError";
     }
 }
