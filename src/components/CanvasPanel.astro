@@ -29,6 +29,7 @@ import ModelSelect from "./ModelSelect.astro";
 <script>
     import { getMainCanvas } from "../scripts/accessors.ts";
 
+    const canvasContainer = document.getElementById("main-canvas-body")!;
     const canvas = getMainCanvas();
 
     const fullscreenButton = document.getElementById("fullscreenButton") as HTMLButtonElement;
@@ -39,7 +40,7 @@ import ModelSelect from "./ModelSelect.astro";
             if (document.fullscreenElement) {
                 document.exitFullscreen();
             } else {
-                canvas.requestFullscreen().catch((err) => {
+                canvasContainer.requestFullscreen().catch((err) => {
                     console.error("Error attempting to enable full-screen mode:", err);
                 });
             }
