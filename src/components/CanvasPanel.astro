@@ -30,7 +30,7 @@ import ModelSelect from "./ModelSelect.astro";
     import applicationState from "../scripts/state";
 
     const canvasContainer = document.getElementById("main-canvas-body")!;
-    const canvas = applicationState.openGLCanvas;
+    const openGLCanvas = applicationState.openGLCanvas;
 
     const fullscreenButton = document.getElementById("fullscreenButton") as HTMLButtonElement;
     if (document.fullscreenEnabled === false) {
@@ -49,9 +49,9 @@ import ModelSelect from "./ModelSelect.astro";
 
     const pauseButton = document.getElementById("pauseButton") as HTMLButtonElement;
     pauseButton.onclick = () => {
-        const shouldPause: boolean = !canvas?.isPaused;
+        const shouldPause: boolean = !openGLCanvas?.isPaused;
         pauseButton.classList.toggle("is-paused", shouldPause);
-        if (canvas) canvas.isPaused = !shouldPause;
+        if (openGLCanvas) openGLCanvas.isPaused = !shouldPause;
     };
 </script>
 

@@ -15,8 +15,8 @@ import defaultVertSource from "../scripts/shaders/defaultVert";
     import {
         OpenGLCanvas,
         ErrorReporter,
-        openGlCanvasState,
     } from "../scripts/rendering/OpenGLCanvas";
+import applicationState from "../scripts/state";
 
     const errorElement = document.getElementById("gl-canvas-error");
     if (!errorElement) {
@@ -29,8 +29,8 @@ import defaultVertSource from "../scripts/shaders/defaultVert";
 
     const errorReporter = new ErrorReporter(errorElement);
     const glCanvasInstance = new OpenGLCanvas(canvasElement, errorReporter);
-    openGlCanvasState.openGLCanvas = glCanvasInstance;
-    openGlCanvasState.errorReporter = errorReporter;
+    applicationState.openGLCanvas = glCanvasInstance;
+    applicationState.errorReporter = errorReporter;
 
     let lastTime: DOMHighResTimeStamp = performance.now();
     function frameCallback(time: DOMHighResTimeStamp): void {
