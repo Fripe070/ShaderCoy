@@ -12,11 +12,8 @@ import defaultVertSource from "../scripts/shaders/defaultVert";
 <div id="gl-canvas-error"></div>
 
 <script>
-    import {
-        OpenGLCanvas,
-        ErrorReporter,
-    } from "../scripts/rendering/OpenGLCanvas";
-import applicationState from "../scripts/state";
+    import { OpenGLCanvas, ErrorReporter } from "../scripts/rendering/OpenGLCanvas";
+    import applicationState from "../scripts/state";
 
     const errorElement = document.getElementById("gl-canvas-error");
     if (!errorElement) {
