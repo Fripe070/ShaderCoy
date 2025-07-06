@@ -41,7 +41,8 @@ export const FRAG_ATTR_KEY: string = "data-fragment";
         private currentVert: string = defaultVertSource;
         private currentFrag: string = defaultFragSource;
 
-        private frameCount: number = 0;
+        private runTime: number = 0;
+        private frameCount: bigint = 0n;
 
         constructor(
             private readonly canvas: HTMLCanvasElement,
@@ -177,7 +178,7 @@ export const FRAG_ATTR_KEY: string = "data-fragment";
             console.log("Shader program loaded successfully.");
         }
 
-        render(): void {
+        render(deltaTime: number): void {
             if (!this.gl || !this.shaderProgram) {
                 console.warn("WebGL context or shader program not initialized.");
                 return;
@@ -190,6 +191,8 @@ export const FRAG_ATTR_KEY: string = "data-fragment";
             this.gl.useProgram(this.shaderProgram);
 
             // TODO: Draw the scene
+
+            this.runTime += deltaTime;
             this.frameCount++;
         }
 
@@ -257,8 +260,12 @@ export const FRAG_ATTR_KEY: string = "data-fragment";
     }
     const glCanvasInstance = new GlCanvas(glCanvas, errorReporter);
 
-    function frameCallback() {
-        glCanvasInstance.render();
+    let lastTime: DOMHighResTimeStamp = performance.now();
+    function frameCallback(time: DOMHighResTimeStamp): void {
+        const deltaTime: number = (time - lastTime) / 1000;
+        lastTime = time;
+
+        glCanvasInstance.render(deltaTime);
         window.requestAnimationFrame(frameCallback);
     }
     window.requestAnimationFrame(frameCallback);
@@ -286,6 +293,9 @@ export const FRAG_ATTR_KEY: string = "data-fragment";
         padding: var(--padding);
         overflow: auto;
         word-wrap: break-word;
+        > pre {
+            text-wrap: auto;
+        }
 
         background-color: #200c;
         border: 1px solid red;
