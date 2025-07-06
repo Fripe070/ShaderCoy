@@ -15,8 +15,10 @@ import "../styles/tabs.css";
         <title>ShaderCoy</title>
         <meta name="description" content="ShaderCoy is a web-based shader editor and viewer." />
         <meta name="generator" content={Astro.generator} />
-        <meta name="theme-color" content="#282c34" />
+
         <meta name="color-scheme" content="dark light" />
+        <meta name="theme-color" content="#282c34" media="(prefers-color-scheme: dark)" />
+        <meta name="theme-color" content="#fafafa" media="(prefers-color-scheme: light)" />
     </head>
     <body>
         {/* TODO: allow toggling class="reversed" in settings */}
