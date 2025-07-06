@@ -1,3 +1,3 @@
 export function getMainCanvas(): HTMLCanvasElement {
-    return document.getElementById("main-canvas")! as HTMLCanvasElement;
+    return document.getElementById("gl-canvas")! as HTMLCanvasElement;
 }

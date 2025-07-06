@@ -1,6 +1,11 @@
 import type { ShaderStage } from "./3d/shader";
 
-export class UserError extends Error {}
+export class UserError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = "UserError";
+    }
+}
 
 export class ShaderError extends UserError {
     constructor(
@@ -8,5 +13,6 @@ export class ShaderError extends UserError {
         message: string,
     ) {
         super(message);
+        this.name = "ShaderError";
     }
 }

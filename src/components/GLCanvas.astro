@@ -1,9 +1,4 @@
 ---
-interface Props {
-    id: string;
-    [key: string]: unknown;
-}
-const { id, ...extraProps } = Astro.props;
 import defaultFragSource from "../scripts/shaders/defaultFrag";
 import defaultVertSource from "../scripts/shaders/defaultVert";
 
@@ -16,20 +11,14 @@ export const FRAG_ATTR_KEY: string = "data-fragment";
 ---
 
 <canvas
-    is="gl-canvas"
-    id={id}
-    class="gl-canvas"
+    id="gl-canvas"
     data-paused="false"
     data-use-model="false"
     data-vertex={defaultVertSource}
-    data-fragment={defaultFragSource}
-    {...extraProps}></canvas>
-<div class="gl-canvas-error" id={id + "-error-reporter"}></div>
+    data-fragment={defaultFragSource}></canvas>
+<div id="gl-canvas-error"></div>
 
 <script>
-    import defaultFragSource from "../scripts/shaders/defaultFrag";
-    import defaultVertSource from "../scripts/shaders/defaultVert";
-
     import {
         getShaderInfo,
         loadFragmentShader,
@@ -37,15 +26,14 @@ export const FRAG_ATTR_KEY: string = "data-fragment";
         type ShaderInfo,
         type ShaderStage,
     } from "../scripts/3d/shader";
-
     import { ShaderError, UserError } from "../scripts/errors";
-    import { VERT_ATTR_KEY, FRAG_ATTR_KEY, type ShaderPair } from "./GLCanvas.astro";
+    import { type ShaderPair } from "./GLCanvas.astro";
+    import defaultFragSource from "../scripts/shaders/defaultFrag";
+    import defaultVertSource from "../scripts/shaders/defaultVert";
+    const VERT_ATTR_KEY: string = "data-vertex";
+    const FRAG_ATTR_KEY: string = "data-fragment";
 
-    export class GlCanvas extends HTMLCanvasElement {
-        static get observedAttributes(): string[] {
-            return [VERT_ATTR_KEY, FRAG_ATTR_KEY];
-        }
-
+    export class GlCanvas {
         private gl: WebGLRenderingContext | null = null;
         private shaderProgram: WebGLProgram | null = null;
         private shaderInfo: ShaderInfo | null = null;
@@ -53,31 +41,23 @@ export const FRAG_ATTR_KEY: string = "data-fragment";
         private currentVert: string = defaultVertSource;
         private currentFrag: string = defaultFragSource;
 
-        private errorReporter: HTMLElement | null = null;
+        private frameCount: number = 0;
 
-        constructor() {
-            super();
-        }
-
-        connectedCallback() {
-            this.errorReporter = document.getElementById(`${this.id}-error-reporter`);
-            if (!this.errorReporter) {
-                console.error("Error reporter element not found");
-            }
-
-            // This is insane but I was going mad trying to make the stupid element not push on its parents
-            const anchorElement = this.parentElement!;
+        constructor(
+            private readonly canvas: HTMLCanvasElement,
+            private readonly errorReporter: HTMLElement,
+        ) {
+            const anchorElement = this.canvas.parentElement!;
             const resizeObserver = new ResizeObserver(() => {
                 const dpr = window.devicePixelRatio || 1;
                 const rect = anchorElement.getBoundingClientRect();
 
-                this.width = Math.floor(rect.width * dpr);
-                this.height = Math.floor(rect.height * dpr);
+                this.canvas.width = Math.floor(rect.width * dpr);
+                this.canvas.height = Math.floor(rect.height * dpr);
             });
             resizeObserver.observe(anchorElement);
 
-            // Initialize WebGL context or any other setup
-            this.gl = this.getContext("webgl2");
+            this.gl = this.canvas.getContext("webgl2");
             // TODO: Add some mode to toggle between WebGL1 and WebGL2 and fallback with a warning.
             // TODO: (req for above) Implement a more robust error reporting system that supports temporary errors/warnings
             if (!this.gl) {
@@ -91,52 +71,61 @@ export const FRAG_ATTR_KEY: string = "data-fragment";
                 return;
             }
 
+            // Initialize WebGL context or any other setup
             this.setupGL(this.gl);
             this.updateShader({
                 vert: this.currentVert,
                 frag: this.currentFrag,
             });
-        }
 
-        attributeChangedCallback(
-            name: string,
-            oldValue: string | null,
-            newValue: string | null,
-        ): void {
-            if (oldValue?.trim() === newValue?.trim()) return;
-            switch (name) {
-                case VERT_ATTR_KEY:
-                    this.currentVert = (newValue || "").trim();
-                    if (this.isConnected && this.gl) {
+            const observer = new MutationObserver((mutationList) => {
+                for (const mutation of mutationList) {
+                    if (mutation.type !== "attributes") continue;
+                    if (!mutation.attributeName) continue;
+                    if (![VERT_ATTR_KEY, FRAG_ATTR_KEY].includes(mutation.attributeName)) continue;
+
+                    const newValue: string = (
+                        this.canvas.getAttribute(mutation.attributeName) || ""
+                    ).trim();
+
+                    switch (mutation.attributeName) {
+                        case VERT_ATTR_KEY:
+                            if (newValue === this.currentVert) continue;
+                            this.currentVert = newValue;
+                            break;
+                        case FRAG_ATTR_KEY:
+                            if (newValue === this.currentFrag) continue;
+                            this.currentFrag = newValue;
+                            break;
+                        default:
+                            console.error(
+                                `Unexpected attribute mutation: ${mutation.attributeName}`,
+                            );
+                            continue;
+                    }
+
+                    if (this.gl) {
                         this.updateShader({
                             vert: this.currentVert,
                             frag: this.currentFrag,
                         });
                     }
-                    break;
-                case FRAG_ATTR_KEY:
-                    this.currentFrag = (newValue || "").trim();
-                    if (this.isConnected && this.gl) {
-                        this.updateShader({
-                            vert: this.currentVert,
-                            frag: this.currentFrag,
-                        });
-                    }
-                    break;
-                default:
-                    console.debug(`Unhandled attribute change: ${name}`);
-                    break;
-            }
+                }
+            });
+            observer.observe(this.canvas, {
+                attributes: true,
+                attributeFilter: [VERT_ATTR_KEY, FRAG_ATTR_KEY],
+            });
         }
 
         setupGL(glCtx: WebGLRenderingContext): void {
-            glCtx.clearColor(0.0, 0.0, 0.0, 1.0);
+            glCtx.clearColor(0.0, 0.0, 0.0, 0.0);
             glCtx.clear(glCtx.COLOR_BUFFER_BIT | glCtx.DEPTH_BUFFER_BIT);
 
             glCtx.enable(glCtx.DEPTH_TEST);
             glCtx.depthFunc(glCtx.LEQUAL);
 
-            glCtx.viewport(0, 0, this.width, this.height);
+            glCtx.viewport(0, 0, this.canvas.width, this.canvas.height);
         }
 
         updateShader(shaderPair: ShaderPair): void {
@@ -155,7 +144,7 @@ export const FRAG_ATTR_KEY: string = "data-fragment";
             let vertexShader: WebGLShader | null = null;
             let fragmentShader: WebGLShader | null = null;
 
-            console.log(shaderPair);
+            console.log("Updating shaders");
 
             try {
                 vertexShader = loadVertexShader(this.gl, shaderPair.vert);
@@ -193,11 +182,15 @@ export const FRAG_ATTR_KEY: string = "data-fragment";
                 console.warn("WebGL context or shader program not initialized.");
                 return;
             }
+            if (this.isPaused) {
+                return;
+            }
 
-            this.gl.clear(this.gl.COLOR_BUFFER_BIT);
+            this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
             this.gl.useProgram(this.shaderProgram);
 
-            this.gl.drawArrays(this.gl.TRIANGLES, 0, 3);
+            // TODO: Draw the scene
+            this.frameCount++;
         }
 
         reportError(error: unknown | null): void {
@@ -241,30 +234,45 @@ export const FRAG_ATTR_KEY: string = "data-fragment";
         // TODO: Oh god I am going to have to support orbiting or some sort of model navigation
 
         get isPaused(): boolean {
-            return this.dataset.paused === "true";
+            return this.canvas.dataset.paused === "true";
         }
         set isPaused(value: boolean) {
-            this.dataset.paused = value ? "true" : "false";
+            this.canvas.dataset.paused = value ? "true" : "false";
         }
         get isModel(): boolean {
-            return this.dataset.useModel === "true";
+            return this.canvas.dataset.useModel === "true";
         }
         set isModel(value: boolean) {
-            this.dataset.useModel = value ? "true" : "false";
+            this.canvas.dataset.useModel = value ? "true" : "false";
         }
     }
-    customElements.define("gl-canvas", GlCanvas, { extends: "canvas" });
+
+    const glCanvas = document.getElementById("gl-canvas") as HTMLCanvasElement;
+    if (!glCanvas) {
+        throw new Error("GLCanvas element not found");
+    }
+    const errorReporter = document.getElementById("gl-canvas-error");
+    if (!errorReporter) {
+        throw new Error("Error reporter element not found");
+    }
+    const glCanvasInstance = new GlCanvas(glCanvas, errorReporter);
+
+    function frameCallback() {
+        glCanvasInstance.render();
+        window.requestAnimationFrame(frameCallback);
+    }
+    window.requestAnimationFrame(frameCallback);
 </script>
 
 <style>
-    .gl-canvas {
+    #gl-canvas {
         position: absolute;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
     }
-    .gl-canvas-error {
+    #gl-canvas-error {
         display: none; /* Overriden by JS */
 
         position: absolute;
@@ -281,20 +289,5 @@ export const FRAG_ATTR_KEY: string = "data-fragment";
 
         background-color: #200c;
         border: 1px solid red;
-    }
-</style>
-
-<style is:global>
-    .unsupported-gl {
-        height: 100%;
-        width: 100%;
-        background-color: #a002;
-        color: red;
-        font-size: 48px;
-        font-weight: bold;
-        text-align: center;
-        word-wrap: break-word;
-        display: flex;
-        align-items: center;
     }
 </style>
