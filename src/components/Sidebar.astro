@@ -68,8 +68,7 @@ import TexturePanel from "./TexturePanel.astro";
 
     import defaultFragSource from "../scripts/shaders/defaultFrag";
     import defaultVertSource from "../scripts/shaders/defaultVert";
-    import { GlCanvas } from "./GLCanvasScript";
-    import { imageConfig } from "astro:assets";
+    import { FRAG_ATTR_KEY, VERT_ATTR_KEY } from "./GLCanvas.astro";
 
     type BufferId = "fragment" | "vertex";
 
@@ -78,8 +77,8 @@ import TexturePanel from "./TexturePanel.astro";
         vertex: defaultVertSource,
     };
     const bufferCanvasMap: Record<BufferId, string> = {
-        fragment: GlCanvas.FRAG_ATTR_KEY,
-        vertex: GlCanvas.VERT_ATTR_KEY,
+        fragment: FRAG_ATTR_KEY,
+        vertex: VERT_ATTR_KEY,
     };
 
     const canvas = getMainCanvas();

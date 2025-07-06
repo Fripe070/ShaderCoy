@@ -1,5 +1,3 @@
-import type { GlCanvas } from "../components/GLCanvasScript";
-
-export function getMainCanvas(): GlCanvas {
-    return document.getElementById("main-canvas")! as GlCanvas;
+export function getMainCanvas(): HTMLCanvasElement {
+    return document.getElementById("main-canvas")! as HTMLCanvasElement;
 }
