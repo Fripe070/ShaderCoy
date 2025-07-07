@@ -1,3 +1,4 @@
+import { cubeMesh, initMeshBuffers, type Mesh, type MeshBuffers } from "../3d/models";
 import {
     createShaderProgram,
     getShaderInfo,
@@ -12,7 +13,7 @@ import defaultVertSource from "../shaders/defaultVert";
 export const VERT_ATTR_KEY: string = "data-vertex";
 export const FRAG_ATTR_KEY: string = "data-fragment";
 
-type WebGLCtx = WebGLRenderingContext | WebGL2RenderingContext;
+export type WebGLCtx = WebGLRenderingContext | WebGL2RenderingContext;
 
 function resizeCanvasTo(target: HTMLElement, canvas: HTMLCanvasElement): ResizeObserver {
     const resizeObserver = new ResizeObserver(() => {
@@ -30,6 +31,7 @@ export class OpenGLCanvas {
     public readonly gl: WebGLCtx;
 
     public loadedShader: ShaderInfo | null = null;
+    public loadedMesh: MeshBuffers | null = null;
 
     private loadedVertexShader: string = defaultVertSource;
     private loadedFragmentShader: string = defaultFragSource;
@@ -65,6 +67,7 @@ export class OpenGLCanvas {
             vertex: this.loadedVertexShader,
             fragment: this.loadedFragmentShader,
         });
+        this.updateMesh(cubeMesh); // TODO: Load from the model selector
 
         const observer = new MutationObserver((mutationList) => {
             mutationList.forEach((mutation) => this.onMutation(mutation));
@@ -73,18 +76,6 @@ export class OpenGLCanvas {
             attributes: true,
             attributeFilter: [VERT_ATTR_KEY, FRAG_ATTR_KEY],
         });
-    }
-
-    render(deltaTime: number): void {
-        if (this.isPaused) return;
-        if (!this.loadedShader) return;
-
-        this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
-        this.gl.useProgram(this.loadedShader.program);
-        // TODO: Draw the scene
-
-        this.runTime += deltaTime;
-        this.frameCount++;
     }
 
     onMutation(mutation: MutationRecord) {
@@ -111,6 +102,22 @@ export class OpenGLCanvas {
             vertex: this.loadedVertexShader,
             fragment: this.loadedFragmentShader,
         });
+    }
+
+    render(deltaTime: number): void {
+        if (this.isPaused) return;
+        if (!this.loadedShader) return;
+        if (!this.loadedMesh) {
+            this.errorReporter.report(new UserError("No mesh loaded to render."));
+            return;
+        }
+
+        this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+        this.gl.useProgram(this.loadedShader.program);
+        // TODO: Draw the scene
+
+        this.runTime += deltaTime;
+        this.frameCount++;
     }
 
     setupGL(): void {
@@ -151,6 +158,10 @@ export class OpenGLCanvas {
         this.gl.useProgram(this.loadedShader.program);
 
         console.log("Shader program loaded successfully.");
+    }
+
+    updateMesh(mesh: Mesh): void {
+        this.loadedMesh = initMeshBuffers(this.gl, mesh);
     }
 
     get isPaused(): boolean {

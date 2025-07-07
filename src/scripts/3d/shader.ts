@@ -11,8 +11,6 @@ export type ShaderCode = {
 
 export const attributeNames = {
     position: "a_position",
-    normal: "a_normal",
-    texCoord: "a_texCoord",
 } as const;
 export const uniformNames = {
     projectionMatrix: "u_projectionMatrix",
@@ -79,8 +77,6 @@ export function getShaderInfo(
         program: shaderProgram,
         attributes: {
             position: glCtx.getAttribLocation(shaderProgram, attributeNames.position),
-            normal: glCtx.getAttribLocation(shaderProgram, attributeNames.normal),
-            texCoord: glCtx.getAttribLocation(shaderProgram, attributeNames.texCoord),
         },
         uniforms: {
             projectionMatrix: glCtx.getUniformLocation(
