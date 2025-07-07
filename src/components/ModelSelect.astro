@@ -19,18 +19,10 @@ export const primitiveModels: ModelMap = {
 <button
     id="model-select"
     class="tab"
-    popovertarget="model-select-dialog"
+    popovertarget="model-select-popover"
     data-model={Object.keys(primitiveModels)[0]}
 >
-    <span id="model-select-text">
-        <span id="model-select-text-inner">
-            {primitiveModels[Object.keys(primitiveModels)[0]].text}
-        </span>
-    </span>
-    <span id="model-select-icon" class="material-symbols-outlined">
-        {primitiveModels[Object.keys(primitiveModels)[0]].icon_name}
-    </span>
-    <div id="model-select-dialog" popover="auto"></div>
+    <div id="model-select-popover" popover="auto"></div>
     <div id="model-select-real" data-primitives={JSON.stringify(primitiveModels)}>
         {
             Object.entries(primitiveModels).map(([id, data]) => (
@@ -56,6 +48,15 @@ export const primitiveModels: ModelMap = {
             <input type="file" id="modelUploadButton" accept=".obj,.glb,.gltf" />
         </label>
     </div>
+
+    <span id="model-select-text">
+        <span id="model-select-text-inner">
+            {primitiveModels[Object.keys(primitiveModels)[0]].text}
+        </span>
+    </span>
+    <span id="model-select-icon" class="material-symbols-outlined">
+        {primitiveModels[Object.keys(primitiveModels)[0]].icon_name}
+    </span>
 </button>
 
 <script>
@@ -106,7 +107,10 @@ export const primitiveModels: ModelMap = {
 
 <style>
     #model-select {
-        --border-width: 2px;
+        --expanded-width: 7em;
+        --animation-duration-vertical: 150ms;
+        --animation-duration-horizontal: 50ms;
+
         position: relative;
 
         display: flex;
@@ -115,72 +119,82 @@ export const primitiveModels: ModelMap = {
 
         padding: calc(var(--tab-height) / 2 - 12px);
         box-sizing: border-box;
+
+        width: var(--tab-height);
+        transition: width var(--animation-duration-horizontal) ease-in-out;
     }
     #model-select-text {
         overflow: hidden;
-        max-width: 0;
-        transition: max-width 0.15s ease-in-out;
         > span {
             padding-right: 4px;
         }
     }
-    #model-select:has(> #model-select-dialog:popover-open, :hover) > #model-select-text {
-        max-width: 10em;
+    #model-select-popover {
+        display: none;
     }
-    #model-select:has(> #model-select-dialog:popover-open)::after {
-        content: "";
-        position: absolute;
-        top: 100%;
-        left: 0;
-        width: 100%;
-        height: var(--border-width);
-        background: inherit;
-        z-index: 2;
-    }
-    #model-select-dialog:popover-open + #model-select-real {
-        transform: scaleY(1);
-    }
-    #model-select-real {
-        transform: scaleY(0);
-        transform-origin: top;
-        transition: transform 50ms ease-out;
+    #model-select:hover,
+    #model-select:has(> #model-select-popover:popover-open) {
+        width: var(--expanded-width);
+        background: var(--bg-normal-hover);
 
-        display: flex;
+        > #model-select-text {
+            max-width: var(--expanded-width);
+        }
+        > #model-select-real {
+            transform: scaleY(1);
+            width: var(--expanded-width);
+        }
+    }
+
+    #model-select-real {
         z-index: 1;
         position: absolute;
         top: 100%;
-        left: auto;
-        right: calc(0px - var(--border-width));
+        right: 0;
+
+        width: var(--tab-height);
+        transform: scaleY(0);
+        transform-origin: top;
+        transition:
+            transform var(--animation-duration-vertical) ease-in-out,
+            width var(--animation-duration-horizontal) ease-in-out;
 
         background: var(--bg-normal);
         color: var(--text);
-        box-sizing: border-box;
-        border: var(--border-width) solid var(--bg-dark);
 
+        display: flex;
         flex-direction: column;
 
         > .row {
             text-wrap: nowrap;
             padding-left: 4px;
             display: flex;
+            justify-content: space-between;
             align-items: center;
             cursor: pointer;
-
-            &:not(.selected) .icon {
-                transition: font-variation-settings 0.1s ease-in-out;
-                font-variation-settings: "FILL" 0;
-            }
-            &:hover .icon {
-                font-variation-settings: "FILL" 1;
-            }
             > .text {
                 flex-grow: 1;
+                overflow: hidden;
+            }
+            > .square {
+                flex-shrink: 0;
             }
             &:nth-child(odd) {
                 background: var(--bg-light);
             }
             input[type="file"] {
                 display: none;
+            }
+
+            &:hover {
+                background: var(--bg-normal-hover);
+            }
+            &:not(.selected) .icon {
+                transition: font-variation-settings 0.1s ease-in-out;
+                font-variation-settings: "FILL" 0;
+            }
+            &:hover .icon {
+                font-variation-settings: "FILL" 1;
             }
         }
     }
