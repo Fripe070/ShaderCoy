@@ -30,9 +30,9 @@ import defaultVertSource from "../scripts/shaders/defaultVert";
     applicationState.errorReporter = errorReporter;
 
     let lastTime: DOMHighResTimeStamp = performance.now();
-    function frameCallback(time: DOMHighResTimeStamp): void {
-        const deltaTime: number = (time - lastTime) / 1000;
-        lastTime = time;
+    function frameCallback(now: DOMHighResTimeStamp): void {
+        const deltaTime: number = (now - lastTime) / 1000;
+        lastTime = now;
 
         glCanvasInstance.render(deltaTime);
         window.requestAnimationFrame(frameCallback);

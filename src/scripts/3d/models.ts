@@ -5,15 +5,9 @@ export type Mesh = {
     indices: Uint32Array;
 };
 
-type BufferAndData<T> = {
-    buffer: WebGLBuffer;
-    data: T;
-};
-
-export type MeshBuffers = {
-    [key in keyof Mesh]: BufferAndData<Mesh[key]>;
-} & {
-    mesh: Mesh;
+export type MeshBuffers<T extends Mesh = Mesh> = {
+    mesh: T;
+    buffers: { [key in keyof T]: WebGLBuffer };
 };
 
 export function initMeshBuffers(gl: WebGLCtx, mesh: Mesh): MeshBuffers {
@@ -30,11 +24,10 @@ export function initMeshBuffers(gl: WebGLCtx, mesh: Mesh): MeshBuffers {
 
     return {
         mesh: mesh,
-        position: {
-            buffer: positionBuffer,
-            data: mesh.position,
+        buffers: {
+            position: positionBuffer,
+            indices: indexBuffer,
         },
-        indices: { buffer: indexBuffer, data: mesh.indices },
     };
 }
 
@@ -55,25 +48,21 @@ export const planeMesh: Mesh = {
 // prettier-ignore
 export const cubeMesh: Mesh = {
     position: new Float32Array([
-        // Front face
-        -1.0, -1.0,  1.0,  1.0, -1.0,  1.0,  1.0,  1.0,  1.0, -1.0,  1.0,  1.0,
-        // Back face
-        -1.0, -1.0, -1.0, -1.0,  1.0, -1.0,  1.0,  1.0, -1.0,  1.0, -1.0, -1.0,
-        // Top face
-        -1.0,  1.0, -1.0, -1.0,  1.0,  1.0,  1.0,  1.0,  1.0,  1.0,  1.0, -1.0,
-        // Bottom face
-        -1.0, -1.0, -1.0,  1.0, -1.0, -1.0,  1.0, -1.0,  1.0, -1.0, -1.0,  1.0,
-        // Right face
-         1.0, -1.0, -1.0,  1.0,  1.0, -1.0,  1.0,  1.0,  1.0,  1.0, -1.0,  1.0,
-        // Left face
-        -1.0, -1.0, -1.0, -1.0, -1.0,  1.0, -1.0,  1.0,  1.0, -1.0,  1.0, -1.0,
+        -1, -1, -1,
+        1, -1, -1,
+        1, 1, -1,
+        -1, 1, -1,
+        -1, -1, 1,
+        1, -1, 1,
+        1, 1, 1,
+        -1, 1, 1,
     ]),
     indices: new Uint32Array([
-        0,  1,  2,   0,  2,  3,    // front
-        4,  5,  6,   4,  6,  7,    // back
-        8,  9,  10,  8,  10, 11,   // top
-        12, 13, 14,  12, 14, 15,   // bottom
-        16, 17, 18,  16, 18, 19,   // right
-        20, 21, 22,  20, 22, 23,   // left
+        0, 1, 3, 3, 1, 2,
+        1, 5, 2, 2, 5, 6,
+        5, 4, 6, 6, 4, 7,
+        4, 0, 7, 7, 0, 3,
+        3, 2, 7, 7, 2, 6,
+        4, 5, 0, 0, 5, 1
     ]),
 };

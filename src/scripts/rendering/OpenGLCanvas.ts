@@ -1,3 +1,4 @@
+import { mat4 } from "gl-matrix";
 import { cubeMesh, initMeshBuffers, type Mesh, type MeshBuffers } from "../3d/models";
 import {
     createShaderProgram,
@@ -9,19 +10,21 @@ import {
 import { ShaderCompileError, UserError } from "../errors";
 import defaultFragSource from "../shaders/defaultFrag";
 import defaultVertSource from "../shaders/defaultVert";
+import { OrbitCamera } from "../3d/camera";
 
 export const VERT_ATTR_KEY: string = "data-vertex";
 export const FRAG_ATTR_KEY: string = "data-fragment";
 
 export type WebGLCtx = WebGLRenderingContext | WebGL2RenderingContext;
 
-function resizeCanvasTo(target: HTMLElement, canvas: HTMLCanvasElement): ResizeObserver {
+function resizeCanvasTo(target: HTMLElement, glCanvas: OpenGLCanvas): ResizeObserver {
     const resizeObserver = new ResizeObserver(() => {
         const dpr = window.devicePixelRatio || 1;
         const rect = target.getBoundingClientRect();
 
-        canvas.width = Math.floor(rect.width * dpr);
-        canvas.height = Math.floor(rect.height * dpr);
+        glCanvas.canvas.width = Math.floor(rect.width * dpr);
+        glCanvas.canvas.height = Math.floor(rect.height * dpr);
+        glCanvas.gl.viewport(0, 0, glCanvas.canvas.width, glCanvas.canvas.height);
     });
     resizeObserver.observe(target);
     return resizeObserver;
@@ -29,6 +32,12 @@ function resizeCanvasTo(target: HTMLElement, canvas: HTMLCanvasElement): ResizeO
 
 export class OpenGLCanvas {
     public readonly gl: WebGLCtx;
+
+    public camera: OrbitCamera = new OrbitCamera({
+        distance: 6,
+        yaw: 45 * (Math.PI / 180),
+        pitch: 20 * (Math.PI / 180),
+    });
 
     public loadedShader: ShaderInfo | null = null;
     public loadedMesh: MeshBuffers | null = null;
@@ -46,7 +55,7 @@ export class OpenGLCanvas {
         // Ensure the canvas resolution is updated whenever the parent (container) element is resized.
         const parentElement = this.canvas.parentElement;
         if (!parentElement) throw new Error("Canvas must have a parent element");
-        resizeCanvasTo(parentElement, this.canvas);
+        resizeCanvasTo(parentElement, this);
 
         // Initialize the WebGL context
         const context = this.canvas.getContext("webgl2"); // TODO: Support WebGL1 as well
@@ -76,10 +85,12 @@ export class OpenGLCanvas {
             attributes: true,
             attributeFilter: [VERT_ATTR_KEY, FRAG_ATTR_KEY],
         });
+
+        // Mouse movement for camera controls
+        this.camera.attachTo(this.canvas);
     }
 
     onMutation(mutation: MutationRecord) {
-        console.log("Mutation observed:", mutation);
         if (mutation.type !== "attributes") return;
         if (!mutation.attributeName) return;
         if (![VERT_ATTR_KEY, FRAG_ATTR_KEY].includes(mutation.attributeName)) return;
@@ -96,7 +107,8 @@ export class OpenGLCanvas {
                 this.loadedFragmentShader = newValue;
                 break;
             default:
-                throw new Error(`Unexpected attribute mutation: ${mutation.attributeName}`);
+                console.warn(`Unexpected attribute mutation: ${mutation.attributeName}`);
+                return;
         }
         this.updateShader({
             vertex: this.loadedVertexShader,
@@ -116,6 +128,39 @@ export class OpenGLCanvas {
         this.gl.useProgram(this.loadedShader.program);
         // TODO: Draw the scene
 
+        const aspectRatio = this.canvas.width / this.canvas.height;
+        const viewMatrix = this.camera.getViewMatrix();
+        const projectionMatrix = this.camera.getProjectionMatrix(aspectRatio);
+        const modelMatrix = mat4.create(); // Identity matrix for now, can be modified later
+
+        this.gl.uniformMatrix4fv(
+            this.loadedShader.uniforms.projectionMatrix,
+            false,
+            projectionMatrix,
+        );
+        this.gl.uniformMatrix4fv(this.loadedShader.uniforms.viewMatrix, false, viewMatrix);
+        this.gl.uniformMatrix4fv(this.loadedShader.uniforms.modelMatrix, false, modelMatrix);
+
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.loadedMesh.buffers.position);
+        this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.loadedMesh.buffers.indices);
+
+        this.gl.enableVertexAttribArray(this.loadedShader.attributes.position);
+        this.gl.vertexAttribPointer(
+            this.loadedShader.attributes.position,
+            3,
+            this.gl.FLOAT,
+            false,
+            0,
+            0,
+        );
+
+        this.gl.drawElements(
+            this.gl.TRIANGLES,
+            this.loadedMesh.mesh.indices.length,
+            this.gl.UNSIGNED_SHORT,
+            0,
+        );
+
         this.runTime += deltaTime;
         this.frameCount++;
     }
@@ -126,8 +171,6 @@ export class OpenGLCanvas {
 
         this.gl.enable(this.gl.DEPTH_TEST);
         this.gl.depthFunc(this.gl.LEQUAL);
-
-        this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
     }
 
     updateShader(newShaders: ShaderCode): void {
@@ -156,8 +199,6 @@ export class OpenGLCanvas {
         this.loadedShader = getShaderInfo(this.gl, shaderProgram);
         // TODO: Populate shaderdata
         this.gl.useProgram(this.loadedShader.program);
-
-        console.log("Shader program loaded successfully.");
     }
 
     updateMesh(mesh: Mesh): void {
@@ -207,7 +248,5 @@ export class ErrorReporter {
         const message = document.createElement("pre");
         message.textContent = error.message;
         this.errorContainer.appendChild(message);
-
-        throw error; // Re-throw the error to propagate it up
     }
 }
