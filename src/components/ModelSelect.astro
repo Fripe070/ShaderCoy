@@ -22,6 +22,15 @@ export const primitiveModels: ModelMap = {
     popovertarget="model-select-popover"
     data-model={Object.keys(primitiveModels)[0]}
 >
+    <span id="model-select-text">
+        <span id="model-select-text-inner">
+            {primitiveModels[Object.keys(primitiveModels)[0]].text}
+        </span>
+    </span>
+    <span id="model-select-icon" class="material-symbols-outlined">
+        {primitiveModels[Object.keys(primitiveModels)[0]].icon_name}
+    </span>
+
     <div id="model-select-popover" popover="auto"></div>
     <div id="model-select-real" data-primitives={JSON.stringify(primitiveModels)}>
         {
@@ -33,30 +42,21 @@ export const primitiveModels: ModelMap = {
                         { selected: id === Object.keys(primitiveModels)[0] },
                     ]}
                 >
-                    <span class="text">{data.text}</span>
                     <span class="square">
                         <span class="icon material-symbols-outlined">{data.icon_name}</span>
                     </span>
+                    <span class="text">{data.text}</span>
                 </div>
             ))
         }
         <label for="modelUploadButton" class="row">
-            <span class="text">Custom</span>
             <span class="square">
                 <span class="icon material-symbols-outlined">computer_arrow_up</span>
             </span>
+            <span class="text">Custom</span>
             <input type="file" id="modelUploadButton" accept=".obj,.glb,.gltf" />
         </label>
     </div>
-
-    <span id="model-select-text">
-        <span id="model-select-text-inner">
-            {primitiveModels[Object.keys(primitiveModels)[0]].text}
-        </span>
-    </span>
-    <span id="model-select-icon" class="material-symbols-outlined">
-        {primitiveModels[Object.keys(primitiveModels)[0]].icon_name}
-    </span>
 </button>
 
 <script>
@@ -167,16 +167,21 @@ export const primitiveModels: ModelMap = {
 
         > .row {
             text-wrap: nowrap;
-            padding-left: 4px;
+            cursor: pointer;
+
             display: flex;
+            flex-direction: row-reverse;
             justify-content: space-between;
             align-items: center;
-            cursor: pointer;
+
             > .text {
+                flex-shrink: 1;
                 flex-grow: 1;
+                padding-left: 4px;
                 overflow: hidden;
             }
             > .square {
+                flex-grow: 0;
                 flex-shrink: 0;
             }
             &:nth-child(odd) {

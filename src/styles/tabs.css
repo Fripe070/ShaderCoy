@@ -36,6 +36,10 @@
     justify-content: center;
 
     width: var(--tab-height);
+    min-width: var(--tab-height);
+    max-width: var(--tab-height);
+    height: var(--tab-height);
+
     padding: 0;
     box-sizing: border-box;
 }
