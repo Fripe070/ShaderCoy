@@ -1,5 +1,30 @@
 import { mat4, vec3 } from "gl-matrix";
 
+enum PointerMode {
+    Idle = "idle",
+    Orbit = "orbit",
+    Pan = "pan",
+    Zoom = "zoom",
+}
+const PointerButton = {
+    Left: 0,
+    Middle: 1,
+    Right: 2,
+    Back: 3,
+    Forward: 4,
+
+    Primary: 0,
+    Wheel: 1,
+    Secondary: 2,
+} as const;
+
+function distBetween(a: [number, number], b: [number, number]): number {
+    return Math.hypot(a[0] - b[0], a[1] - b[1]);
+}
+function averagePos(a: [number, number], b: [number, number]): [number, number] {
+    return [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+}
+
 export class OrbitCamera {
     public orbitPoint: vec3;
     public distance: number;
@@ -10,22 +35,35 @@ export class OrbitCamera {
     public farPlane: number;
     public fov: number;
 
-    constructor({
-        orbitPoint = vec3.fromValues(0, 0, 0),
-        distance = 10,
-        yaw = 0,
-        pitch = 0,
-        nearPlane = 0.1,
-        farPlane = 100,
-        fov = 45 * (Math.PI / 180),
-    }: Partial<OrbitCamera> = {}) {
-        this.orbitPoint = vec3.clone(orbitPoint);
-        this.distance = distance;
-        this.yaw = yaw;
-        this.pitch = pitch;
-        this.nearPlane = nearPlane;
-        this.farPlane = farPlane;
-        this.fov = fov;
+    // Controls
+    private trackedPointers: Map<number, [number, number]> = new Map();
+    private navMode: PointerMode = PointerMode.Idle;
+    private lastTapTime: number = 0;
+    private prevPinchDist: number | undefined;
+    private prevPinchMid: [number, number] | undefined;
+
+    constructor(
+        params: {
+            orbitPoint?: vec3;
+            distance?: number;
+            yaw?: number;
+            pitch?: number;
+            nearPlane?: number;
+            farPlane?: number;
+            fov?: number;
+            // Controls
+            doubleTapTimeout?: number;
+        } = {},
+    ) {
+        this.orbitPoint = vec3.clone(params.orbitPoint ?? vec3.fromValues(0, 0, 0));
+        this.distance = params.distance ?? 10;
+        this.yaw = params.yaw ?? 0;
+        this.pitch = params.pitch ?? 0;
+        this.nearPlane = params.nearPlane ?? 0.1;
+        this.farPlane = params.farPlane ?? 100;
+        this.fov = params.fov ?? 45 * (Math.PI / 180);
+
+        this.lastTapTime = -(params.doubleTapTimeout ?? 300); // Ensure no immediate double-tap
     }
 
     getViewMatrix(): mat4 {
@@ -48,6 +86,109 @@ export class OrbitCamera {
             this.nearPlane,
             this.farPlane,
         );
+    }
+
+    attachTo(canvas: HTMLCanvasElement): void {
+        canvas.addEventListener("contextmenu", (event) => event.preventDefault());
+        canvas.addEventListener("dragstart", (event) => event.preventDefault());
+
+        canvas.addEventListener("pointerdown", (event: PointerEvent) => {
+            // Double-tap to reset orbit point
+            const now = Date.now();
+            if (now - this.lastTapTime < 300 && this.navMode === PointerMode.Idle) {
+                this.orbitPoint = vec3.fromValues(0, 0, 0);
+            }
+            this.lastTapTime = now;
+
+            canvas.setPointerCapture(event.pointerId);
+            this.trackedPointers.set(event.pointerId, [event.clientX, event.clientY]);
+
+            if (this.trackedPointers.size === 1) {
+                if (event.button === PointerButton.Right) {
+                    this.navMode = PointerMode.Pan;
+                } else if (event.button === PointerButton.Middle) {
+                    // Blender familiarity
+                    if (event.shiftKey) {
+                        this.navMode = PointerMode.Pan;
+                    } else {
+                        this.navMode = PointerMode.Orbit;
+                    }
+                } else {
+                    this.navMode = PointerMode.Orbit; // Default to orbit
+                }
+                return;
+            }
+            if (this.trackedPointers.size === 2) {
+                // If two pointers are down, we prepare for pinch zoom
+                this.navMode = PointerMode.Zoom;
+                const [pos1, pos2] = this.trackedPointers.values();
+                this.prevPinchDist = distBetween(pos1, pos2);
+            }
+            return;
+        });
+
+        canvas.addEventListener("pointermove", (event: PointerEvent) => {
+            if (!this.trackedPointers.has(event.pointerId)) return;
+
+            const lastPos = this.trackedPointers.get(event.pointerId)!;
+            const positionDelta: [number, number] = [
+                event.clientX - lastPos[0],
+                event.clientY - lastPos[1],
+            ];
+            this.trackedPointers.set(event.pointerId, [event.clientX, event.clientY]);
+
+            if (this.trackedPointers.size === 1) {
+                if (this.navMode === PointerMode.Pan) {
+                    this.pan(positionDelta);
+                } else if (this.navMode === PointerMode.Orbit) {
+                    this.orbit(positionDelta);
+                } else if (this.navMode === PointerMode.Zoom) {
+                    this.zoom(positionDelta[1]); // Zoom in/out based on vertical movement
+                }
+                return;
+            }
+            if (this.trackedPointers.size === 2) {
+                // Pinch zoom and associated panning
+                const [pos1, pos2] = this.trackedPointers.values();
+                const newDist = distBetween(pos1, pos2);
+                const newMid = averagePos(pos1, pos2);
+                if (this.prevPinchDist && this.prevPinchMid) {
+                    this.zoom(this.prevPinchDist - newDist);
+                    this.pan([newMid[0] - this.prevPinchMid[0], newMid[1] - this.prevPinchMid[1]]);
+                }
+                this.prevPinchDist = newDist;
+                this.prevPinchMid = newMid;
+                return;
+            }
+        });
+
+        const handlePointerExit = (event: PointerEvent) => {
+            this.trackedPointers.delete(event.pointerId);
+            if (this.trackedPointers.size < 2) {
+                this.prevPinchDist = undefined;
+                this.prevPinchMid = undefined;
+            }
+            if (this.trackedPointers.size === 0) {
+                this.navMode = PointerMode.Idle;
+            } else if (this.trackedPointers.size === 1) {
+                this.navMode = PointerMode.Orbit;
+            }
+        };
+        canvas.addEventListener("pointerup", (event: PointerEvent) => {
+            canvas.releasePointerCapture(event.pointerId);
+            handlePointerExit(event);
+        });
+        canvas.addEventListener("pointercancel", handlePointerExit);
+
+        canvas.addEventListener("wheel", (event: WheelEvent) => {
+            if (event.shiftKey) {
+                this.adjustFov(event.deltaY);
+            } else {
+                this.zoom(event.deltaY);
+            }
+            canvas.focus();
+            event.preventDefault();
+        });
     }
 
     pan([deltaX, deltaY]: [number, number]): void {
@@ -79,31 +220,5 @@ export class OrbitCamera {
     adjustFov(fovDelta: number): void {
         this.fov += fovDelta / 1000;
         this.fov = Math.max(0.1, Math.min(Math.PI / 2, this.fov));
-    }
-
-    // Listen for all the relevant events (both mouse and touch)
-    attachTo(canvas: HTMLCanvasElement): void {
-        canvas.addEventListener("contextmenu", (event) => event.preventDefault());
-        canvas.addEventListener("dragstart", (event) => event.preventDefault());
-
-        canvas.addEventListener("mousemove", (event: MouseEvent) => {
-            if (event.buttons & 1) {
-                // Left button for orbit
-                this.orbit([event.movementX, event.movementY]);
-            } else if (event.buttons & 2) {
-                // Right button for pan
-                this.pan([event.movementX, event.movementY]);
-            }
-        });
-        canvas.addEventListener("wheel", (event: WheelEvent) => {
-            // this.zoom(event.deltaY);
-            // If holding Ctrl, adjust FOV instead of zooming
-            if (event.shiftKey) {
-                this.adjustFov(event.deltaY);
-            } else {
-                this.zoom(event.deltaY);
-            }
-            event.preventDefault();
-        });
     }
 }
