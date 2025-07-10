@@ -171,6 +171,9 @@ export class OpenGLCanvas {
 
         this.gl.enable(this.gl.DEPTH_TEST);
         this.gl.depthFunc(this.gl.LEQUAL);
+
+        // Depth
+        console.log(this.gl.getExtension("EXT_frag_depth"));
     }
 
     updateShader(newShaders: ShaderCode): void {

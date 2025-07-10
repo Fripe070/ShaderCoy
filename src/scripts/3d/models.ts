@@ -2,7 +2,7 @@ import type { WebGLCtx } from "../rendering/OpenGLCanvas";
 
 export type Mesh = {
     position: Float32Array;
-    indices: Uint32Array;
+    indices: Uint16Array;
 };
 
 export type MeshBuffers<T extends Mesh = Mesh> = {
@@ -34,14 +34,14 @@ export function initMeshBuffers(gl: WebGLCtx, mesh: Mesh): MeshBuffers {
 // prettier-ignore
 export const planeMesh: Mesh = {
     position: new Float32Array([
-         1.0, 0.0,  1.0,
-        -1.0, 0.0,  1.0,
-         1.0, 0.0, -1.0,
-        -1.0, 0.0, -1.0,
+         1.0,  0.0,  1.0,
+        -1.0,  0.0,  1.0,
+         1.0,  0.0, -1.0,
+        -1.0,  0.0, -1.0,
     ]),
-    indices: new Uint32Array([
-        0,  1,  2,   
-        0,  2,  3,
+    indices: new Uint16Array([
+        0, 1, 2,
+        1, 2, 3,
     ]),
 };
 
@@ -49,20 +49,20 @@ export const planeMesh: Mesh = {
 export const cubeMesh: Mesh = {
     position: new Float32Array([
         -1, -1, -1,
-        1, -1, -1,
-        1, 1, -1,
-        -1, 1, -1,
-        -1, -1, 1,
-        1, -1, 1,
-        1, 1, 1,
-        -1, 1, 1,
+         1, -1, -1,
+         1,  1, -1,
+        -1,  1, -1,
+        -1, -1,  1,
+         1, -1,  1,
+         1,  1,  1,
+        -1,  1,  1,
     ]),
-    indices: new Uint32Array([
+    indices: new Uint16Array([
         0, 1, 3, 3, 1, 2,
         1, 5, 2, 2, 5, 6,
         5, 4, 6, 6, 4, 7,
         4, 0, 7, 7, 0, 3,
         3, 2, 7, 7, 2, 6,
-        4, 5, 0, 0, 5, 1
+        4, 5, 0, 0, 5, 1,
     ]),
 };
