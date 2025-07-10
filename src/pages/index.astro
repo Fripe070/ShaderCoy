@@ -32,9 +32,9 @@ import "../styles/tabs.css";
         display: flex;
         flex-direction: row;
         width: 100vw;
-        height: 100vh;
-        min-height: 100vh;
-        max-height: 100vh%;
+        height: 100svh;
+        min-height: 100svh;
+        max-height: 100svh;
     }
     #app.reversed {
         flex-direction: row-reverse;
@@ -75,8 +75,8 @@ import "../styles/tabs.css";
     }
     @media screen and (max-width: 850px) {
         :root {
-            --canvas-height: min(100vw, 45vh);
-            --sidebar-height: calc(100vh - var(--canvas-height));
+            --canvas-height: min(100vw, 45svh);
+            --sidebar-height: calc(100svh - var(--canvas-height));
         }
     }
 
@@ -127,7 +127,8 @@ import "../styles/tabs.css";
         }
     }
 
-    button {
+    button,
+    input[type="button"] {
         all: unset;
         cursor: pointer;
         background: var(--bg-light);
