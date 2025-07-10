@@ -92,6 +92,23 @@ export class OrbitCamera {
         canvas.addEventListener("contextmenu", (event) => event.preventDefault());
         canvas.addEventListener("dragstart", (event) => event.preventDefault());
 
+        // Helper to update cursor based on mode
+        const updateCursor = () => {
+            switch (this.navMode) {
+                case PointerMode.Orbit:
+                    canvas.style.cursor = "grab";
+                    break;
+                case PointerMode.Pan:
+                    canvas.style.cursor = "move";
+                    break;
+                case PointerMode.Zoom:
+                    canvas.style.cursor = "zoom-in";
+                    break;
+                default:
+                    canvas.style.cursor = "default";
+            }
+        };
+
         canvas.addEventListener("pointerdown", (event: PointerEvent) => {
             // Double-tap to reset orbit point
             const now = Date.now();
@@ -116,7 +133,6 @@ export class OrbitCamera {
                 } else {
                     this.navMode = PointerMode.Orbit; // Default to orbit
                 }
-                return;
             }
             if (this.trackedPointers.size === 2) {
                 // If two pointers are down, we prepare for pinch zoom
@@ -124,7 +140,7 @@ export class OrbitCamera {
                 const [pos1, pos2] = this.trackedPointers.values();
                 this.prevPinchDist = distBetween(pos1, pos2);
             }
-            return;
+            updateCursor();
         });
 
         canvas.addEventListener("pointermove", (event: PointerEvent) => {
@@ -145,7 +161,6 @@ export class OrbitCamera {
                 } else if (this.navMode === PointerMode.Zoom) {
                     this.zoom(positionDelta[1]); // Zoom in/out based on vertical movement
                 }
-                return;
             }
             if (this.trackedPointers.size === 2) {
                 // Pinch zoom and associated panning
@@ -158,8 +173,8 @@ export class OrbitCamera {
                 }
                 this.prevPinchDist = newDist;
                 this.prevPinchMid = newMid;
-                return;
             }
+            updateCursor();
         });
 
         const handlePointerExit = (event: PointerEvent) => {
@@ -173,6 +188,7 @@ export class OrbitCamera {
             } else if (this.trackedPointers.size === 1) {
                 this.navMode = PointerMode.Orbit;
             }
+            updateCursor();
         };
         canvas.addEventListener("pointerup", (event: PointerEvent) => {
             canvas.releasePointerCapture(event.pointerId);
