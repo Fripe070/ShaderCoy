@@ -16,12 +16,7 @@ export const primitiveModels: ModelMap = {
 };
 ---
 
-<button
-    id="model-select"
-    class="tab"
-    popovertarget="model-select-popover"
-    data-model={Object.keys(primitiveModels)[0]}
->
+<button id="model-select" class="tab" data-model={Object.keys(primitiveModels)[0]}>
     <span id="model-select-text">
         <span id="model-select-text-inner">
             {primitiveModels[Object.keys(primitiveModels)[0]].text}
@@ -31,23 +26,24 @@ export const primitiveModels: ModelMap = {
         {primitiveModels[Object.keys(primitiveModels)[0]].icon_name}
     </span>
 
-    <div id="model-select-popover" popover="auto"></div>
     <div id="model-select-real" data-primitives={JSON.stringify(primitiveModels)}>
         {
-            Object.entries(primitiveModels).map(([id, data]) => (
-                <div
-                    id={`model-select-${id}`}
-                    class:list={[
-                        "row clickable",
-                        { selected: id === Object.keys(primitiveModels)[0] },
-                    ]}
-                >
-                    <span class="square">
-                        <span class="icon material-symbols-outlined">{data.icon_name}</span>
-                    </span>
-                    <span class="text">{data.text}</span>
-                </div>
-            ))
+            Object.entries(primitiveModels)
+                .filter(([id]) => id !== "custom")
+                .map(([id, data]) => (
+                    <div
+                        id={`model-select-${id}`}
+                        class:list={[
+                            "row clickable",
+                            { selected: id === Object.keys(primitiveModels)[0] },
+                        ]}
+                    >
+                        <span class="square">
+                            <span class="icon material-symbols-outlined">{data.icon_name}</span>
+                        </span>
+                        <span class="text">{data.text}</span>
+                    </div>
+                ))
         }
         <label for="modelUploadButton" class="row">
             <span class="square">
@@ -90,9 +86,20 @@ export const primitiveModels: ModelMap = {
 
     const modelUploadButton = document.getElementById("modelUploadButton") as HTMLInputElement;
     modelUploadButton.onchange = (event) => {
-        const button = event.target as HTMLInputElement | null;
-        if (!button?.files?.length) return;
-        const file = button.files[0];
+        modelSelectButton.dataset.model = "custom";
+        iconElement.textContent = "computer_arrow_up";
+        modelSelectText.textContent = "Custom"; // Will be changed to the model filename later
+        rows.forEach((r) => {
+            r.classList.remove("selected");
+            if (r.id === modelUploadButton.id) {
+                r.classList.add("selected");
+            }
+        });
+
+        // Handle upload
+        const inputElem = event.target as HTMLInputElement | null;
+        if (!inputElem?.files?.length) return;
+        const file = inputElem.files[0];
         // Load file content into the editor
         const reader = new FileReader();
         reader.onload = () => {
@@ -110,6 +117,7 @@ export const primitiveModels: ModelMap = {
         --expanded-width: 7em;
         --animation-duration-vertical: 150ms;
         --animation-duration-horizontal: 50ms;
+        --fill-animation-duration: 100ms;
 
         position: relative;
 
@@ -129,11 +137,8 @@ export const primitiveModels: ModelMap = {
             padding-right: 4px;
         }
     }
-    #model-select-popover {
-        display: none;
-    }
     #model-select:hover,
-    #model-select:has(> #model-select-popover:popover-open) {
+    #model-select:focus-within {
         width: var(--expanded-width);
         background: var(--bg-normal-hover);
 
@@ -195,7 +200,7 @@ export const primitiveModels: ModelMap = {
                 background: var(--bg-normal-hover);
             }
             &:not(.selected) .icon {
-                transition: font-variation-settings 0.1s ease-in-out;
+                transition: font-variation-settings var(--fill-animation-duration) ease-in-out;
                 font-variation-settings: "FILL" 0;
             }
             &:hover .icon {
