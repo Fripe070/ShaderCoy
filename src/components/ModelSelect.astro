@@ -14,16 +14,17 @@ export const primitiveModels: ModelMap = {
     torus: { icon_name: "donut_small", text: "Torus" },
     suzanne: { icon_name: "mood", text: "Suzanne" },
 };
+export const defaultModelIndex = 1;
 ---
 
 <button id="model-select" class="tab" data-model={Object.keys(primitiveModels)[0]}>
     <span id="model-select-text">
         <span id="model-select-text-inner">
-            {primitiveModels[Object.keys(primitiveModels)[0]].text}
+            {primitiveModels[Object.keys(primitiveModels)[defaultModelIndex]].text}
         </span>
     </span>
     <span id="model-select-icon" class="material-symbols-outlined">
-        {primitiveModels[Object.keys(primitiveModels)[0]].icon_name}
+        {primitiveModels[Object.keys(primitiveModels)[defaultModelIndex]].icon_name}
     </span>
 
     <div id="model-select-real" data-primitives={JSON.stringify(primitiveModels)}>

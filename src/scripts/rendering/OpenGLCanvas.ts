@@ -184,6 +184,19 @@ export class OpenGLCanvas {
 
         this.gl.enable(this.gl.DEPTH_TEST);
         this.gl.depthFunc(this.gl.LEQUAL);
+
+        this.gl.enable(this.gl.BLEND);
+        this.gl.blendEquationSeparate(this.gl.FUNC_ADD, this.gl.FUNC_ADD);
+        this.gl.blendFuncSeparate(
+            this.gl.SRC_ALPHA,
+            this.gl.ONE_MINUS_SRC_ALPHA,
+            this.gl.ONE,
+            this.gl.ONE_MINUS_SRC_ALPHA,
+        );
+
+        this.gl.frontFace(this.gl.CCW);
+        this.gl.enable(this.gl.CULL_FACE);
+        this.gl.cullFace(this.gl.BACK);
     }
 
     updateShader(newShaders: ShaderCode): void {
@@ -240,7 +253,7 @@ export class OpenGLCanvas {
         );
         // Time uniforms
         this.gl.uniform1f(this.loadedShader.uniforms.time, this.runTime);
-        this.gl.uniform1f(this.loadedShader.uniforms.frameNumber, this.frameCount);
+        this.gl.uniform1i(this.loadedShader.uniforms.frameNumber, this.frameCount);
         this.gl.uniform1f(this.loadedShader.uniforms.timeDelta, data.deltaTime);
         // Mouse position
         this.gl.uniform4f(
