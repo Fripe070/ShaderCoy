@@ -59,9 +59,8 @@ import TexturePanel from "./TexturePanel.astro";
 <script>
     import { EditorView, keymap } from "@codemirror/view";
     import { EditorState, Compartment } from "@codemirror/state";
-    import { indentUnit, syntaxHighlighting } from "@codemirror/language";
+    import { indentUnit } from "@codemirror/language";
     import { indentWithTab, redo } from "@codemirror/commands";
-    import { oneDarkHighlightStyle, oneDarkTheme } from "@codemirror/theme-one-dark";
     import { basicSetup } from "codemirror";
     import { glsl } from "codemirror-lang-glsl";
 
@@ -69,6 +68,7 @@ import TexturePanel from "./TexturePanel.astro";
     import defaultVertSource from "../scripts/shaders/defaultVert";
     import { FRAG_ATTR_KEY, VERT_ATTR_KEY } from "../scripts/rendering/OpenGLCanvas";
     import applicationState from "../scripts/state";
+    import { oneDark, oneLight } from "../scripts/editor/theme";
 
     type BufferId = "fragment" | "vertex";
 
@@ -100,7 +100,9 @@ import TexturePanel from "./TexturePanel.astro";
             glsl(),
             keymap.of([indentWithTab, { key: "Mod-Shift-z", run: redo, preventDefault: true }]),
 
-            themeCompartment.of([oneDarkTheme, syntaxHighlighting(oneDarkHighlightStyle)]),
+            themeCompartment.of(
+                window.matchMedia("(prefers-color-scheme: dark)").matches ? oneDark : oneLight,
+            ),
             tabSizeCompartment.of(indentUnit.of(" ".repeat(4))),
             lineWrappingCompartment.of([]), // No wrapping by default
             // TODO: Style search/replace
@@ -136,6 +138,12 @@ import TexturePanel from "./TexturePanel.astro";
     //             : [EditorView.lineWrapping],
     //     ),
     // });
+
+    // Listen for theme changes
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (event) => {
+        const newTheme = event.matches ? oneDark : oneLight;
+        view.dispatch({ effects: themeCompartment.reconfigure(newTheme) });
+    });
 
     selectibleTabs.forEach((tab) => {
         tab.addEventListener("click", () => {
