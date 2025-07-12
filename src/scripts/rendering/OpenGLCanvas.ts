@@ -15,6 +15,10 @@ import { OrbitCamera } from "../3d/camera";
 export const VERT_ATTR_KEY: string = "data-vertex";
 export const FRAG_ATTR_KEY: string = "data-fragment";
 
+/**
+ * Type representing a WebGL context, which can be either WebGLRenderingContext or WebGL2RenderingContext.
+ * This allows for flexibility in using either version of WebGL.
+ */
 export type WebGLCtx = WebGLRenderingContext | WebGL2RenderingContext;
 
 function resizeCanvasTo(target: HTMLElement, glCanvas: OpenGLCanvas): ResizeObserver {
@@ -58,7 +62,7 @@ export class OpenGLCanvas {
         resizeCanvasTo(parentElement, this);
 
         // Initialize the WebGL context
-        const context = this.canvas.getContext("webgl2"); // TODO: Support WebGL1 as well
+        const context: WebGLCtx | null = this.canvas.getContext("webgl2"); // TODO: Support WebGL1 as well
         if (!context) {
             const error = new UserError(
                 "This site will not function as your system or browser does not support WebGL 2.0. " +
@@ -171,9 +175,6 @@ export class OpenGLCanvas {
 
         this.gl.enable(this.gl.DEPTH_TEST);
         this.gl.depthFunc(this.gl.LEQUAL);
-
-        // Depth
-        console.log(this.gl.getExtension("EXT_frag_depth"));
     }
 
     updateShader(newShaders: ShaderCode): void {
