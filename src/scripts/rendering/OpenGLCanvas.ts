@@ -1,5 +1,5 @@
 import { mat4 } from "gl-matrix";
-import { cubeMesh, initMeshBuffers, type Mesh, type MeshBuffers } from "../3d/models";
+import { cubeMesh, initMeshBuffers, type MeshBuffers } from "../3d/models";
 import {
     createShaderProgram,
     getShaderInfo,
@@ -50,7 +50,13 @@ export class OpenGLCanvas {
     private loadedFragmentShader: string = defaultFragSource;
 
     private runTime: number = 0;
-    private frameCount: bigint = 0n;
+    private frameCount: number = 0;
+    private lastMouseData: { x: number; y: number; left: boolean; right: boolean } = {
+        x: 0,
+        y: 0,
+        left: false,
+        right: false,
+    };
 
     constructor(
         public readonly canvas: HTMLCanvasElement,
@@ -80,7 +86,7 @@ export class OpenGLCanvas {
             vertex: this.loadedVertexShader,
             fragment: this.loadedFragmentShader,
         });
-        this.updateMesh(cubeMesh); // TODO: Load from the model selector
+        this.loadedMesh = initMeshBuffers(this.gl, cubeMesh); // TODO: Load from the model selector
 
         const observer = new MutationObserver((mutationList) => {
             mutationList.forEach((mutation) => this.onMutation(mutation));
@@ -92,6 +98,20 @@ export class OpenGLCanvas {
 
         // Mouse movement for camera controls
         this.camera.attachTo(this.canvas);
+
+        // Mouse position and click tracking
+        this.canvas.addEventListener("mousemove", (event) => {
+            this.lastMouseData.x = event.clientX;
+            this.lastMouseData.y = event.clientY;
+        });
+        this.canvas.addEventListener("mousedown", (event) => {
+            if (event.button === 0) this.lastMouseData.left = true;
+            if (event.button === 2) this.lastMouseData.right = true;
+        });
+        this.canvas.addEventListener("mouseup", (event) => {
+            if (event.button === 0) this.lastMouseData.left = false;
+            if (event.button === 2) this.lastMouseData.right = false;
+        });
     }
 
     onMutation(mutation: MutationRecord) {
@@ -132,18 +152,7 @@ export class OpenGLCanvas {
         this.gl.useProgram(this.loadedShader.program);
         // TODO: Draw the scene
 
-        const aspectRatio = this.canvas.width / this.canvas.height;
-        const viewMatrix = this.camera.getViewMatrix();
-        const projectionMatrix = this.camera.getProjectionMatrix(aspectRatio);
-        const modelMatrix = mat4.create(); // Identity matrix for now, can be modified later
-
-        this.gl.uniformMatrix4fv(
-            this.loadedShader.uniforms.projectionMatrix,
-            false,
-            projectionMatrix,
-        );
-        this.gl.uniformMatrix4fv(this.loadedShader.uniforms.viewMatrix, false, viewMatrix);
-        this.gl.uniformMatrix4fv(this.loadedShader.uniforms.modelMatrix, false, modelMatrix);
+        this.updateFrameUniforms({ deltaTime: deltaTime });
 
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.loadedMesh.buffers.position);
         this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.loadedMesh.buffers.indices);
@@ -201,12 +210,52 @@ export class OpenGLCanvas {
             this.loadedShader = null;
         }
         this.loadedShader = getShaderInfo(this.gl, shaderProgram);
-        // TODO: Populate shaderdata
-        this.gl.useProgram(this.loadedShader.program);
+        this.gl.useProgram(shaderProgram);
+        this.populateShaderData();
+
+        console.debug("Shader updated.");
     }
 
-    updateMesh(mesh: Mesh): void {
-        this.loadedMesh = initMeshBuffers(this.gl, mesh);
+    populateShaderData(): void {
+        if (!this.loadedShader) return;
+        // TODO: Do we even need this? Will we ever allow moving the model?
+        const modelMatrix = mat4.create();
+        this.gl.uniformMatrix4fv(this.loadedShader.uniforms.modelMatrix, false, modelMatrix);
+
+        this.updateFrameUniforms({ deltaTime: 0 });
+    }
+
+    updateFrameUniforms(data: { deltaTime: number }): void {
+        if (!this.loadedShader) return;
+        // Camera matrices
+        this.gl.uniformMatrix4fv(
+            this.loadedShader.uniforms.projectionMatrix,
+            false,
+            this.camera.getProjectionMatrix(this.canvas.width / this.canvas.height),
+        );
+        this.gl.uniformMatrix4fv(
+            this.loadedShader.uniforms.viewMatrix,
+            false,
+            this.camera.getViewMatrix(),
+        );
+        // Time uniforms
+        this.gl.uniform1f(this.loadedShader.uniforms.time, this.runTime);
+        this.gl.uniform1f(this.loadedShader.uniforms.frameNumber, this.frameCount);
+        this.gl.uniform1f(this.loadedShader.uniforms.timeDelta, data.deltaTime);
+        // Mouse position
+        this.gl.uniform4f(
+            this.loadedShader.uniforms.mouse,
+            this.lastMouseData.x / this.canvas.width,
+            this.lastMouseData.y / this.canvas.height,
+            this.lastMouseData.left ? 1 : 0,
+            this.lastMouseData.right ? 1 : 0,
+        );
+        // Resolution
+        this.gl.uniform2f(
+            this.loadedShader.uniforms.resolution,
+            this.canvas.width,
+            this.canvas.height,
+        );
     }
 
     get isPaused(): boolean {

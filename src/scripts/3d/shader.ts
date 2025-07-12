@@ -16,6 +16,12 @@ export const uniformNames = {
     projectionMatrix: "u_projectionMatrix",
     viewMatrix: "u_viewMatrix",
     modelMatrix: "u_modelMatrix",
+
+    resolution: "u_resolution",
+    mouse: "u_mouse",
+    time: "u_time",
+    timeDelta: "u_timeDelta",
+    frameNumber: "u_frameNumber",
 } as const;
 
 export type AttributeName = keyof typeof attributeNames;
@@ -26,6 +32,32 @@ export type ShaderInfo = {
     attributes: Record<AttributeName, number>;
     uniforms: Record<UniformName, WebGLUniformLocation | null>;
 };
+
+export function getShaderInfo(
+    glCtx: WebGLRenderingContext,
+    shaderProgram: WebGLProgram,
+): ShaderInfo {
+    return {
+        program: shaderProgram,
+        attributes: {
+            position: glCtx.getAttribLocation(shaderProgram, attributeNames.position),
+        },
+        uniforms: {
+            projectionMatrix: glCtx.getUniformLocation(
+                shaderProgram,
+                uniformNames.projectionMatrix,
+            ),
+            viewMatrix: glCtx.getUniformLocation(shaderProgram, uniformNames.viewMatrix),
+            modelMatrix: glCtx.getUniformLocation(shaderProgram, uniformNames.modelMatrix),
+
+            resolution: glCtx.getUniformLocation(shaderProgram, uniformNames.resolution),
+            mouse: glCtx.getUniformLocation(shaderProgram, uniformNames.mouse),
+            time: glCtx.getUniformLocation(shaderProgram, uniformNames.time),
+            timeDelta: glCtx.getUniformLocation(shaderProgram, uniformNames.timeDelta),
+            frameNumber: glCtx.getUniformLocation(shaderProgram, uniformNames.frameNumber),
+        },
+    };
+}
 
 export function compileShader(
     glCtx: WebGLRenderingContext,
@@ -67,24 +99,4 @@ export function createShaderProgram(
         throw new ShaderLinkError(`Shader program linking failed: ${error}`);
     }
     return program;
-}
-
-export function getShaderInfo(
-    glCtx: WebGLRenderingContext,
-    shaderProgram: WebGLProgram,
-): ShaderInfo {
-    return {
-        program: shaderProgram,
-        attributes: {
-            position: glCtx.getAttribLocation(shaderProgram, attributeNames.position),
-        },
-        uniforms: {
-            projectionMatrix: glCtx.getUniformLocation(
-                shaderProgram,
-                uniformNames.projectionMatrix,
-            ),
-            viewMatrix: glCtx.getUniformLocation(shaderProgram, uniformNames.viewMatrix),
-            modelMatrix: glCtx.getUniformLocation(shaderProgram, uniformNames.modelMatrix),
-        },
-    };
 }
