@@ -22,6 +22,7 @@ import ModelSelect from "./ModelSelect.astro";
         </button>
     </div>
     <div id="main-canvas-body">
+        <!-- TODO: Allow drag and drop model uploads -->
         <GLCanvas />
     </div>
 </div>
@@ -57,7 +58,7 @@ import ModelSelect from "./ModelSelect.astro";
 
 <style>
     #canvas-container {
-        --body-height: calc(var(--canvas-height) - var(--tab-height));
+        --body-height: calc(var(--canvas-height) - var(--icon-size));
 
         flex-grow: 1;
         flex-shrink: 1;
@@ -67,8 +68,7 @@ import ModelSelect from "./ModelSelect.astro";
         position: relative;
 
         background-color: var(--bg-dark);
-        background: repeating-conic-gradient(var(--bg-dark) 0 25%, var(--bg-normal) 0 50%) 50% /
-            20px 20px;
+        background: var(--bg-checkerboard);
         background-position: top right;
     }
 

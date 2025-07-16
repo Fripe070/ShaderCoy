@@ -1,13 +1,9 @@
-:root {
-    --tab-height: 30px;
-}
-
 .tab-bar {
     background-color: var(--bg-dark);
     display: flex;
     flex-direction: row;
     align-items: center;
-    height: var(--tab-height);
+    height: var(--icon-size);
     user-select: none;
 }
 
@@ -35,10 +31,10 @@
     align-items: center;
     justify-content: center;
 
-    width: var(--tab-height);
-    min-width: var(--tab-height);
-    max-width: var(--tab-height);
-    height: var(--tab-height);
+    width: var(--icon-size);
+    min-width: var(--icon-size);
+    max-width: var(--icon-size);
+    height: var(--icon-size);
 
     padding: 0;
     box-sizing: border-box;

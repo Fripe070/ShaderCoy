@@ -197,6 +197,8 @@ export class OrbitCamera {
         canvas.addEventListener("pointercancel", handlePointerExit);
 
         canvas.addEventListener("wheel", (event: WheelEvent) => {
+            if (event.ctrlKey) return; // Ignore ctrl to let the browser handle page zoom
+
             if (event.shiftKey) {
                 this.adjustFov(event.deltaY);
             } else {
