@@ -72,6 +72,7 @@ import TexturePanel from "./TexturePanel.astro";
 
     type BufferId = "fragment" | "vertex";
 
+    // TODO: Also store histories in a map
     const editorContentBuffers: Record<BufferId, string> = {
         fragment: defaultFragSource,
         vertex: defaultVertSource,
@@ -155,7 +156,7 @@ import TexturePanel from "./TexturePanel.astro";
             }
             const tabBody = document.getElementById(tabBodyId)!;
             console.log(`Switching to tab body: ${tabBodyId}`);
-            console.log(`Clicked tab: ${tab.textContent}`);
+            console.log(`Clicked tab: ${tab.id || tab.textContent}`);
 
             tabBodies.forEach((t) => t.classList.remove("active"));
             tabBody.classList.add("active");
