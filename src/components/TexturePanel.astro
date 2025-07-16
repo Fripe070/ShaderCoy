@@ -1,306 +1,250 @@
 ---
-
+import "../styles/tabs.css";
 ---
 
 <div id="textures-panel">
-    <!-- image drop area -->
-    <input type="file" id="texture-file-input" style="display:none" accept="image/*" />
-
-    <div class="textures-header">
-        <h2>Textures</h2>
-        <button id="upload-btn" class="upload-btn">
-            <span class="material-symbols-outlined">upload</span>
-            <span>Upload</span>
-        </button>
+    <div id="textures-grid">
+        <label for="textureUploadButton" id="upload-card">
+            <input type="file" id="textureUploadButton" accept="image/*" multiple />
+            <span class="icon material-symbols-outlined">add_photo_alternate</span>
+            <span>Upload Texture</span>
+        </label>
     </div>
 
-    <div class="textures-grid" id="textures-grid"></div>
+    <template>
+        <div class="card">
+            <div class="card-preview">
+                <!-- TODO: Set CSS image-rendering based on filter mode -->
+                <img
+                    class="texture-image"
+                    src="https://placehold.co/40x60.png"
+                    alt="Texture Preview"
+                />
 
-    <template id="texture-card-template">
-        <div class="texture-card">
-            <div class="texture-card-preview">
-                <img alt="Texture Preview" />
+                <span class="card-index">N/A</span>
+                <button class="card-delete square">
+                    <span class="material-symbols-outlined">delete</span>
+                </button>
             </div>
-            <div class="texture-card-info">
-                <h3></h3>
-                <div class="texture-card-actions">
-                    <button class="texture-card-edit">
-                        <span class="material-symbols-outlined">edit</span>
-                        <span>Edit</span>
-                    </button>
-                    <button class="texture-card-delete">
-                        <span class="material-symbols-outlined">delete</span>
-                        <span>Delete</span>
-                    </button>
-                </div>
+            <div class="card-footer">
+                <button class="square card-arrow arrow-left">
+                    <span class="material-symbols-outlined">arrow_back</span>
+                </button>
+                <button class="card-edit">
+                    <span class="material-symbols-outlined">edit</span>
+                    <span>Edit</span>
+                </button>
+                <button class="square card-arrow arrow-right">
+                    <span class="material-symbols-outlined">arrow_forward</span>
+                </button>
             </div>
         </div>
     </template>
-
-    <div class="no-textures" id="no-textures">
-        <span class="material-symbols-outlined">image_not_supported</span>
-        <p>No textures uploaded yet</p>
-        <p class="hint">Upload some textures to get started</p>
-    </div>
 </div>
 
 <script>
-    const uploadBtn = document.getElementById("upload-btn") as HTMLInputElement;
-    const fileInput = document.getElementById("texture-file-input") as HTMLInputElement;
-    const noTextures = document.getElementById("no-textures") as HTMLDivElement;
-    const template = document.getElementById("texture-card-template") as HTMLTemplateElement;
-    interface Texture {
-        id: string;
-        name: string;
-        file: File;
-        preview: string;
-    }
+    const panel = document.getElementById("textures-panel") as HTMLElement;
+    const grid = document.getElementById("textures-grid") as HTMLElement;
+    const cardTemplate = document.querySelector("template") as HTMLTemplateElement;
+    const uploadCard = document.getElementById("upload-card") as HTMLElement;
+    const uploadButton = document.getElementById("textureUploadButton") as HTMLInputElement;
 
-    let textures: Texture[] = [];
-
-    const addTexture = (file: File) =>
-        textures.push({
-            id: textures.length.toString(),
-            name: file.name,
-            file,
-            preview: URL.createObjectURL(file),
-        });
-
-    uploadBtn?.addEventListener("click", () => {
-        fileInput?.click();
+    panel.addEventListener("dragover", (event) => {
+        event.preventDefault();
+        panel.classList.toggle("dragover", true);
     });
-
-    fileInput.addEventListener("change", (e) => {
-        if (fileInput.files && fileInput.files.length > 0) {
-            for (const file of fileInput.files) addTexture(file);
-            fileInput.value = "";
-            updateTextureGrid();
-        }
+    panel.addEventListener("dragleave", (event) => {
+        event.preventDefault();
+        panel.classList.toggle("dragover", false);
     });
-
-    const panel = document.getElementById("textures-panel") as HTMLDivElement;
-    panel.addEventListener("dragover", (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        panel.classList.add("dragover");
-    });
-
-    panel.addEventListener("dragleave", (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        panel.classList.remove("dragover");
-    });
-
-    panel.addEventListener("drop", (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        panel.classList.remove("dragover");
-        if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
-            for (const file of e.dataTransfer.files) {
+    panel.addEventListener("drop", (event) => {
+        event.preventDefault();
+        panel.classList.toggle("dragover", false);
+        if (event.dataTransfer?.files && event.dataTransfer.files.length > 0) {
+            for (const file of event.dataTransfer.files) {
                 if (file.type.startsWith("image/")) {
-                    addTexture(file);
+                    addTextureCard(file);
                 }
             }
-            updateTextureGrid();
+        }
+    });
+    uploadButton.addEventListener("change", () => {
+        if (uploadButton.files && uploadButton.files.length > 0) {
+            for (const file of uploadButton.files) addTextureCard(file);
         }
     });
 
-    function updateTextureGrid() {
-        if (textures.length === 0) {
-            noTextures.style.display = "flex";
-        } else {
-            noTextures.style.display = "none";
-        }
+    type Texture = {
+        file: File;
+        previewUri: string;
+    };
+    const textures: Texture[] = [];
 
-        const grid = document.getElementById("textures-grid") as HTMLDivElement;
-
-        const cards = grid.querySelectorAll(".texture-card");
-        cards.forEach((card) => card.remove());
-
-        textures.forEach((texture) => {
-            const clone = template.content.cloneNode(true) as HTMLDivElement;
-
-            const textureCard = clone.querySelector(".texture-card") as HTMLDivElement;
-            textureCard.setAttribute("data-texture-id", texture.id);
-
-            const img = clone.querySelector(".texture-card-preview img") as HTMLImageElement;
-            img.src = texture.preview;
-            img.alt = `${texture.name} Preview`;
-
-            const title = clone.querySelector(".texture-card-info h3") as HTMLHeadingElement;
-            title.textContent = texture.name;
-
-            const deleteBtn = clone.querySelector(".texture-card-delete") as HTMLButtonElement;
-            deleteBtn.addEventListener("click", () => {
-                textures = textures.filter((t) => t.id !== texture.id);
-                updateTextureGrid();
-            });
-
-            const editBtn = clone.querySelector(".texture-card-edit") as HTMLButtonElement;
-            editBtn.addEventListener("click", () => {
-                alert(`Edit texture: ${texture.name}`);
-            });
-
-            grid.appendChild(clone);
-
-            deleteBtn.addEventListener("click", () => {
-                textures = textures.filter((t) => t.id !== texture.id);
-                updateTextureGrid();
-            });
-
-            grid.appendChild(textureCard);
+    function addTextureCard(file: File) {
+        textures.push({
+            file,
+            previewUri: URL.createObjectURL(file),
         });
+        repaintTextureGrid();
+    }
+
+    function repaintTextureGrid() {
+        grid.replaceChildren(
+            ...textures.map((texture, index) => {
+                const card = cardTemplate.content.cloneNode(true) as HTMLElement;
+                card.querySelector(".card-index")!.textContent = index.toString();
+
+                const textureImage = card.querySelector(".texture-image") as HTMLImageElement;
+                textureImage.src = texture.previewUri;
+                textureImage.alt = `Preview of texture ${index + 1}: ${texture.file.name}`;
+
+                const deleteBtn = card.querySelector(".card-delete") as HTMLButtonElement;
+                deleteBtn.addEventListener("click", () => {
+                    textures.splice(index, 1);
+                    URL.revokeObjectURL(texture.previewUri);
+                    grid.removeChild(grid.children[index]);
+                    repaintTextureGrid();
+                });
+
+                return card;
+            }),
+            uploadCard,
+        );
     }
 </script>
 
-<style is:global>
-    /* texture card */
-    .texture-card {
-        display: flex;
-        flex-direction: column;
-        background: #21252b;
-        border-radius: 3px;
-        box-shadow: 0px 1px 5px 0px rgba(0, 0, 0, 0.25);
-        border: 1px solid #333;
-    }
-
-    .texture-card-preview {
-        padding: 0.25rem;
-        width: 100%;
-        height: 100%;
-        border-radius: 0.1rem;
-        overflow: hidden;
-    }
-
-    .texture-card-preview img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-
-    .texture-card-info {
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-    }
-
-    .texture-card-info h3 {
-        font: var(--font-mono);
-        font-size: 0.875rem;
-        font-weight: 1000;
-        color: var(--fg-normal);
-        text-align: center;
-        padding: 0.18rem 0rem 0.25rem 0rem;
-    }
-
-    .texture-card-actions {
-        display: flex;
-        margin-top: auto;
-        gap: 0.5rem;
-    }
-
-    .texture-card-edit,
-    .texture-card-delete {
-        flex: 1;
-        display: flex;
-        align-items: center;
-        gap: 0.25rem;
-        padding: 0.2rem 0.1rem 0.15rem 0.4rem;
-        font-size: 0.875rem;
-        font-weight: 500;
-        border: none;
-        cursor: pointer;
-    }
-
-    .texture-card-edit {
-        /* padding-left: 0.55rem; */
-        border-radius: 0px 3px;
-        background-color: #363e4a;
-        color: white;
-    }
-
-    .texture-card-delete {
-        border-radius: 3px 0px;
-        background-color: #d24949;
-        color: white;
-    }
-</style>
-
 <style>
     #textures-panel {
-        padding: 1rem;
-        height: 100%;
-        overflow-y: auto;
         display: flex;
         flex-direction: column;
-        gap: 1rem;
+        height: 100%;
+        overflow-y: auto;
+
+        transition: backdrop-filter 0.2s;
+
+        position: relative;
+        z-index: 1;
+
+        --card-width: 180px;
+    }
+
+    #textures-grid {
+        z-index: -1;
+
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+
+        gap: var(--standard-spacing);
+        padding: var(--standard-spacing);
     }
 
     #textures-panel.dragover {
-        outline: 2px dashed var(--fg-muted, #aaa);
-        background: rgba(80, 80, 80, 0.15);
-        transition:
-            outline 0.1s,
-            background 0.1s;
+        backdrop-filter: brightness(0.9);
+        outline: 2px dashed var(--text-muted);
+        outline-offset: -2px;
     }
 
-    .textures-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, 180px);
-        gap: 1rem;
-    }
+    #upload-card {
+        width: var(--card-width);
+        height: calc(var(--card-width) + var(--icon-size));
 
-    .textures-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-
-    .no-textures {
         display: flex;
         flex-direction: column;
-        align-items: center;
         justify-content: center;
-        padding: 3rem 1rem;
-        color: var(--fg-muted);
-        text-align: center;
-    }
-
-    .no-textures .material-symbols-outlined {
-        font-size: 3rem;
-        margin-bottom: 1rem;
-    }
-
-    .no-textures p {
-        margin: 0;
-        font-size: 0.875rem;
-    }
-
-    .no-textures .hint {
-        font-size: 0.75rem;
-        margin-top: 0.25rem;
-    }
-
-    /* upload button */
-    .upload-btn {
-        display: flex;
         align-items: center;
-        gap: 0.5rem;
-        background: #343942;
-        color: #fff;
-        border: none;
-        border-radius: 0.15rem;
-        padding: 0.5rem 0.5rem;
-        font-size: 1rem;
+        background: var(--bg-dark);
+
+        padding: var(--standard-spacing);
+        user-select: none;
         cursor: pointer;
-        border: 1px solid #43464b;
+
+        color: var(--text-muted);
+        --border-width: 4px;
+        outline: var(--border-width) dashed var(--bg-light);
+        outline-offset: calc(-1 * var(--border-width));
+
+        > .icon {
+            font-size: 5em;
+        }
+        > input[type="file"] {
+            display: none;
+        }
     }
 
-    .upload-btn:hover {
-        background: #333;
+    .card {
+        display: flex;
+        flex-direction: column;
+
+        background: var(--bg-dark);
+        width: var(--card-width);
+
+        user-select: none;
+    }
+    .card-preview {
+        position: relative;
+        background: var(--bg-checkerboard);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+
+        height: var(--card-width);
+
+        > .texture-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            cursor: zoom-in;
+        }
+        > .card-index {
+            user-select: text;
+
+            position: absolute;
+            top: 0;
+            left: 0;
+
+            background: var(--bg-light);
+            font-weight: 700;
+            font-size: 1.5em;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            min-width: var(--icon-size);
+            height: var(--icon-size);
+
+            padding: 0 0.25ch;
+            box-sizing: border-box;
+        }
+        > .card-delete {
+            position: absolute;
+            top: 0;
+            right: 0;
+
+            background: var(--col-red);
+            color: var(--bg-dark);
+        }
     }
 
-    .upload-btn .material-symbols-outlined {
-        font-size: 1.25rem;
+    .card-footer {
+        height: var(--icon-size);
+        display: flex;
+        flex-direction: row;
+
+        font-weight: bold;
+        > .card-edit {
+            flex-grow: 1;
+            height: var(--icon-size);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: calc(var(--icon-margin) * 2);
+            padding: 0 var(--icon-margin);
+            background: var(--bg-dark);
+        }
     }
 </style>
