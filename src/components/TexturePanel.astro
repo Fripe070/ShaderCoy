@@ -5,7 +5,7 @@ import "../styles/tabs.css";
 <div id="textures-panel">
     <div id="textures-grid">
         <label for="textureUploadButton" id="upload-card">
-            <input type="file" id="textureUploadButton" accept="image/*" multiple />
+            <input type="file" id="textureUploadButton" accept="image/png,image/jpeg" />
             <span class="icon material-symbols-outlined">add_photo_alternate</span>
             <span>Upload Texture</span>
         </label>
@@ -61,11 +61,7 @@ import "../styles/tabs.css";
         event.preventDefault();
         panel.classList.toggle("dragover", false);
         if (event.dataTransfer?.files && event.dataTransfer.files.length > 0) {
-            for (const file of event.dataTransfer.files) {
-                if (file.type.startsWith("image/")) {
-                    addTextureCard(file);
-                }
-            }
+            for (const file of event.dataTransfer.files) addTextureCard(file);
         }
     });
     uploadButton.addEventListener("change", () => {
