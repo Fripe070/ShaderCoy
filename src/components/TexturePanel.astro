@@ -5,7 +5,7 @@ import "../styles/tabs.css";
 <div id="textures-panel">
     <div id="textures-grid">
         <label for="textureUploadButton" id="upload-card">
-            <input type="file" id="textureUploadButton" accept="image/png,image/jpeg" />
+            <input type="file" id="textureUploadButton" accept="image/png,image/jpeg" multiple />
             <span class="icon material-symbols-outlined">add_photo_alternate</span>
             <span>Upload Texture</span>
         </label>
@@ -94,11 +94,29 @@ import "../styles/tabs.css";
                 textureImage.src = texture.previewUri;
                 textureImage.alt = `Preview of texture ${index + 1}: ${texture.file.name}`;
 
-                const deleteBtn = card.querySelector(".card-delete") as HTMLButtonElement;
-                deleteBtn.addEventListener("click", () => {
+                const deleteButton = card.querySelector(".card-delete") as HTMLButtonElement;
+                deleteButton.addEventListener("click", () => {
                     textures.splice(index, 1);
                     URL.revokeObjectURL(texture.previewUri);
                     grid.removeChild(grid.children[index]);
+                    repaintTextureGrid();
+                });
+
+                const arrowLeftButton = card.querySelector(
+                    ".card-arrow.arrow-left",
+                ) as HTMLButtonElement;
+                arrowLeftButton.disabled = index === 0;
+                arrowLeftButton.addEventListener("click", () => {
+                    [textures[index - 1], textures[index]] = [textures[index], textures[index - 1]];
+                    repaintTextureGrid();
+                });
+
+                const arrowRightButton = card.querySelector(
+                    ".card-arrow.arrow-right",
+                ) as HTMLButtonElement;
+                arrowRightButton.disabled = index === textures.length - 1;
+                arrowRightButton.addEventListener("click", () => {
+                    [textures[index], textures[index + 1]] = [textures[index + 1], textures[index]];
                     repaintTextureGrid();
                 });
 
