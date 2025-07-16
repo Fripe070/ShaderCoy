@@ -42,7 +42,8 @@
 .push-right {
     margin-left: auto;
 }
-.disabled {
+.disabled,
+button:disabled {
     opacity: 0.5;
     pointer-events: none;
     background-color: #f003 !important;
