@@ -104,7 +104,7 @@ import TexturePanel from "./TexturePanel.astro";
                 { key: "Mod-Shift-z", run: redo, preventDefault: true },
                 { key: "Mod-/", run: toggleComment, preventDefault: true },
             ]),
-            // Bind tab to autocomplete
+            // TODO: Bind tab to autocomplete
 
             themeCompartment.of(
                 window.matchMedia("(prefers-color-scheme: dark)").matches ? oneDark : oneLight,
