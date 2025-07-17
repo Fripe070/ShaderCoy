@@ -11,6 +11,13 @@ export default tseslint.config(
     eslintConfigPrettier,
     eslintPluginAstro.configs.recommended,
     {
-        ignores: ["dist/", "node_modules/", ".astro/", "bun.lockb", "src/scripts/editor/language/build-parser.js", "src/scripts/editor/language/glsl.parser.ts"],
+        ignores: [
+            "dist/",
+            "node_modules/",
+            ".astro/",
+            "bun.lockb",
+            "src/scripts/editor/language/build-parser.js",
+            "src/scripts/editor/language/glsl.parser.ts",
+        ],
     },
 );
