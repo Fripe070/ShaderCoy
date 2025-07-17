@@ -54,11 +54,8 @@ import "../styles/tabs.css";
 </div>
 
 <script>
+    import { loadTexture2D } from "../scripts/3d/texture";
     import applicationState from "../scripts/state";
-
-    const glCanvas = applicationState.openGLCanvas;
-    if (!glCanvas) throw new Error("TexturePanel: No OpenGLCanvas found in application state.");
-    const maxFragTextures = glCanvas.gl.getParameter(glCanvas!.gl.MAX_TEXTURE_IMAGE_UNITS) ?? 0;
 
     const panel = document.getElementById("textures-panel") as HTMLElement;
     const grid = document.getElementById("textures-grid") as HTMLElement;
@@ -70,6 +67,11 @@ import "../styles/tabs.css";
 
     const loadedTextureCounter = document.getElementById("grid-loaded-textures") as HTMLElement;
     const maxTextureCounter = document.getElementById("grid-max-textures") as HTMLElement;
+
+    const glCanvas = applicationState.openGLCanvas;
+    if (!glCanvas) throw new Error("No OpenGL context available");
+    const glCtx = glCanvas.gl;
+    const maxFragTextures = glCtx.getParameter(glCtx.MAX_TEXTURE_IMAGE_UNITS) ?? 0;
 
     panel.addEventListener("dragover", (event) => {
         event.preventDefault();
@@ -83,55 +85,93 @@ import "../styles/tabs.css";
         event.preventDefault();
         panel.classList.toggle("dragover", false);
         if (event.dataTransfer?.files && event.dataTransfer.files.length > 0) {
-            for (const file of event.dataTransfer.files) addTextureCard(file);
+            addTextures(event.dataTransfer.files);
         }
     });
     uploadButton.addEventListener("change", () => {
         if (uploadButton.files && uploadButton.files.length > 0) {
-            for (const file of uploadButton.files) addTextureCard(file);
+            addTextures(uploadButton.files);
+            uploadButton.value = "";
         }
     });
 
-    type Texture = {
-        file: File;
-        glTexture?: WebGLTexture;
-        previewUri: string;
+    type LoadedTexture = {
+        imageUri: string;
+        glTexture: WebGLTexture;
     };
-    const textures: Texture[] = [];
+    const textures: LoadedTexture[] = [];
 
-    function addTextureCard(file: File) {
-        if (textures.length >= maxFragTextures) {
-            console.warn(`Maximum number of textures reached (${maxFragTextures}), skipping.`);
-            return;
+    function addTextures(files: FileList) {
+        panel.classList.toggle("loading", true);
+
+        const promises: Promise<LoadedTexture>[] = [];
+        for (const file of files) {
+            if (textures.length + promises.length >= maxFragTextures) {
+                console.warn(
+                    `Maximum of ${maxFragTextures} textures reached, skipping: ${file.name}`,
+                );
+                continue;
+            }
+            promises.push(
+                new Promise((resolve, reject) => {
+                    const image = new Image();
+                    image.onload = () => {
+                        const glTexture = loadTexture2D(glCtx, image);
+                        const texture: LoadedTexture = {
+                            imageUri: image.src,
+                            glTexture: glTexture,
+                        };
+                        textures.push(texture);
+                        resolve(texture);
+                    };
+                    image.onerror = (error) => reject(error);
+                    image.src = URL.createObjectURL(file);
+                }),
+            );
         }
-
-        textures.push({
-            file,
-            previewUri: URL.createObjectURL(file),
-        });
-        repaintTextureGrid();
+        Promise.allSettled(promises)
+            .then((results) => {
+                results
+                    .filter((result) => result.status !== "fulfilled")
+                    .forEach((result) => console.error(result.reason));
+            })
+            .catch((error) => console.error(error))
+            .finally(() => {
+                panel.classList.toggle("loading", false);
+                repaintTextureGrid();
+            });
     }
 
     function repaintTextureGrid() {
+        const newUrls: string[] = textures.map((texture) => texture.imageUri);
+        const oldUrls: string[] = Array.from(
+            grid.querySelectorAll<HTMLImageElement>(".texture-image"),
+            (image) => image.src,
+        );
+        if (newUrls.join() !== oldUrls.join()) {
+            console.debug("Texture order changed, rebinding textures.");
+            glCanvas!.setTextures(textures.map((texture) => texture.glTexture));
+        }
+
         grid.replaceChildren(
             ...textures.map((texture, index) => {
                 const card = cardTemplate.content.cloneNode(true) as HTMLElement;
                 card.querySelector(".card-index")!.textContent = index.toString();
 
                 const textureImage = card.querySelector(".texture-image") as HTMLImageElement;
-                textureImage.src = texture.previewUri;
-                textureImage.alt = `Preview of texture ${index + 1}: ${texture.file.name}`;
+                textureImage.src = texture.imageUri;
+                textureImage.alt = `Preview of texture ${index + 1}`;
 
                 textureImage.addEventListener("click", () => {
-                    previewDialogImage.src = texture.previewUri;
+                    previewDialogImage.src = texture.imageUri;
                     previewDialog.showModal();
                 });
 
                 const deleteButton = card.querySelector(".card-delete") as HTMLButtonElement;
                 deleteButton.addEventListener("click", () => {
                     textures.splice(index, 1);
-                    URL.revokeObjectURL(texture.previewUri);
-                    grid.removeChild(grid.children[index]);
+                    URL.revokeObjectURL(texture.imageUri);
+                    glCtx.deleteTexture(texture.glTexture);
                     repaintTextureGrid();
                 });
 
@@ -183,6 +223,7 @@ import "../styles/tabs.css";
 
     #textures-grid {
         z-index: -1;
+        position: relative;
 
         display: flex;
         flex-direction: row;
@@ -198,6 +239,18 @@ import "../styles/tabs.css";
         backdrop-filter: brightness(0.9);
         outline: 2px dashed var(--text-muted);
         outline-offset: -2px;
+    }
+    #textures-panel.loading {
+        filter: brightness(0.85);
+        backdrop-filter: brightness(0.85);
+        pointer-events: none;
+        &::after {
+            content: "Loading...";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
     }
 
     #upload-card {

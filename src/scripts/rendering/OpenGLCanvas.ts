@@ -3,6 +3,7 @@ import { cubeMesh, initMeshBuffers, type MeshBuffers } from "../3d/models";
 import {
     createShaderProgram,
     getShaderInfo,
+    textureArrayName,
     type ShaderCode,
     type ShaderInfo,
     type ShaderStage,
@@ -45,6 +46,7 @@ export class OpenGLCanvas {
 
     public loadedShader: ShaderInfo | null = null;
     public loadedMesh: MeshBuffers | null = null;
+    private loadedTextures: WebGLTexture[] = [];
 
     private loadedVertexShader: string = defaultVertSource;
     private loadedFragmentShader: string = defaultFragSource;
@@ -150,7 +152,6 @@ export class OpenGLCanvas {
 
         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
         this.gl.useProgram(this.loadedShader.program);
-        // TODO: Draw the scene
 
         this.updateFrameUniforms({ deltaTime: deltaTime });
 
@@ -236,6 +237,7 @@ export class OpenGLCanvas {
         this.gl.uniformMatrix4fv(this.loadedShader.uniforms.modelMatrix, false, modelMatrix);
 
         this.updateFrameUniforms({ deltaTime: 0 });
+        this.rebindTextures(this.loadedTextures);
     }
 
     updateFrameUniforms(data: { deltaTime: number }): void {
@@ -269,6 +271,34 @@ export class OpenGLCanvas {
             this.canvas.width,
             this.canvas.height,
         );
+    }
+
+    rebindTextures(textures: WebGLTexture[]): void {
+        const maxTextures = this.gl.getParameter(this.gl.MAX_TEXTURE_IMAGE_UNITS) ?? 0;
+        if (textures.length > maxTextures) throw new Error("Too many textures to bind");
+
+        for (let i = 0; i < maxTextures; i++) {
+            this.gl.activeTexture(this.gl.TEXTURE0 + i);
+            this.gl.bindTexture(this.gl.TEXTURE_2D, textures[i] || null);
+            // this.loadedShader.uniforms.textures is an array of sampler2D
+            if (this.loadedShader) {
+                // this.gl.uniform1i(this.loadedShader.uniforms.textures, i);
+                this.gl.uniform1i(
+                    this.gl.getUniformLocation(
+                        this.loadedShader.program,
+                        `${textureArrayName}[${i}]`,
+                    ),
+                    i,
+                );
+            }
+            console.debug(`Bound texture unit ${i} to ${textures[i] ? "provided" : "blank"}.`);
+        }
+        console.debug(`Bound ${textures.length} textures.`);
+    }
+
+    setTextures(textures: WebGLTexture[]): void {
+        this.loadedTextures = textures;
+        this.rebindTextures(textures);
     }
 
     get isPaused(): boolean {

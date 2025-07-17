@@ -12,7 +12,7 @@ export type ShaderCode = {
 export const attributeNames = {
     position: "a_position",
 } as const;
-export const uniformNames = {
+export const staticUniformNames = {
     projectionMatrix: "u_projectionMatrix",
     viewMatrix: "u_viewMatrix",
     modelMatrix: "u_modelMatrix",
@@ -23,9 +23,10 @@ export const uniformNames = {
     timeDelta: "u_timeDelta",
     frameNumber: "u_frameNumber",
 } as const;
+export const textureArrayName = "u_textures" as const;
 
 export type AttributeName = keyof typeof attributeNames;
-export type UniformName = keyof typeof uniformNames;
+export type UniformName = keyof typeof staticUniformNames;
 
 export type ShaderInfo = {
     program: WebGLProgram;
@@ -45,16 +46,16 @@ export function getShaderInfo(
         uniforms: {
             projectionMatrix: glCtx.getUniformLocation(
                 shaderProgram,
-                uniformNames.projectionMatrix,
+                staticUniformNames.projectionMatrix,
             ),
-            viewMatrix: glCtx.getUniformLocation(shaderProgram, uniformNames.viewMatrix),
-            modelMatrix: glCtx.getUniformLocation(shaderProgram, uniformNames.modelMatrix),
+            viewMatrix: glCtx.getUniformLocation(shaderProgram, staticUniformNames.viewMatrix),
+            modelMatrix: glCtx.getUniformLocation(shaderProgram, staticUniformNames.modelMatrix),
 
-            resolution: glCtx.getUniformLocation(shaderProgram, uniformNames.resolution),
-            mouse: glCtx.getUniformLocation(shaderProgram, uniformNames.mouse),
-            time: glCtx.getUniformLocation(shaderProgram, uniformNames.time),
-            timeDelta: glCtx.getUniformLocation(shaderProgram, uniformNames.timeDelta),
-            frameNumber: glCtx.getUniformLocation(shaderProgram, uniformNames.frameNumber),
+            resolution: glCtx.getUniformLocation(shaderProgram, staticUniformNames.resolution),
+            mouse: glCtx.getUniformLocation(shaderProgram, staticUniformNames.mouse),
+            time: glCtx.getUniformLocation(shaderProgram, staticUniformNames.time),
+            timeDelta: glCtx.getUniformLocation(shaderProgram, staticUniformNames.timeDelta),
+            frameNumber: glCtx.getUniformLocation(shaderProgram, staticUniformNames.frameNumber),
         },
     };
 }

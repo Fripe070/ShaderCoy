@@ -12,6 +12,8 @@ uniform float u_time;
 uniform float u_timeDelta;
 uniform int u_frameNumber;
 
+uniform sampler2D u_textures[8];
+
 void main() {
     fragColor = vec4((FragPosition + 1.0) / 2.0, 1.0);
 }
