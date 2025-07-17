@@ -7,7 +7,8 @@ import "../styles/tabs.css";
         <label for="textureUploadButton" id="upload-card">
             <input type="file" id="textureUploadButton" accept="image/png,image/jpeg" multiple />
             <span class="icon material-symbols-outlined">add_photo_alternate</span>
-            <span>Upload Texture</span>
+            <p>Upload Texture</p>
+            <p><span id="grid-loaded-textures">?</span>/<span id="grid-max-textures">?</span></p>
         </label>
     </div>
 
@@ -53,6 +54,12 @@ import "../styles/tabs.css";
 </div>
 
 <script>
+    import applicationState from "../scripts/state";
+
+    const glCanvas = applicationState.openGLCanvas;
+    if (!glCanvas) throw new Error("TexturePanel: No OpenGLCanvas found in application state.");
+    const maxFragTextures = glCanvas.gl.getParameter(glCanvas!.gl.MAX_TEXTURE_IMAGE_UNITS) ?? 0;
+
     const panel = document.getElementById("textures-panel") as HTMLElement;
     const grid = document.getElementById("textures-grid") as HTMLElement;
     const cardTemplate = document.querySelector("template") as HTMLTemplateElement;
@@ -60,6 +67,9 @@ import "../styles/tabs.css";
     const uploadButton = document.getElementById("textureUploadButton") as HTMLInputElement;
     const previewDialog = document.getElementById("texture-preview-dialog") as HTMLDialogElement;
     const previewDialogImage = previewDialog.querySelector(".dialog-image") as HTMLImageElement;
+
+    const loadedTextureCounter = document.getElementById("grid-loaded-textures") as HTMLElement;
+    const maxTextureCounter = document.getElementById("grid-max-textures") as HTMLElement;
 
     panel.addEventListener("dragover", (event) => {
         event.preventDefault();
@@ -84,11 +94,17 @@ import "../styles/tabs.css";
 
     type Texture = {
         file: File;
+        glTexture?: WebGLTexture;
         previewUri: string;
     };
     const textures: Texture[] = [];
 
     function addTextureCard(file: File) {
+        if (textures.length >= maxFragTextures) {
+            console.warn(`Maximum number of textures reached (${maxFragTextures}), skipping.`);
+            return;
+        }
+
         textures.push({
             file,
             previewUri: URL.createObjectURL(file),
@@ -141,7 +157,13 @@ import "../styles/tabs.css";
             }),
             uploadCard,
         );
+
+        uploadCard.style.display = maxFragTextures > textures.length ? "flex" : "none";
+        loadedTextureCounter.textContent = textures.length.toString();
+        maxTextureCounter.textContent = maxFragTextures.toString();
     }
+
+    repaintTextureGrid();
 </script>
 
 <style>
