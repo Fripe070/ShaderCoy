@@ -3,16 +3,16 @@
     "type": "module",
     "version": "0.0.1",
     "scripts": {
-        "dev": "astro dev --host",
-        "build": "astro build",
-        "preview": "astro preview",
+        "prepare": "bun run build:parser",
         "astro": "astro",
+        "dev": "astro dev --host",
+        "preview": "bun run build:parser && astro preview",
+        "build": "bun run build:parser && astro build",
+        "build:parser": "lezer-generator src/scripts/editor/language/glsl.grammar -o src/scripts/editor/language/parser.js",
         "lint": "eslint .",
         "lint:fix": "eslint . --fix",
         "format": "prettier --write .",
-        "format:check": "prettier --check .",
-        "build:parser": "lezer-generator src/scripts/editor/language/glsl.grammar -o src/scripts/editor/language/parser.js",
-        "prepare": "bun run build:parser"
+        "format:check": "prettier --check ."
     },
     "dependencies": {
         "astro": "^5.11.2",

@@ -1,4 +1,3 @@
-import { parser } from "lezer-glsl";
 import {
     continuedIndent,
     delimitedIndent,
@@ -7,6 +6,7 @@ import {
     foldInside,
     LRLanguage,
 } from "@codemirror/language";
+import { parser } from "./parser.js";
 
 export const glslLanguage = LRLanguage.define({
     name: "glsl",

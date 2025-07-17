@@ -337,7 +337,7 @@ commaSep1<term> { term ("," term)* }
 
 @skip { whitespace | LineComment | BlockComment | PreprocDirective }
 
-@external tokens preprocArg from "./tokens.js" { PreprocArg }
+@external tokens preprocArg from "./tokens.ts" { PreprocArg }
 
 @tokens {
     whitespace {
@@ -412,6 +412,6 @@ commaSep1<term> { term ("," term)* }
     "," 
 }
 
-@external propSource glslHighlighting from "./highlighting.js"
+@external propSource glslHighlighting from "./highlighting.ts"
 
 @detectDelim
