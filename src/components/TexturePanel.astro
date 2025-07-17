@@ -15,11 +15,7 @@ import "../styles/tabs.css";
         <div class="card">
             <div class="card-preview">
                 <!-- TODO: Set CSS image-rendering based on filter mode -->
-                <img
-                    class="texture-image"
-                    src="https://placehold.co/40x60.png"
-                    alt="Texture Preview"
-                />
+                <img class="texture-image" src="" alt="Texture Preview" />
 
                 <span class="card-index">N/A</span>
                 <button class="card-delete square">
@@ -40,6 +36,20 @@ import "../styles/tabs.css";
             </div>
         </div>
     </template>
+
+    <dialog id="texture-preview-dialog" closedby="any">
+        <div class="tab-bar">
+            <span class="push-right"></span>
+            <form method="dialog">
+                <button type="submit">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </form>
+        </div>
+        <div class="dialog-body">
+            <img class="dialog-image" src="" alt="Texture Preview" />
+        </div>
+    </dialog>
 </div>
 
 <script>
@@ -48,6 +58,8 @@ import "../styles/tabs.css";
     const cardTemplate = document.querySelector("template") as HTMLTemplateElement;
     const uploadCard = document.getElementById("upload-card") as HTMLElement;
     const uploadButton = document.getElementById("textureUploadButton") as HTMLInputElement;
+    const previewDialog = document.getElementById("texture-preview-dialog") as HTMLDialogElement;
+    const previewDialogImage = previewDialog.querySelector(".dialog-image") as HTMLImageElement;
 
     panel.addEventListener("dragover", (event) => {
         event.preventDefault();
@@ -93,6 +105,11 @@ import "../styles/tabs.css";
                 const textureImage = card.querySelector(".texture-image") as HTMLImageElement;
                 textureImage.src = texture.previewUri;
                 textureImage.alt = `Preview of texture ${index + 1}: ${texture.file.name}`;
+
+                textureImage.addEventListener("click", () => {
+                    previewDialogImage.src = texture.previewUri;
+                    previewDialog.showModal();
+                });
 
                 const deleteButton = card.querySelector(".card-delete") as HTMLButtonElement;
                 deleteButton.addEventListener("click", () => {
@@ -259,6 +276,43 @@ import "../styles/tabs.css";
             gap: calc(var(--icon-margin) * 2);
             padding: 0 var(--icon-margin);
             background: var(--bg-dark);
+        }
+    }
+
+    #texture-preview-dialog {
+        border: none;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: min(100vw, 800px);
+        height: min(100svh, 1000px);
+
+        background: var(--bg-checkerboard);
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+
+        &[open] {
+            display: flex;
+            flex-direction: column;
+        }
+        &::backdrop {
+            backdrop-filter: blur(5px) brightness(0.6);
+        }
+
+        .dialog-body {
+            flex-grow: 1;
+            height: calc(100% - var(--icon-size));
+
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .dialog-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
         }
     }
 </style>
