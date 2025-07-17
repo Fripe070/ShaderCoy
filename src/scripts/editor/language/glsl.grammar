@@ -1,0 +1,159 @@
+@precedence {
+  mult @left,
+  add @left,
+  rel @left,
+  equal @left,
+  and @left,
+  or @left,
+  ternary @right,
+  assign @right,
+  else @right
+}
+
+@top Program { statement* }
+
+statement {
+  VariableDeclaration |
+  FunctionDeclaration |
+  ExpressionStatement |
+  Block |
+  IfStatement |
+  ForStatement |
+  ReturnStatement |
+  EmptyStatement
+}
+
+VariableDeclaration {
+  StorageQualifier? TypeName Identifier ("=" Expression)? ";"
+}
+
+FunctionDeclaration {
+  TypeName Identifier ParameterList Block
+}
+
+TypeName {
+  "void" | "bool" | "int" | "uint" | "float" |
+  "vec2" | "vec3" | "vec4" | "ivec2" | "ivec3" | "ivec4" | "uvec2" | "uvec3" | "uvec4" | "bvec2" | "bvec3" | "bvec4" |
+  "mat2" | "mat3" | "mat4" | "sampler2D" | "sampler3D" | "samplerCube" |
+  Identifier
+}
+
+StorageQualifier { "const" | "in" | "out" | "uniform" | "varying" | "attribute" }
+
+ParameterList { "(" (Parameter ("," Parameter)*)? ")" }
+Parameter { StorageQualifier? TypeName Identifier }
+
+Block { "{" statement* "}" }
+
+IfStatement { "if" "(" Expression ")" statement (!else "else" statement)? }
+ForStatement { "for" "(" VariableDeclaration Expression? ";" Expression? ")" statement }
+ReturnStatement { "return" Expression? ";" }
+EmptyStatement { ";" }
+
+ExpressionStatement { Expression ";" }
+
+Expression {
+  AssignmentExpression
+}
+
+AssignmentExpression {
+  ConditionalExpression |
+  ConditionalExpression !assign "=" AssignmentExpression
+}
+
+ConditionalExpression {
+  LogicalOrExpression |
+  LogicalOrExpression !ternary "?" Expression ":" ConditionalExpression
+}
+
+LogicalOrExpression {
+  LogicalAndExpression |
+  LogicalOrExpression !or "||" LogicalAndExpression
+}
+
+LogicalAndExpression {
+  EqualityExpression |
+  LogicalAndExpression !and "&&" EqualityExpression
+}
+
+EqualityExpression {
+  RelationalExpression |
+  EqualityExpression !equal ("==" | "!=") RelationalExpression
+}
+
+RelationalExpression {
+  AdditiveExpression |
+  RelationalExpression !rel ("<" | ">" | "<=" | ">=") AdditiveExpression
+}
+
+AdditiveExpression {
+  MultiplicativeExpression |
+  AdditiveExpression !add ("+" | "-") MultiplicativeExpression
+}
+
+MultiplicativeExpression {
+  UnaryExpression |
+  MultiplicativeExpression !mult ("*" | DivisionOperator | "%") UnaryExpression
+}
+
+UnaryExpression {
+  PostfixExpression |
+  ("+" | "-" | "!" | "~") UnaryExpression
+}
+
+PostfixExpression {
+  PrimaryExpression |
+  PostfixExpression "[" Expression "]" |
+  PostfixExpression "(" (Expression ("," Expression)*)? ")" |
+  PostfixExpression "." Identifier
+}
+
+PrimaryExpression {
+  Identifier |
+  Number |
+  Boolean |
+  "(" Expression ")"
+}
+
+@tokens {
+  Identifier { $[a-zA-Z_] $[a-zA-Z0-9_]* }
+  
+  Number {
+    $[0-9]+ ("." $[0-9]*)? ($[eE] $[+-]? $[0-9]+)? $[fF]? |
+    "." $[0-9]+ ($[eE] $[+-]? $[0-9]+)? $[fF]?
+  }
+  
+  Boolean { "true" | "false" }
+  
+  LineComment { "//" ![\n]* }
+  BlockComment { "/*" blockCommentRest }
+  blockCommentRest { ![*] blockCommentRest | "*" blockCommentAfterStar }
+  blockCommentAfterStar { "/" | "*" blockCommentAfterStar | ![/*] blockCommentRest }
+  
+  DivisionOperator { "/" }
+  
+  @precedence { 
+    Boolean,
+    "void", "bool", "int", "uint", "float",
+    "vec2", "vec3", "vec4", "ivec2", "ivec3", "ivec4", "uvec2", "uvec3", "uvec4", "bvec2", "bvec3", "bvec4",
+    "mat2", "mat3", "mat4", "sampler2D", "sampler3D", "samplerCube",
+    "const", "in", "out", "uniform", "varying", "attribute",
+    "if", "else", "for", "return",
+    LineComment, BlockComment, DivisionOperator, Number, Identifier 
+  }
+  
+  space { $[ \t\n\r]+ }
+  
+  "(" ")" "[" "]" "{" "}"
+  ";" "," "."
+  "=" 
+  "||" "&&"
+  "==" "!="
+  "<" ">" "<=" ">="
+  "+" "-"
+  "*" "%"
+  "!" "~"
+  "?" ":"
+}
+
+@skip { space | LineComment | BlockComment }

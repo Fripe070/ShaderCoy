@@ -10,9 +10,13 @@
         "lint": "eslint .",
         "lint:fix": "eslint . --fix",
         "format": "prettier --write .",
-        "format:check": "prettier --check ."
+        "format:check": "prettier --check .",
+        "build:parser": "cd src/scripts/editor/language && node build-parser.js"
     },
     "dependencies": {
+        "@lezer/generator": "^1.8.0",
+        "@lezer/highlight": "^1.2.1",
+        "@lezer/lr": "^1.4.2",
         "astro": "^5.11.2",
         "autoprefixer": "^10.4.21",
         "codemirror": "^6.0.2",
