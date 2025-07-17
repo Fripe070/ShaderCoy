@@ -59,7 +59,7 @@ export const glslCompletion = glslLanguage.data.of({
         { label: "precision", type: "storage-class" },
         { label: "invariant", type: "storage-class" },
         { label: "smooth", type: "storage-class" },
-        { label: "flat", type: "storage-class" },   
+        { label: "flat", type: "storage-class" },
         { label: "lowp", type: "storage-class" },
         { label: "mediump", type: "storage-class" },
         { label: "highp", type: "storage-class" },
