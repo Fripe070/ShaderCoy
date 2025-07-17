@@ -1,8 +1,8 @@
-name: Build and Deploy to GitHub Pages
+name: Deploy to GitHub Pages
 
 on:
   push:
-  pull_request:
+    branches: ["main"]
   workflow_dispatch:
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
@@ -41,7 +41,7 @@ jobs:
 
       - name: Build with Astro
         run: |
-          bun run astro build \
+          bun run build \
              --site "${{ steps.pages.outputs.origin }}" \
              --base "${{ steps.pages.outputs.base_path }}"
         working-directory: ${{ env.BUILD_PATH }}
