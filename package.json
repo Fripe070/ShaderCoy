@@ -10,16 +10,18 @@
         "lint": "eslint .",
         "lint:fix": "eslint . --fix",
         "format": "prettier --write .",
-        "format:check": "prettier --check ."
+        "format:check": "prettier --check .",
+        "build:parser": "lezer-generator src/scripts/editor/language/glsl.grammar -o src/scripts/editor/language/parser.js",
+        "prepare": "bun run build:parser"
     },
     "dependencies": {
         "astro": "^5.11.2",
         "autoprefixer": "^10.4.21",
         "codemirror": "^6.0.2",
-        "codemirror-lang-glsl": "^0.5.0",
         "gl-matrix": "^3.4.3"
     },
     "devDependencies": {
+        "@lezer/generator": "^1.8.0",
         "@eslint/js": "^9.31.0",
         "eslint": "^9.31.0",
         "eslint-config-prettier": "^10.1.5",

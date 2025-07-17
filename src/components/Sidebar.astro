@@ -60,10 +60,10 @@ import TexturePanel from "./TexturePanel.astro";
     import { EditorView, keymap } from "@codemirror/view";
     import { EditorState, Compartment } from "@codemirror/state";
     import { indentUnit } from "@codemirror/language";
-    import { indentWithTab, redo } from "@codemirror/commands";
+    import { indentWithTab, redo, toggleComment } from "@codemirror/commands";
     import { basicSetup } from "codemirror";
-    import { glsl } from "codemirror-lang-glsl";
 
+    import { glsl } from "../scripts/editor/language/glsl";
     import defaultFragSource from "../scripts/shaders/defaultFrag";
     import defaultVertSource from "../scripts/shaders/defaultVert";
     import { FRAG_ATTR_KEY, VERT_ATTR_KEY } from "../scripts/rendering/OpenGLCanvas";
@@ -99,7 +99,12 @@ import TexturePanel from "./TexturePanel.astro";
         extensions: [
             basicSetup,
             glsl(),
-            keymap.of([indentWithTab, { key: "Mod-Shift-z", run: redo, preventDefault: true }]),
+            keymap.of([
+                indentWithTab,
+                { key: "Mod-Shift-z", run: redo, preventDefault: true },
+                { key: "Mod-/", run: toggleComment, preventDefault: true },
+            ]),
+            // Bind tab to autocomplete
 
             themeCompartment.of(
                 window.matchMedia("(prefers-color-scheme: dark)").matches ? oneDark : oneLight,
