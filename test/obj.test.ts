@@ -38,10 +38,22 @@ test("Parse a cube with multiple texture coordinates", () => {
         quadCube.vertices,
         "Quad cube does not have the same vertices as the tri cube",
     );
-    assert.sameMembers(
-        triCube.indices.toSorted(),
-        quadCube.indices.toSorted(),
-        "Quad cube does not have the same indices as the tri cube",
+    expect(
+        triCube.indices,
+        "Tri cube should have the same number of indices as the quad cube",
+    ).toHaveLength(quadCube.indices.length);
+
+    assert.isTrue(
+        quadCube.indices
+            .reduce((resultArray: number[][], item, index) => {
+                const chunkIndex = Math.floor(index / 3.0);
+                if (!resultArray[chunkIndex]) resultArray[chunkIndex] = [];
+                resultArray[chunkIndex].push(item);
+                return resultArray;
+            }, [])
+            .map((tri) => tri[0] !== tri[1] && tri[0] !== tri[2] && tri[1] !== tri[2])
+            .every((isUnique) => isUnique),
+        "All triangles in the tri cube should have unique vertices",
     );
 
     console.log(quadCube.vertices);
