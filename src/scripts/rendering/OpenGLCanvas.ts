@@ -1,5 +1,5 @@
 import { mat4 } from "gl-matrix";
-import { cubeMesh, initMeshBuffers, type MeshBuffers } from "../3d/models";
+import { cubeMesh, initMeshBuffers, meshVertexSchema, type MeshBuffers } from "../3d/models";
 import {
     createShaderProgram,
     getShaderInfo,
@@ -155,19 +155,29 @@ export class OpenGLCanvas {
 
         this.updateFrameUniforms({ deltaTime: deltaTime });
 
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.loadedMesh.buffers.position);
-        this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.loadedMesh.buffers.indices);
+        // Procedurally generate the vertex attributes
+        const floatBytes = Float32Array.BYTES_PER_ELEMENT;
+        const totalBytes =
+            floatBytes * Object.values(meshVertexSchema).reduce((sum, n) => sum + n, 0);
+        let offset = 0;
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.loadedMesh.vertexBuffer);
+        for (const [key, attrSize] of Object.entries(meshVertexSchema).slice(0, 3) as [
+            keyof typeof meshVertexSchema,
+            number,
+        ][]) {
+            this.gl.enableVertexAttribArray(this.loadedShader.attributes[key]);
+            this.gl.vertexAttribPointer(
+                this.loadedShader.attributes[key],
+                attrSize,
+                this.gl.FLOAT,
+                false,
+                totalBytes,
+                offset,
+            );
+            offset += attrSize * floatBytes;
+        }
 
-        this.gl.enableVertexAttribArray(this.loadedShader.attributes.position);
-        this.gl.vertexAttribPointer(
-            this.loadedShader.attributes.position,
-            3,
-            this.gl.FLOAT,
-            false,
-            0,
-            0,
-        );
-
+        this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.loadedMesh.indexBuffer);
         this.gl.drawElements(
             this.gl.TRIANGLES,
             this.loadedMesh.mesh.indices.length,
@@ -280,18 +290,11 @@ export class OpenGLCanvas {
         for (let i = 0; i < maxTextures; i++) {
             this.gl.activeTexture(this.gl.TEXTURE0 + i);
             this.gl.bindTexture(this.gl.TEXTURE_2D, textures[i] || null);
-            // this.loadedShader.uniforms.textures is an array of sampler2D
-            if (this.loadedShader) {
-                // this.gl.uniform1i(this.loadedShader.uniforms.textures, i);
-                this.gl.uniform1i(
-                    this.gl.getUniformLocation(
-                        this.loadedShader.program,
-                        `${textureArrayName}[${i}]`,
-                    ),
-                    i,
-                );
-            }
-            console.debug(`Bound texture unit ${i} to ${textures[i] ? "provided" : "blank"}.`);
+            if (!this.loadedShader) continue;
+            this.gl.uniform1i(
+                this.gl.getUniformLocation(this.loadedShader.program, `${textureArrayName}[${i}]`),
+                i,
+            );
         }
         console.debug(`Bound ${textures.length} textures.`);
     }

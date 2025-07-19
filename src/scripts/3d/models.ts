@@ -1,68 +1,59 @@
+import complexCube from "../../../test/cube_complex_tris.obj";
 import type { WebGLCtx } from "../rendering/OpenGLCanvas";
+import { parseObj } from "./parsers/obj";
+
+export type MeshVertex = {
+    position: [number, number, number];
+    normal: [number, number, number];
+    texCoords: [number, number, number];
+};
+export const meshVertexSchema: Record<keyof MeshVertex, number> = {
+    position: 3,
+    normal: 3,
+    texCoords: 3,
+} as const;
+export const meshVertexSize = Object.values(meshVertexSchema).reduce((sum, n) => sum + n, 0);
 
 export type Mesh = {
-    position: Float32Array;
+    vertices: MeshVertex[];
+    indices: number[];
+};
+export type FlatMesh = {
+    vertexData: Float32Array;
     indices: Uint16Array;
 };
-
-export type MeshBuffers<T extends Mesh = Mesh> = {
-    mesh: T;
-    buffers: { [key in keyof T]: WebGLBuffer };
-};
-
-export function initMeshBuffers(gl: WebGLCtx, mesh: Mesh): MeshBuffers {
-    const positionBuffer = gl.createBuffer();
-    if (!positionBuffer) throw new Error("Failed to create position buffer");
-    const indexBuffer = gl.createBuffer();
-    if (!indexBuffer) throw new Error("Failed to create index buffer");
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, mesh.position, gl.STATIC_DRAW);
-
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, mesh.indices, gl.STATIC_DRAW);
-
+export function flattenMesh(mesh: Mesh): FlatMesh {
+    const meshVertexKeys = Object.keys(meshVertexSchema) as (keyof MeshVertex)[];
     return {
-        mesh: mesh,
-        buffers: {
-            position: positionBuffer,
-            indices: indexBuffer,
-        },
+        indices: new Uint16Array(mesh.indices),
+        vertexData: new Float32Array(
+            mesh.vertices.flatMap((v) => meshVertexKeys.flatMap((k) => v[k])),
+        ),
     };
 }
 
-// prettier-ignore
-export const planeMesh: Mesh = {
-    position: new Float32Array([
-         1.0,  0.0,  1.0,
-        -1.0,  0.0,  1.0,
-         1.0,  0.0, -1.0,
-        -1.0,  0.0, -1.0,
-    ]),
-    indices: new Uint16Array([
-        0, 1, 2,
-        1, 2, 3,
-    ]),
+export type MeshBuffers = {
+    mesh: Mesh;
+    vertexBuffer: WebGLBuffer;
+    indexBuffer: WebGLBuffer;
 };
 
-// prettier-ignore
-export const cubeMesh: Mesh = {
-    position: new Float32Array([
-        -1, -1, -1,
-         1, -1, -1,
-         1,  1, -1,
-        -1,  1, -1,
-        -1, -1,  1,
-         1, -1,  1,
-         1,  1,  1,
-        -1,  1,  1,
-    ]),
-    indices: new Uint16Array([
-        3, 1, 0,   2, 1, 3,
-        2, 5, 1,   6, 5, 2,
-        6, 4, 5,   7, 4, 6,
-        7, 0, 4,   3, 0, 7,
-        7, 2, 3,   6, 2, 7,
-        0, 5, 4,   1, 5, 0,
-    ]),
-};
+export function initMeshBuffers(gl: WebGLCtx, mesh: Mesh): MeshBuffers {
+    const flatMesh = flattenMesh(mesh);
+
+    const vertexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, flatMesh.vertexData, gl.STATIC_DRAW);
+
+    const indexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, flatMesh.indices, gl.STATIC_DRAW);
+
+    return {
+        mesh: mesh,
+        vertexBuffer: vertexBuffer,
+        indexBuffer: indexBuffer,
+    };
+}
+
+export const cubeMesh: Mesh = parseObj(complexCube)[0];
