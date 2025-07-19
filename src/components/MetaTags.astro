@@ -2,7 +2,7 @@
 const title = "ShaderCoy";
 const description = "A web-based shader editor and viewer.";
 const url: URL = Astro.url ?? new URL("https://fripe070.github.io/ShaderCoy/");
-const image: string = new URL("colour_cube.webp", url).href;
+const image: string = new URL(url.pathname.replace(/\/?$/, "/colour_cube.webp"), url).href;
 const imageType = "image/webp";
 const imageAlt = "ShaderCoy Coloured Cube Logo";
 ---
