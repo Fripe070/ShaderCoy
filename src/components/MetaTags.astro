@@ -1,0 +1,24 @@
+---
+const title = "ShaderCoy";
+const description = "A web-based shader editor and viewer.";
+const url: URL = Astro.site ?? new URL("https://fripe070.github.io/ShaderCoy/");
+const image = "/colour_cube.webp";
+const imageType = "image/webp";
+const imageAlt = "ShaderCoy Coloured Cube Logo";
+---
+
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+<title>{title}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={url.href} />
+<meta name="generator" content={Astro.generator} />
+
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:type" content="website" />
+<meta property="og:url" content={url.href} />
+<meta property="og:image" content={image} />
+<meta property="og:image:type" content={imageType} />
+<meta property="og:image:alt" content={imageAlt} />
+<meta name="twitter:card" content="summary" />
