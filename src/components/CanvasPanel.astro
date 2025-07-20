@@ -50,7 +50,7 @@ import ModelSelect from "@/components/ModelSelect.astro";
 
     const pauseButton = document.getElementById("pauseButton") as HTMLButtonElement;
     pauseButton.onclick = () => {
-        const shouldPause: boolean = !openGLCanvas?.isPaused;
+        const shouldPause = !openGLCanvas?.isPaused;
         pauseButton.classList.toggle("is-paused", shouldPause);
         if (openGLCanvas) openGLCanvas.isPaused = !shouldPause;
     };

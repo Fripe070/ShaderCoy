@@ -95,10 +95,10 @@ import "@/styles/tabs.css";
         }
     });
 
-    type LoadedTexture = {
+    interface LoadedTexture {
         imageUri: string;
         glTexture: WebGLTexture;
-    };
+    }
     const textures: LoadedTexture[] = [];
 
     function addTextures(files: FileList) {

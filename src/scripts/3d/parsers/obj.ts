@@ -1,18 +1,18 @@
 import { vec3 } from "gl-matrix";
 import type { Mesh, MeshVertex } from "../models";
 
-type ObjVertData = {
+interface ObjVertData {
     original: string;
     positionIndex: number;
     texCoordIndex: number | null;
     normalIndex: number | null;
-};
-type ObjData = {
+}
+interface ObjData {
     positions: [number, number, number][];
     texCoords: [number, number, number][];
     normals: [number, number, number][];
     faces: ObjVertData[][];
-};
+}
 
 const TOKENS = {
     object: "o ",
@@ -37,9 +37,7 @@ function extractObjData(content: string): ObjData[] {
     ];
 
     const lines = content.split("\n");
-    for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
-        const line = lines[lineIndex].trimStart();
-
+    for (const line of lines.map((l) => l.trim())) {
         if (line.startsWith(TOKENS.object)) {
             if (objects[0].positions.length === 0) objects.shift();
             objects.push({

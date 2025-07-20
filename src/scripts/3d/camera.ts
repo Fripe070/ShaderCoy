@@ -36,9 +36,9 @@ export class OrbitCamera {
     public fov: number;
 
     // Controls
-    private trackedPointers: Map<number, [number, number]> = new Map();
+    private trackedPointers = new Map<number, [number, number]>();
     private navMode: PointerMode = PointerMode.Idle;
-    private lastTapTime: number = 0;
+    private lastTapTime = 0;
     private prevPinchDist: number | undefined;
     private prevPinchMid: [number, number] | undefined;
 

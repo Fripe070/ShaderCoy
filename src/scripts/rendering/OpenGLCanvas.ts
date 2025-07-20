@@ -13,8 +13,8 @@ import defaultFragSource from "../shaders/defaultFrag.glsl?raw";
 import defaultVertSource from "../shaders/defaultVert.glsl?raw";
 import { OrbitCamera } from "../3d/camera";
 
-export const VERT_ATTR_KEY: string = "data-vertex";
-export const FRAG_ATTR_KEY: string = "data-fragment";
+export const VERT_ATTR_KEY = "data-vertex";
+export const FRAG_ATTR_KEY = "data-fragment";
 
 /**
  * Type representing a WebGL context, which can be either WebGLRenderingContext or WebGL2RenderingContext.
@@ -51,8 +51,8 @@ export class OpenGLCanvas {
     private loadedVertexShader: string = defaultVertSource;
     private loadedFragmentShader: string = defaultFragSource;
 
-    private runTime: number = 0;
-    private frameCount: number = 0;
+    private runTime = 0;
+    private frameCount = 0;
     private lastMouseData: { x: number; y: number; left: boolean; right: boolean } = {
         x: 0,
         y: 0,
@@ -121,7 +121,7 @@ export class OpenGLCanvas {
         if (!mutation.attributeName) return;
         if (![VERT_ATTR_KEY, FRAG_ATTR_KEY].includes(mutation.attributeName)) return;
 
-        const newValue: string = (this.canvas.getAttribute(mutation.attributeName) || "").trim();
+        const newValue: string = (this.canvas.getAttribute(mutation.attributeName) ?? "").trim();
 
         switch (mutation.attributeName) {
             case VERT_ATTR_KEY:
@@ -284,7 +284,7 @@ export class OpenGLCanvas {
     }
 
     rebindTextures(textures: WebGLTexture[]): void {
-        const maxTextures = this.gl.getParameter(this.gl.MAX_TEXTURE_IMAGE_UNITS) ?? 0;
+        const maxTextures = (this.gl.getParameter(this.gl.MAX_TEXTURE_IMAGE_UNITS) as GLint) ?? 0;
         if (textures.length > maxTextures) throw new Error("Too many textures to bind");
 
         for (let i = 0; i < maxTextures; i++) {

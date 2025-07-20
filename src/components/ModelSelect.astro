@@ -1,12 +1,13 @@
 ---
 import "@/styles/tabs.css";
 
-type ModelMap = {
-    [id: string]: {
+type ModelMap = Record<
+    string,
+    {
         icon_name: string;
         text: string;
-    };
-};
+    }
+>;
 export const primitiveModels: ModelMap = {
     viewport: { icon_name: "2d", text: "Viewport" },
     cube: { icon_name: "deployed_code", text: "Cube" },
@@ -31,20 +32,25 @@ export const defaultModelIndex = 1;
         {
             Object.entries(primitiveModels)
                 .filter(([id]) => id !== "custom")
-                .map(([id, data]) => (
-                    <div
-                        id={`model-select-${id}`}
-                        class:list={[
-                            "row clickable",
-                            { selected: id === Object.keys(primitiveModels)[0] },
-                        ]}
-                    >
-                        <span class="square">
-                            <span class="icon material-symbols-outlined">{data.icon_name}</span>
-                        </span>
-                        <span class="text">{data.text}</span>
-                    </div>
-                ))
+                .map(
+                    ([id, data]) =>
+                        (
+                            <div
+                                id={`model-select-${id}`}
+                                class:list={[
+                                    "row clickable",
+                                    { selected: id === Object.keys(primitiveModels)[0] },
+                                ]}
+                            >
+                                <span class="square">
+                                    <span class="icon material-symbols-outlined">
+                                        {data.icon_name}
+                                    </span>
+                                </span>
+                                <span class="text">{data.text}</span>
+                            </div>
+                        ) as HTMLDivElement,
+                )
         }
         <label for="modelUploadButton" class="row">
             <span class="square">

@@ -4,10 +4,10 @@ export type ShaderStage =
     | WebGLRenderingContext["VERTEX_SHADER"]
     | WebGLRenderingContext["FRAGMENT_SHADER"];
 
-export type ShaderCode = {
+export interface ShaderCode {
     vertex: string;
     fragment: string;
-};
+}
 
 export const attributeNames = {
     position: "a_position",
@@ -30,11 +30,11 @@ export const textureArrayName = "u_textures" as const;
 export type AttributeName = keyof typeof attributeNames;
 export type UniformName = keyof typeof staticUniformNames;
 
-export type ShaderInfo = {
+export interface ShaderInfo {
     program: WebGLProgram;
     attributes: Record<AttributeName, number>;
     uniforms: Record<UniformName, WebGLUniformLocation | null>;
-};
+}
 
 export function getShaderInfo(
     glCtx: WebGLRenderingContext,
