@@ -8,9 +8,17 @@ import eslintPluginAstro from "eslint-plugin-astro";
 export default tseslint.config(
     eslint.configs.recommended,
     tseslint.configs.recommended,
+    tseslint.configs.stylistic,
     eslintConfigPrettier,
     eslintPluginAstro.configs.recommended,
     {
-        ignores: ["dist/", "node_modules/", ".astro/", "bun.lockb"],
+        ignores: [
+            "dist/",
+            "node_modules/",
+            ".astro/",
+            "bun.lockb",
+            "src/scripts/editor/language/parser.js",
+            "src/scripts/editor/language/parser.terms.js",
+        ],
     },
 );
