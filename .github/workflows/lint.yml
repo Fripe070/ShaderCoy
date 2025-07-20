@@ -26,11 +26,13 @@ jobs:
       - name: Fix formatting
         run: bun run format
 
-      - name: Fix linting issues
-        run: bun run lint:fix:types
+      - name: Fix linter issues
+        run: bun run lint:fix:types || true
 
       - uses: stefanzweifel/git-auto-commit-action@v6
         id: auto-commit-action
-        if: always()
         with:
           commit_message: "chore: fix formatting and linting issues"
+
+      - name: Report linter issues
+        run: bun run lint:types
