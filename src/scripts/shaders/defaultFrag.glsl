@@ -1,4 +1,3 @@
-export default /* glsl */ `\
 #version 300 es
 precision mediump float;
 
@@ -22,4 +21,3 @@ void main() {
     fragColor = vec4(color.rgb, 1.0);
     fragColor = vec4(TexCoord.xy, 0.0, 1.0);
 }
-`;

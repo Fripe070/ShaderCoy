@@ -9,8 +9,8 @@ import {
     type ShaderStage,
 } from "../3d/shader";
 import { ShaderCompileError, UserError } from "../errors";
-import defaultFragSource from "../shaders/defaultFrag";
-import defaultVertSource from "../shaders/defaultVert";
+import defaultFragSource from "../shaders/defaultFrag.glsl?raw";
+import defaultVertSource from "../shaders/defaultVert.glsl?raw";
 import { OrbitCamera } from "../3d/camera";
 
 export const VERT_ATTR_KEY: string = "data-vertex";

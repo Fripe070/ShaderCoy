@@ -1,4 +1,3 @@
-export default /* glsl */ `\
 #version 300 es
 
 in vec3 a_position;
@@ -20,4 +19,3 @@ void main() {
     Normal = a_normal;
     TexCoord = a_texCoord;
 }
-`;
