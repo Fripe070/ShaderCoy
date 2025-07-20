@@ -1,5 +1,5 @@
 import { assert, expect, test } from "vitest";
-import { parseObj } from "../src/scripts/3d/parsers/obj";
+import { parseObj } from "@/scripts/3d/parsers/obj";
 import simpleCube from "./cube_simple.obj.ts";
 import complexCube from "./cube_complex_quads.obj.ts";
 import complexTriCube from "./cube_complex_tris.obj.ts";

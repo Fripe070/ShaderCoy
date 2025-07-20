@@ -1,8 +1,8 @@
 ---
-import "../styles/tabs.css";
+import "@/styles/tabs.css";
 
-import GLCanvas from "./GLCanvas.astro";
-import ModelSelect from "./ModelSelect.astro";
+import GLCanvas from "@/components/GLCanvas.astro";
+import ModelSelect from "@/components/ModelSelect.astro";
 ---
 
 <div id="canvas-container">
@@ -28,7 +28,7 @@ import ModelSelect from "./ModelSelect.astro";
 </div>
 
 <script>
-    import applicationState from "../scripts/state";
+    import applicationState from "@/scripts/state";
 
     const canvasContainer = document.getElementById("main-canvas-body")!;
     const openGLCanvas = applicationState.openGLCanvas;

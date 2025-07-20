@@ -1,6 +1,6 @@
 ---
-import SettingsPanel from "./SettingsPanel.astro";
-import TexturePanel from "./TexturePanel.astro";
+import SettingsPanel from "@/components/SettingsPanel.astro";
+import TexturePanel from "@/components/TexturePanel.astro";
 ---
 
 <div id="sidebar">
@@ -63,12 +63,12 @@ import TexturePanel from "./TexturePanel.astro";
     import { indentWithTab, redo, toggleComment } from "@codemirror/commands";
     import { basicSetup } from "codemirror";
 
-    import { glsl } from "../scripts/editor/language/glsl";
-    import defaultFragSource from "../scripts/shaders/defaultFrag.glsl?raw";
-    import defaultVertSource from "../scripts/shaders/defaultVert.glsl?raw";
-    import { FRAG_ATTR_KEY, VERT_ATTR_KEY } from "../scripts/rendering/OpenGLCanvas";
-    import applicationState from "../scripts/state";
-    import { oneDark, oneLight } from "../scripts/editor/theme";
+    import { glsl } from "@/scripts/editor/language/glsl";
+    import defaultFragSource from "@/scripts/shaders/defaultFrag.glsl?raw";
+    import defaultVertSource from "@/scripts/shaders/defaultVert.glsl?raw";
+    import { FRAG_ATTR_KEY, VERT_ATTR_KEY } from "@/scripts/rendering/OpenGLCanvas";
+    import applicationState from "@/scripts/state";
+    import { oneDark, oneLight } from "@/scripts/editor/theme";
 
     type BufferId = "fragment" | "vertex";
 

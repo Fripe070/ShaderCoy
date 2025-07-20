@@ -1,6 +1,6 @@
 ---
-import defaultFragSource from "../scripts/shaders/defaultFrag.glsl?raw";
-import defaultVertSource from "../scripts/shaders/defaultVert.glsl?raw";
+import defaultFragSource from "@/scripts/shaders/defaultFrag.glsl?raw";
+import defaultVertSource from "@/scripts/shaders/defaultVert.glsl?raw";
 ---
 
 <canvas
@@ -12,8 +12,8 @@ import defaultVertSource from "../scripts/shaders/defaultVert.glsl?raw";
 <div id="gl-canvas-error"></div>
 
 <script>
-    import { OpenGLCanvas, ErrorReporter } from "../scripts/rendering/OpenGLCanvas";
-    import applicationState from "../scripts/state";
+    import { OpenGLCanvas, ErrorReporter } from "@/scripts/rendering/OpenGLCanvas";
+    import applicationState from "@/scripts/state";
 
     const errorElement = document.getElementById("gl-canvas-error");
     if (!errorElement) {
