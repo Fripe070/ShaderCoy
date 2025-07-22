@@ -18,7 +18,7 @@ export const primitiveModels: ModelMap = {
 export const defaultModelIndex = 1;
 ---
 
-<button id="model-select" class="tab" data-model={Object.keys(primitiveModels)[0]}>
+<button id="model-select" class="tab" data-model={Object.keys(primitiveModels)[0]} tabindex=-"1">
     <span id="model-select-text">
         <span id="model-select-text-inner">
             {primitiveModels[Object.keys(primitiveModels)[defaultModelIndex]].text}
@@ -41,6 +41,7 @@ export const defaultModelIndex = 1;
                                     "row clickable",
                                     { selected: id === Object.keys(primitiveModels)[0] },
                                 ]}
+                                tabindex="0"
                             >
                                 <span class="square">
                                     <span class="icon material-symbols-outlined">
@@ -52,7 +53,7 @@ export const defaultModelIndex = 1;
                         ) as HTMLDivElement,
                 )
         }
-        <label for="modelUploadButton" class="row">
+        <label for="modelUploadButton" class="row" tabindex="0">
             <span class="square">
                 <span class="icon material-symbols-outlined">computer_arrow_up</span>
             </span>

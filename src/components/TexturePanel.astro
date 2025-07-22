@@ -4,7 +4,7 @@ import "@/styles/tabs.css";
 
 <div id="textures-panel">
     <div id="textures-grid">
-        <label for="textureUploadButton" id="upload-card">
+        <label for="textureUploadButton" id="upload-card" tabindex="0" role="button">
             <input type="file" id="textureUploadButton" accept="image/png,image/jpeg" multiple />
             <span class="icon material-symbols-outlined">add_photo_alternate</span>
             <p>Upload Texture</p>
@@ -38,11 +38,11 @@ import "@/styles/tabs.css";
         </div>
     </template>
 
-    <dialog id="texture-preview-dialog" closedby="any">
+    <dialog id="texture-preview-dialog" closedby="any" tabindex="-1">
         <div class="tab-bar">
             <span class="push-right"></span>
             <form method="dialog">
-                <button type="submit">
+                <button type="submit" tabindex="0">
                     <span class="material-symbols-outlined">close</span>
                 </button>
             </form>
@@ -92,6 +92,11 @@ import "@/styles/tabs.css";
         if (uploadButton.files && uploadButton.files.length > 0) {
             addTextures(uploadButton.files);
             uploadButton.value = "";
+        }
+    });
+    uploadCard.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+            uploadButton.click();
         }
     });
 
@@ -179,6 +184,7 @@ import "@/styles/tabs.css";
                     ".card-arrow.arrow-left",
                 ) as HTMLButtonElement;
                 arrowLeftButton.disabled = index === 0;
+                arrowLeftButton.tabIndex = index === 0 ? -1 : 0;
                 arrowLeftButton.addEventListener("click", () => {
                     [textures[index - 1], textures[index]] = [textures[index], textures[index - 1]];
                     repaintTextureGrid();
@@ -188,6 +194,7 @@ import "@/styles/tabs.css";
                     ".card-arrow.arrow-right",
                 ) as HTMLButtonElement;
                 arrowRightButton.disabled = index === textures.length - 1;
+                arrowRightButton.tabIndex = index === textures.length - 1 ? -1 : 0;
                 arrowRightButton.addEventListener("click", () => {
                     [textures[index], textures[index + 1]] = [textures[index + 1], textures[index]];
                     repaintTextureGrid();
