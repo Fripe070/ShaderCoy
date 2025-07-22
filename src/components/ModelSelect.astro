@@ -18,7 +18,7 @@ export const primitiveModels: ModelMap = {
 export const defaultModelIndex = 1;
 ---
 
-<button id="model-select" class="tab" data-model={Object.keys(primitiveModels)[0]} tabindex=-"1">
+<button id="model-select" class="tab" data-model={Object.keys(primitiveModels)[0]} tabindex='-"1"'>
     <span id="model-select-text">
         <span id="model-select-text-inner">
             {primitiveModels[Object.keys(primitiveModels)[defaultModelIndex]].text}
