@@ -18,7 +18,7 @@ export const primitiveModels: ModelMap = {
 export const defaultModelIndex = 1;
 ---
 
-<button id="model-select" class="tab" data-model={Object.keys(primitiveModels)[0]} tabindex='-"1"'>
+<div id="model-select" class="tab" data-model={Object.keys(primitiveModels)[0]} tabindex='-"1"'>
     <span id="model-select-text">
         <span id="model-select-text-inner">
             {primitiveModels[Object.keys(primitiveModels)[defaultModelIndex]].text}
@@ -32,26 +32,21 @@ export const defaultModelIndex = 1;
         {
             Object.entries(primitiveModels)
                 .filter(([id]) => id !== "custom")
-                .map(
-                    ([id, data]) =>
-                        (
-                            <div
-                                id={`model-select-${id}`}
-                                class:list={[
-                                    "row clickable",
-                                    { selected: id === Object.keys(primitiveModels)[0] },
-                                ]}
-                                tabindex="0"
-                            >
-                                <span class="square">
-                                    <span class="icon material-symbols-outlined">
-                                        {data.icon_name}
-                                    </span>
-                                </span>
-                                <span class="text">{data.text}</span>
-                            </div>
-                        ) as HTMLDivElement,
-                )
+                .map(([id, data]) => (
+                    <div
+                        id={`model-select-${id}`}
+                        class:list={[
+                            "row clickable",
+                            { selected: id === Object.keys(primitiveModels)[0] },
+                        ]}
+                        tabindex="0"
+                    >
+                        <span class="square">
+                            <span class="icon material-symbols-outlined">{data.icon_name}</span>
+                        </span>
+                        <span class="text">{data.text}</span>
+                    </div>
+                ))
         }
         <label for="modelUploadButton" class="row" tabindex="0">
             <span class="square">
@@ -61,14 +56,14 @@ export const defaultModelIndex = 1;
             <input type="file" id="modelUploadButton" accept=".obj,.glb,.gltf" />
         </label>
     </div>
-</button>
+</div>
 
 <script>
     const primitiveModels = JSON.parse(
         document.getElementById("model-select-real")?.dataset.primitives || "{}",
     );
 
-    const modelSelectButton = document.getElementById("model-select")!;
+    const modelSelectTab = document.getElementById("model-select")!;
     const modelSelectText = document.getElementById("model-select-text-inner")!;
     const iconElement = document.getElementById("model-select-icon")!;
 
@@ -79,7 +74,7 @@ export const defaultModelIndex = 1;
             console.log(`Selected model: ${modelId}`);
             const modelData = primitiveModels[modelId];
             if (!modelData) return;
-            modelSelectButton.dataset.model = modelId;
+            modelSelectTab.dataset.model = modelId;
             iconElement.textContent = modelData.icon_name;
             modelSelectText.textContent = modelData.text;
             rows.forEach((r) => {
@@ -94,7 +89,7 @@ export const defaultModelIndex = 1;
 
     const modelUploadButton = document.getElementById("modelUploadButton") as HTMLInputElement;
     modelUploadButton.onchange = (event) => {
-        modelSelectButton.dataset.model = "custom";
+        modelSelectTab.dataset.model = "custom";
         iconElement.textContent = "computer_arrow_up";
         modelSelectText.textContent = "Custom"; // Will be changed to the model filename later
         rows.forEach((r) => {
