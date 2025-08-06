@@ -1,4 +1,3 @@
-import type { APIRoute } from "astro";
 import { getImage } from "astro:assets";
 import appIcon from "../assets/images/pwa_icon.png";
 
