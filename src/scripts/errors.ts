@@ -1,4 +1,4 @@
-import type { ShaderStage } from "./3d/shader";
+import type { ShaderStage } from "@/scripts/gl/shader";
 
 export class UserError extends Error {
     constructor(message: string) {

@@ -223,7 +223,7 @@ export class OrbitCamera {
         this.orbitPoint = vec3.transformMat4(
             vec3.create(),
             viewSpaceOrbit,
-            mat4.invert(mat4.create(), this.getViewMatrix()),
+            mat4.invert(mat4.create(), this.getViewMatrix())!,
         );
     }
     orbit([deltaX, deltaY]: [number, number]): void {

@@ -1,17 +1,15 @@
 import { mat4 } from "gl-matrix";
-import { cubeMesh, initMeshBuffers, meshVertexSchema, type MeshBuffers } from "../3d/models";
-import {
-    createShaderProgram,
-    getShaderInfo,
-    textureArrayName,
-    type ShaderCode,
-    type ShaderInfo,
-    type ShaderStage,
-} from "../3d/shader";
+
 import { ShaderCompileError, UserError } from "../errors";
-import defaultFragSource from "../shaders/defaultFrag.glsl?raw";
-import defaultVertSource from "../shaders/defaultVert.glsl?raw";
+import defaultFragSource from "@/assets/shaders/defaultFrag.glsl?raw";
+import defaultVertSource from "@/assets/shaders/defaultVert.glsl?raw";
 import { OrbitCamera } from "../3d/camera";
+import initAssimp, { type MainModule as AssimpTSModule } from "assimpts";
+import cubeObj from "@/assets/models/cornell_box.obj?raw";
+import { createShaderProgram, getShaderInfo, textureArrayName, type ShaderCode, type ShaderInfo, type ShaderStage } from "@/scripts/gl/shader";
+import { loadMeshBuffers, VERTEX_FLOAT_COUNT, VERTEX_SCHEMA, type MeshBuffers } from "@/scripts/model/mesh";
+import { loadMeshes, stringToAssimpFile } from "@/scripts/model/load";
+
 
 export const VERT_ATTR_KEY = "data-vertex";
 export const FRAG_ATTR_KEY = "data-fragment";
@@ -45,7 +43,7 @@ export class OpenGLCanvas {
     });
 
     public loadedShader: ShaderInfo | null = null;
-    public loadedMesh: MeshBuffers | null = null;
+    public loadedMeshBuffers: MeshBuffers | null = null;
     private loadedTextures: WebGLTexture[] = [];
 
     private loadedVertexShader: string = defaultVertSource;
@@ -59,6 +57,8 @@ export class OpenGLCanvas {
         left: false,
         right: false,
     };
+
+    private assimp: AssimpTSModule | null = null;
 
     constructor(
         public readonly canvas: HTMLCanvasElement,
@@ -88,7 +88,21 @@ export class OpenGLCanvas {
             vertex: this.loadedVertexShader,
             fragment: this.loadedFragmentShader,
         });
-        this.loadedMesh = initMeshBuffers(this.gl, cubeMesh); // TODO: Load from the model selector
+        // this.loadedMesh = initMeshBuffers(this.gl, cubeMesh); // TODO: Load from the model selector
+
+        // Initialize Assimp, should be relatively fast but we can't guarantee it
+        initAssimp().then((module) => {
+            this.assimp = module;
+            console.debug("Assimp initialized.");
+
+            const mesh = loadMeshes(
+                this.assimp,
+                [stringToAssimpFile("cube_simple.obj", cubeObj)], 
+            )[0]
+            console.log("Loaded mesh:", mesh);
+            this.loadedMeshBuffers = loadMeshBuffers(this.gl, mesh);
+            console.log("Initialized mesh buffers:", this.loadedMeshBuffers);
+        });
 
         const observer = new MutationObserver((mutationList) => {
             mutationList.forEach((mutation) => this.onMutation(mutation));
@@ -97,7 +111,7 @@ export class OpenGLCanvas {
             attributes: true,
             attributeFilter: [VERT_ATTR_KEY, FRAG_ATTR_KEY],
         });
-
+        
         // Mouse movement for camera controls
         this.camera.attachTo(this.canvas);
 
@@ -145,7 +159,7 @@ export class OpenGLCanvas {
     render(deltaTime: number): void {
         if (this.isPaused) return;
         if (!this.loadedShader) return;
-        if (!this.loadedMesh) {
+        if (!this.loadedMeshBuffers) {
             this.errorReporter.report(new UserError("No mesh loaded to render."));
             return;
         }
@@ -157,30 +171,33 @@ export class OpenGLCanvas {
 
         // Procedurally generate the vertex attributes
         const floatBytes = Float32Array.BYTES_PER_ELEMENT;
-        const totalBytes =
-            floatBytes * Object.values(meshVertexSchema).reduce((sum, n) => sum + n, 0);
+        const totalBytes = floatBytes * VERTEX_FLOAT_COUNT;
         let offset = 0;
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.loadedMesh.vertexBuffer);
-        for (const [key, attrSize] of Object.entries(meshVertexSchema).slice(0, 3) as [
-            keyof typeof meshVertexSchema,
-            number,
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.loadedMeshBuffers!.vertexBuffer);
+        for (const [key, { size: attrSize }] of Object.entries(VERTEX_SCHEMA) as [
+            keyof typeof VERTEX_SCHEMA,
+            (typeof VERTEX_SCHEMA)[keyof typeof VERTEX_SCHEMA]
         ][]) {
-            this.gl.enableVertexAttribArray(this.loadedShader.attributes[key]);
-            this.gl.vertexAttribPointer(
-                this.loadedShader.attributes[key],
-                attrSize,
-                this.gl.FLOAT,
-                false,
-                totalBytes,
-                offset,
-            );
+            // TODO: Is skipping null (-1) here problematic?
+            const attrLoc = this.loadedShader.attributes[key];
+            if (attrLoc !== null) {
+                this.gl.enableVertexAttribArray(attrLoc);
+                this.gl.vertexAttribPointer(
+                    attrLoc,
+                    attrSize,
+                    this.gl.FLOAT,
+                    false,
+                    totalBytes,
+                    offset,
+                );
+            }
             offset += attrSize * floatBytes;
         }
 
-        this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.loadedMesh.indexBuffer);
+        this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.loadedMeshBuffers!.indexBuffer);
         this.gl.drawElements(
             this.gl.TRIANGLES,
-            this.loadedMesh.mesh.indices.length,
+            this.loadedMeshBuffers.indexCount,
             this.gl.UNSIGNED_SHORT,
             0,
         );

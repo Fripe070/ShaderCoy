@@ -1,4 +1,5 @@
 import { ShaderCompileError, ShaderLinkError } from "../errors";
+import { VERTEX_SCHEMA } from "@/scripts/model/mesh";
 
 export type ShaderStage =
     | WebGLRenderingContext["VERTEX_SHADER"]
@@ -9,12 +10,14 @@ export interface ShaderCode {
     fragment: string;
 }
 
-export const attributeNames = {
-    position: "a_position",
-    normal: "a_normal",
-    texCoords: "a_texCoord",
-} as const;
-export const staticUniformNames = {
+export interface ShaderInfo {
+    program: WebGLProgram;
+    attributes: Record<keyof typeof VERTEX_SCHEMA, number | null>;
+    uniforms: Record<keyof typeof UNIFORM_NAMES, WebGLUniformLocation | null>;
+}
+
+// TODO: Figure out some way of being more lenient in what inputs a shader needs to define
+export const UNIFORM_NAMES = {
     projectionMatrix: "u_projectionMatrix",
     viewMatrix: "u_viewMatrix",
     modelMatrix: "u_modelMatrix",
@@ -25,42 +28,33 @@ export const staticUniformNames = {
     timeDelta: "u_timeDelta",
     frameNumber: "u_frameNumber",
 } as const;
+
 export const textureArrayName = "u_textures" as const;
-
-export type AttributeName = keyof typeof attributeNames;
-export type UniformName = keyof typeof staticUniformNames;
-
-export interface ShaderInfo {
-    program: WebGLProgram;
-    attributes: Record<AttributeName, number>;
-    uniforms: Record<UniformName, WebGLUniformLocation | null>;
-}
 
 export function getShaderInfo(
     glCtx: WebGLRenderingContext,
     shaderProgram: WebGLProgram,
 ): ShaderInfo {
+    const attributeLocationMap = Object.fromEntries(
+        Object.entries(VERTEX_SCHEMA).map(([key, value]) => {
+            const location = glCtx.getAttribLocation(shaderProgram, value.attribute);
+            return [key, location === -1 ? null : location];
+        }),
+    ) as Record<keyof typeof VERTEX_SCHEMA, number | null>;
+    const uniformLocationMap = Object.fromEntries(
+        Object.entries(UNIFORM_NAMES).map(([key, value]) => {
+            const location = glCtx.getUniformLocation(shaderProgram, value);
+            if (location === null) {
+                console.warn(`Uniform ${value} not found in shader program.`);
+            }
+            return [key, location];
+        }),
+    ) as Record<keyof typeof UNIFORM_NAMES, WebGLUniformLocation | null>;
+
     return {
         program: shaderProgram,
-        attributes: {
-            position: glCtx.getAttribLocation(shaderProgram, attributeNames.position),
-            normal: glCtx.getAttribLocation(shaderProgram, attributeNames.normal),
-            texCoords: glCtx.getAttribLocation(shaderProgram, attributeNames.texCoords),
-        },
-        uniforms: {
-            projectionMatrix: glCtx.getUniformLocation(
-                shaderProgram,
-                staticUniformNames.projectionMatrix,
-            ),
-            viewMatrix: glCtx.getUniformLocation(shaderProgram, staticUniformNames.viewMatrix),
-            modelMatrix: glCtx.getUniformLocation(shaderProgram, staticUniformNames.modelMatrix),
-
-            resolution: glCtx.getUniformLocation(shaderProgram, staticUniformNames.resolution),
-            mouse: glCtx.getUniformLocation(shaderProgram, staticUniformNames.mouse),
-            time: glCtx.getUniformLocation(shaderProgram, staticUniformNames.time),
-            timeDelta: glCtx.getUniformLocation(shaderProgram, staticUniformNames.timeDelta),
-            frameNumber: glCtx.getUniformLocation(shaderProgram, staticUniformNames.frameNumber),
-        },
+        attributes: attributeLocationMap,
+        uniforms: uniformLocationMap,
     };
 }
 
@@ -94,7 +88,8 @@ export function createShaderProgram(
     glCtx.attachShader(program, vertexShader);
     glCtx.attachShader(program, fragmentShader);
     glCtx.linkProgram(program);
-    // Mark shaders for deletion after linking
+    // Mark shaders for deletion after linking.
+    // Will not actually be deleted until the program is deleted
     glCtx.deleteShader(vertexShader);
     glCtx.deleteShader(fragmentShader);
     // Check if the program linked successfully
