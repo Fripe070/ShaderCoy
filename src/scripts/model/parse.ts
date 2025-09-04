@@ -45,7 +45,7 @@ export function assjsonToMesh(assjson: AssimpModel): Mesh {
             const meshVertices: [number, number, number][] = [];
             const meshNormals: [number, number, number][] = [];
             const meshTexCoords: [number, number, number][] = [];
-            
+
             const texCoordSize = mesh.numuvcomponents?.[0] ?? 2; // TODO: Support multiple texture coordinate sets?
             if (texCoordSize < 1 || texCoordSize > 3)
                 throw new Error("Unsupported texture coordinate size: " + texCoordSize);
@@ -60,7 +60,11 @@ export function assjsonToMesh(assjson: AssimpModel): Mesh {
                 meshVertices.push(position);
             }
             for (let i = 2; i < (mesh.normals?.length ?? 0); i += 3) {
-                const normal: [number, number, number] = [mesh.normals![i - 2], mesh.normals![i - 1], mesh.normals![i]];
+                const normal: [number, number, number] = [
+                    mesh.normals![i - 2],
+                    mesh.normals![i - 1],
+                    mesh.normals![i],
+                ];
                 vec3.transformMat4(normal, normal, parentTransform);
                 meshNormals.push(normal);
             }
