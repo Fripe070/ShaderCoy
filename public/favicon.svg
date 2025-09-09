@@ -1,20 +1,16 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<svg
-  fill="none"
-  viewBox="0 0 128 128"
-  xmlns="http://www.w3.org/2000/svg"
->
-  <style id="style1">
-    .f1 { fill: #333; }
-    .f2 { fill: #111; }
-    .f3 { fill: #222; }
+<svg viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .left { fill: #111; }
+    .right { fill: #333; }
+    .top { fill: #222; }
     @media (prefers-color-scheme: dark) {
-      .f1 { fill: #fff; }
-      .f3 { fill: #aaa; }
-      .f2 { fill: #ddd; }
-    } 
+    .left { fill: #ddd; }
+    .right { fill: #fff; }
+    .top { fill: #aaa; }
+    }
   </style>
-  <path class="f1" style="display:inline;" d="M 64,126.36719 121.00391,91.710937 128,11.496094 64,28.90299 Z" id="path3" />
-  <path class="f2" style="display:inline;" d="M 64,126.36719 6.9960937,91.710937 0,11.496094 64,28.90299 Z" id="path2" />
-  <path class="f3" style="display:inline;" d="M 64,1.8561553 0,11.496 64,28.90299 128,11.496 Z" id="path1" />
+  <path class="left" d="M 64,126 64,29 0,11.5 7,92 Z" />
+  <path class="right" d="M 64,126 64,29 128,11.5 121,92 Z" />
+  <path class="top" d="M 64,2 0,11.5 64,29 128,11.5 Z" />
 </svg>

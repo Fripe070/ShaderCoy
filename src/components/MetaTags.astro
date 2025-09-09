@@ -1,0 +1,32 @@
+---
+const title = "ShaderCoy";
+const description = "A web-based shader editor and viewer.";
+const url: URL = Astro.url ?? new URL("https://fripe070.github.io/ShaderCoy/");
+
+const favicon: string = new URL(url.pathname.replace(/\/?$/, "/favicon.svg"), url).href;
+const pwaManifest = new URL(url.pathname.replace(/\/?$/, "/manifest.json"), url).href;
+const preview: string = new URL(url.pathname.replace(/\/?$/, "/preview.webp"), url).href;
+const imageAlt = "ShaderCoy Coloured Cube Logo";
+---
+
+<link rel="icon" type="image/svg+xml" href={favicon} />
+
+<title>{title}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={url.href} />
+<meta name="generator" content={Astro.generator} />
+
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:type" content="website" />
+<meta property="og:url" content={url.href} />
+<meta property="og:image" content={preview} />
+<meta property="og:image:type" content="image/webp" />
+<meta property="og:image:alt" content={imageAlt} />
+<meta name="twitter:card" content="summary" />
+
+<meta name="color-scheme" content="dark light" />
+<meta name="theme-color" content="#21252b" media="(prefers-color-scheme: dark)" />
+<meta name="theme-color" content="#eaeaeb" media="(prefers-color-scheme: light)" />
+
+<link rel="manifest" href={pwaManifest} />

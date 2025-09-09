@@ -1,6 +1,7 @@
 ---
-import CanvasPanel from "@/components/CanvasPanel.astro";
-import Sidebar from "@/components/Sidebar.astro";
+import CanvasPanel from "../components/CanvasPanel.astro";
+import MetaTags from "../components/MetaTags.astro";
+import Sidebar from "../components/Sidebar.astro";
 
 import "@/styles/tabs.css";
 ---
@@ -8,15 +9,8 @@ import "@/styles/tabs.css";
 <html lang="en">
     <head>
         <meta charset="utf-8" />
-        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <meta name="viewport" content="width=device-width" />
-        <title>ShaderCoy</title>
-        <meta name="description" content="ShaderCoy is a web-based shader editor and viewer." />
-        <meta name="generator" content={Astro.generator} />
-
-        <meta name="color-scheme" content="dark light" />
-        <meta name="theme-color" content="#21252b" media="(prefers-color-scheme: dark)" />
-        <meta name="theme-color" content="#eaeaeb" media="(prefers-color-scheme: light)" />
+        <MetaTags />
     </head>
     <body>
         {/* TODO: allow toggling class="reversed" in settings */}
