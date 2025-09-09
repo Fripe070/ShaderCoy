@@ -5,7 +5,7 @@ import defaultFragSource from "@/assets/shaders/defaultFrag.glsl?raw";
 import defaultVertSource from "@/assets/shaders/defaultVert.glsl?raw";
 import { OrbitCamera } from "../3d/camera";
 import initAssimp, { type MainModule as AssimpTSModule } from "assimpts";
-import cubeObj from "@/assets/models/cornell_box.obj?raw";
+import cubeObj from "@/assets/models/cube.obj?raw";
 import { createShaderProgram, getShaderInfo, textureArrayName, type ShaderCode, type ShaderInfo, type ShaderStage } from "@/scripts/gl/shader";
 import { loadMeshBuffers, VERTEX_FLOAT_COUNT, VERTEX_SCHEMA, type MeshBuffers } from "@/scripts/model/mesh";
 import { loadMeshes, stringToAssimpFile } from "@/scripts/model/load";

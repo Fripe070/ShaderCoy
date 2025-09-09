@@ -1,5 +1,6 @@
 import type { WebGLCtx } from "../rendering/OpenGLCanvas";
 
+// TODO: Allow configuring in textures panel
 export function loadTexture2D(gl: WebGLCtx, image: HTMLImageElement): WebGLTexture {
     const texture = gl.createTexture();
     if (!texture) throw new Error("Failed to create texture");
@@ -14,8 +15,8 @@ export function loadTexture2D(gl: WebGLCtx, image: HTMLImageElement): WebGLTextu
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     }
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
 
     return texture;
 }
