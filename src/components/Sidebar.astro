@@ -1,6 +1,6 @@
 ---
-import SettingsPanel from "./SettingsPanel.astro";
-import TexturePanel from "./TexturePanel.astro";
+import SettingsPanel from "@/components/SettingsPanel.astro";
+import TexturePanel from "@/components/TexturePanel.astro";
 ---
 
 <div id="sidebar">
@@ -35,7 +35,7 @@ import TexturePanel from "./TexturePanel.astro";
 
         <span class="push-right"></span>
         <!-- Push following buttons to the right -->
-        <label id="codeUploadButton" for="codeUploadInput" class="tab square button">
+        <label id="codeUploadButton" for="codeUploadInput" class="tab square button" tabindex="0">
             <span class="material-symbols-outlined">upload_file</span>
         </label>
         <input type="file" id="codeUploadInput" accept=".glsl,.frag,.fs" />
@@ -60,15 +60,15 @@ import TexturePanel from "./TexturePanel.astro";
     import { EditorView, keymap } from "@codemirror/view";
     import { EditorState, Compartment } from "@codemirror/state";
     import { indentUnit } from "@codemirror/language";
-    import { indentWithTab, redo } from "@codemirror/commands";
+    import { indentWithTab, redo, toggleComment } from "@codemirror/commands";
     import { basicSetup } from "codemirror";
-    import { glsl } from "codemirror-lang-glsl";
 
-    import defaultFragSource from "../scripts/shaders/defaultFrag";
-    import defaultVertSource from "../scripts/shaders/defaultVert";
-    import { FRAG_ATTR_KEY, VERT_ATTR_KEY } from "../scripts/rendering/OpenGLCanvas";
-    import applicationState from "../scripts/state";
-    import { oneDark, oneLight } from "../scripts/editor/theme";
+    import { glsl } from "@/scripts/editor/language/glsl";
+    import defaultFragSource from "@/assets/shaders/defaultFrag.glsl?raw";
+    import defaultVertSource from "@/assets/shaders/defaultVert.glsl?raw";
+    import { FRAG_ATTR_KEY, VERT_ATTR_KEY } from "@/scripts/rendering/OpenGLCanvas";
+    import applicationState from "@/scripts/state";
+    import { oneDark, oneLight } from "@/scripts/editor/theme";
 
     type BufferId = "fragment" | "vertex";
 
@@ -99,7 +99,12 @@ import TexturePanel from "./TexturePanel.astro";
         extensions: [
             basicSetup,
             glsl(),
-            keymap.of([indentWithTab, { key: "Mod-Shift-z", run: redo, preventDefault: true }]),
+            keymap.of([
+                indentWithTab,
+                { key: "Mod-Shift-z", run: redo, preventDefault: true },
+                { key: "Mod-/", run: toggleComment, preventDefault: true },
+            ]),
+            // TODO: Bind tab to autocomplete
 
             themeCompartment.of(
                 window.matchMedia("(prefers-color-scheme: dark)").matches ? oneDark : oneLight,

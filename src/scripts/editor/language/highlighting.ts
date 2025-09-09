@@ -1,0 +1,37 @@
+import { styleTags, tags } from "@lezer/highlight";
+
+export const glslHighlighting = styleTags({
+    struct: tags.definitionKeyword,
+    "precision const uniform in out centroid layout smooth flat invariant highp mediump lowp":
+        tags.modifier,
+    "if else switch for while do case default return break continue goto try catch":
+        tags.controlKeyword,
+    "true false": tags.bool,
+    PrimitiveType: tags.standard(tags.typeName),
+    TypeIdentifier: tags.typeName,
+    FieldIdentifier: tags.propertyName,
+    "CallExpression/FieldExpression/FieldIdentifier": tags.function(tags.propertyName),
+    Identifier: tags.variableName,
+    IdentifierDefinition: tags.definition(tags.variableName),
+    "CallExpression/Identifier": tags.function(tags.variableName),
+    "FunctionDeclarator/Identifier": tags.function(tags.definition(tags.variableName)),
+    OperatorName: tags.operator,
+    ArithOp: tags.arithmeticOperator,
+    LogicOp: tags.logicOperator,
+    BitOp: tags.bitwiseOperator,
+    CompareOp: tags.compareOperator,
+    AssignOp: tags.definitionOperator,
+    UpdateOp: tags.updateOperator,
+    LineComment: tags.lineComment,
+    BlockComment: tags.blockComment,
+    Number: tags.number,
+    PreProcArg: tags.meta,
+    String: tags.string,
+    "PreprocDirectiveName #version #include": tags.processingInstruction,
+    "( )": tags.strong,
+    "[ ]": tags.squareBracket,
+    "{ }": tags.brace,
+    "< >": tags.angleBracket,
+    ". ->": tags.derefOperator,
+    ", ;": tags.separator,
+});

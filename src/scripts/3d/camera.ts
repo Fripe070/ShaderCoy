@@ -36,9 +36,9 @@ export class OrbitCamera {
     public fov: number;
 
     // Controls
-    private trackedPointers: Map<number, [number, number]> = new Map();
+    private trackedPointers = new Map<number, [number, number]>();
     private navMode: PointerMode = PointerMode.Idle;
-    private lastTapTime: number = 0;
+    private lastTapTime = 0;
     private prevPinchDist: number | undefined;
     private prevPinchMid: [number, number] | undefined;
 
@@ -223,7 +223,7 @@ export class OrbitCamera {
         this.orbitPoint = vec3.transformMat4(
             vec3.create(),
             viewSpaceOrbit,
-            mat4.invert(mat4.create(), this.getViewMatrix()),
+            mat4.invert(mat4.create(), this.getViewMatrix())!,
         );
     }
     orbit([deltaX, deltaY]: [number, number]): void {

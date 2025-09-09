@@ -2,6 +2,9 @@
 dist/
 # generated types
 .astro/
+# generated parser files
+src/scripts/editor/language/parser.js 
+src/scripts/editor/language/parser.terms.js 
 
 # dependencies
 node_modules/

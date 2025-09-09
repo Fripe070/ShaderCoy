@@ -1,19 +1,29 @@
 import { mat4 } from "gl-matrix";
-import { cubeMesh, initMeshBuffers, type MeshBuffers } from "../3d/models";
+
+import { ShaderCompileError, UserError } from "../errors";
+import defaultFragSource from "@/assets/shaders/defaultFrag.glsl?raw";
+import defaultVertSource from "@/assets/shaders/defaultVert.glsl?raw";
+import { OrbitCamera } from "../3d/camera";
+import initAssimp, { type MainModule as AssimpTSModule } from "assimpts";
+import cubeObj from "@/assets/models/cube.obj?raw";
 import {
     createShaderProgram,
     getShaderInfo,
+    textureArrayName,
     type ShaderCode,
     type ShaderInfo,
     type ShaderStage,
-} from "../3d/shader";
-import { ShaderCompileError, UserError } from "../errors";
-import defaultFragSource from "../shaders/defaultFrag";
-import defaultVertSource from "../shaders/defaultVert";
-import { OrbitCamera } from "../3d/camera";
+} from "@/scripts/gl/shader";
+import {
+    loadMeshBuffers,
+    VERTEX_FLOAT_COUNT,
+    VERTEX_SCHEMA,
+    type MeshBuffers,
+} from "@/scripts/model/mesh";
+import { loadMeshes, stringToAssimpFile } from "@/scripts/model/load";
 
-export const VERT_ATTR_KEY: string = "data-vertex";
-export const FRAG_ATTR_KEY: string = "data-fragment";
+export const VERT_ATTR_KEY = "data-vertex";
+export const FRAG_ATTR_KEY = "data-fragment";
 
 /**
  * Type representing a WebGL context, which can be either WebGLRenderingContext or WebGL2RenderingContext.
@@ -44,19 +54,22 @@ export class OpenGLCanvas {
     });
 
     public loadedShader: ShaderInfo | null = null;
-    public loadedMesh: MeshBuffers | null = null;
+    public loadedMeshBuffers: MeshBuffers | null = null;
+    private loadedTextures: WebGLTexture[] = [];
 
     private loadedVertexShader: string = defaultVertSource;
     private loadedFragmentShader: string = defaultFragSource;
 
-    private runTime: number = 0;
-    private frameCount: number = 0;
+    private runTime = 0;
+    private frameCount = 0;
     private lastMouseData: { x: number; y: number; left: boolean; right: boolean } = {
         x: 0,
         y: 0,
         left: false,
         right: false,
     };
+
+    private assimp: AssimpTSModule | null = null;
 
     constructor(
         public readonly canvas: HTMLCanvasElement,
@@ -86,7 +99,20 @@ export class OpenGLCanvas {
             vertex: this.loadedVertexShader,
             fragment: this.loadedFragmentShader,
         });
-        this.loadedMesh = initMeshBuffers(this.gl, cubeMesh); // TODO: Load from the model selector
+        // this.loadedMesh = initMeshBuffers(this.gl, cubeMesh); // TODO: Load from the model selector
+
+        // Initialize Assimp, should be relatively fast but we can't guarantee it
+        initAssimp().then((module) => {
+            this.assimp = module;
+            console.debug("Assimp initialized.");
+
+            const mesh = loadMeshes(this.assimp, [
+                stringToAssimpFile("cube_simple.obj", cubeObj),
+            ])[0];
+            console.log("Loaded mesh:", mesh);
+            this.loadedMeshBuffers = loadMeshBuffers(this.gl, mesh);
+            console.log("Initialized mesh buffers:", this.loadedMeshBuffers);
+        });
 
         const observer = new MutationObserver((mutationList) => {
             mutationList.forEach((mutation) => this.onMutation(mutation));
@@ -119,7 +145,7 @@ export class OpenGLCanvas {
         if (!mutation.attributeName) return;
         if (![VERT_ATTR_KEY, FRAG_ATTR_KEY].includes(mutation.attributeName)) return;
 
-        const newValue: string = (this.canvas.getAttribute(mutation.attributeName) || "").trim();
+        const newValue: string = (this.canvas.getAttribute(mutation.attributeName) ?? "").trim();
 
         switch (mutation.attributeName) {
             case VERT_ATTR_KEY:
@@ -143,33 +169,45 @@ export class OpenGLCanvas {
     render(deltaTime: number): void {
         if (this.isPaused) return;
         if (!this.loadedShader) return;
-        if (!this.loadedMesh) {
+        if (!this.loadedMeshBuffers) {
             this.errorReporter.report(new UserError("No mesh loaded to render."));
             return;
         }
 
         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
         this.gl.useProgram(this.loadedShader.program);
-        // TODO: Draw the scene
 
         this.updateFrameUniforms({ deltaTime: deltaTime });
 
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.loadedMesh.buffers.position);
-        this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.loadedMesh.buffers.indices);
+        // Procedurally generate the vertex attributes
+        const floatBytes = Float32Array.BYTES_PER_ELEMENT;
+        const totalBytes = floatBytes * VERTEX_FLOAT_COUNT;
+        let offset = 0;
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.loadedMeshBuffers.vertexBuffer);
+        for (const [key, { size: attrSize }] of Object.entries(VERTEX_SCHEMA) as [
+            keyof typeof VERTEX_SCHEMA,
+            (typeof VERTEX_SCHEMA)[keyof typeof VERTEX_SCHEMA],
+        ][]) {
+            // TODO: Is skipping null (-1) here problematic?
+            const attrLoc = this.loadedShader.attributes[key];
+            if (attrLoc !== null) {
+                this.gl.enableVertexAttribArray(attrLoc);
+                this.gl.vertexAttribPointer(
+                    attrLoc,
+                    attrSize,
+                    this.gl.FLOAT,
+                    false,
+                    totalBytes,
+                    offset,
+                );
+            }
+            offset += attrSize * floatBytes;
+        }
 
-        this.gl.enableVertexAttribArray(this.loadedShader.attributes.position);
-        this.gl.vertexAttribPointer(
-            this.loadedShader.attributes.position,
-            3,
-            this.gl.FLOAT,
-            false,
-            0,
-            0,
-        );
-
+        this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.loadedMeshBuffers.indexBuffer);
         this.gl.drawElements(
             this.gl.TRIANGLES,
-            this.loadedMesh.mesh.indices.length,
+            this.loadedMeshBuffers.indexCount,
             this.gl.UNSIGNED_SHORT,
             0,
         );
@@ -236,6 +274,7 @@ export class OpenGLCanvas {
         this.gl.uniformMatrix4fv(this.loadedShader.uniforms.modelMatrix, false, modelMatrix);
 
         this.updateFrameUniforms({ deltaTime: 0 });
+        this.rebindTextures(this.loadedTextures);
     }
 
     updateFrameUniforms(data: { deltaTime: number }): void {
@@ -269,6 +308,27 @@ export class OpenGLCanvas {
             this.canvas.width,
             this.canvas.height,
         );
+    }
+
+    rebindTextures(textures: WebGLTexture[]): void {
+        const maxTextures = (this.gl.getParameter(this.gl.MAX_TEXTURE_IMAGE_UNITS) as GLint) ?? 0;
+        if (textures.length > maxTextures) throw new Error("Too many textures to bind");
+
+        for (let i = 0; i < maxTextures; i++) {
+            this.gl.activeTexture(this.gl.TEXTURE0 + i);
+            this.gl.bindTexture(this.gl.TEXTURE_2D, textures[i] || null);
+            if (!this.loadedShader) continue;
+            this.gl.uniform1i(
+                this.gl.getUniformLocation(this.loadedShader.program, `${textureArrayName}[${i}]`),
+                i,
+            );
+        }
+        console.debug(`Bound ${textures.length} textures.`);
+    }
+
+    setTextures(textures: WebGLTexture[]): void {
+        this.loadedTextures = textures;
+        this.rebindTextures(textures);
     }
 
     get isPaused(): boolean {
