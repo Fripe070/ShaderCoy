@@ -5,7 +5,7 @@
     "scripts": {
         "prepare": "bun run build:parser",
         "astro": "astro",
-        "dev": "astro dev --host",
+        "dev": "astro dev",
         "preview": "bun run build:parser && astro preview",
         "build": "bun run build:parser && astro build",
         "build:parser": "lezer-generator src/scripts/editor/language/glsl.grammar -o src/scripts/editor/language/parser.js",
