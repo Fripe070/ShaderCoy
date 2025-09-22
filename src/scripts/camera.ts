@@ -34,7 +34,7 @@ export class OrbitCamera {
     public state: CameraState;
 
     constructor(params?: Partial<CameraState>) {
-        this.state = new CameraState() as CameraState;
+        this.state = new CameraState();
         Object.assign(this.state, params);
     }
 
