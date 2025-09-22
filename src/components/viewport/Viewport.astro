@@ -1,0 +1,132 @@
+---
+import Canvas3D from "./canvas/Canvas3D.astro";
+import { Icon } from "astro-icon/components";
+---
+
+<div class="w-full h-full flex flex-col">
+    <section class="flex flex-row bg-od-dark h-7">
+        <button
+            id="viewport-pause-btn"
+            class:list={[
+                "w-7 h-7 flex items-center justify-center",
+                "bg-od-normal hover:bg-od-light cursor-pointer",
+                "data-[paused=true]:[&>.playing]:hidden",
+                "data-[paused=false]:[&>.paused]:hidden",
+                "data-[paused=true]:bg-red-400/20",
+            ]}
+            data-paused="false"
+        >
+            <Icon class="playing" name="material-symbols:pause" size={24} />
+            <Icon class="paused" name="material-symbols:play-arrow" size={24} />
+        </button>
+
+        <div
+            class:list={[
+                "px-2 h-7 flex items-center justify-center text-nowrap",
+                "[#viewport-pause-btn[data-paused=true]~&]:text-od-muted",
+            ]}
+        >
+            <span id="render-time-ms">00.00</span>ms (<span id="render-time-fps">0</span>&nbsp;FPS)
+        </div>
+
+        <div class="grow"></div>
+
+        <button
+            id="viewport-fullscreen-btn"
+            class:list={[
+                "w-7 h-7 flex items-center justify-center",
+                "bg-od-normal hover:bg-od-light cursor-pointer",
+            ]}
+        >
+            <Icon name="material-symbols:fullscreen" size={24} />
+        </button>
+    </section>
+
+    <div class="grow relative overflow-hidden">
+        <Canvas3D />
+
+        <div
+            id="viewport-property-panel"
+            class:list={[
+                "flex max-h-[calc(100%-2*var(--spacing))] min-h-6 bg-od-light",
+                "absolute top-1 left-[100%] transition-all",
+                "translate-x-0",
+                "data-[expanded=true]:-translate-x-full",
+                "data-[expanded=true]:[&>#viewport-property-panel-expander>svg]:-scale-x-100",
+            ]}
+        >
+            <div
+                id="viewport-property-panel-expander"
+                class:list={[
+                    "w-4 h-6 absolute right-[100%]",
+                    "flex items-center justify-center",
+                    "bg-od-light text-od-muted hover:text-od-text cursor-pointer",
+                    "rounded-l",
+                ]}
+            >
+                <Icon name="material-symbols:arrow-back-ios-new" size={16} />
+            </div>
+            <div
+                id="viewport-property-panel-content"
+                class="flex flex-col text-nowrap p-1 pt-0 overflow-y-scroll"
+            >
+                <h2 class="font-bold">Properties</h2>
+                <label class="flex flex-row gap-1 justify-between">
+                    <span class="mr-2">Pivot point</span>
+                    <div class="flex flex-row">
+                        {
+                            Array(3)
+                                .keys()
+                                .map(() => (
+                                    <input
+                                        type="number"
+                                        class="w-16 bg-od-normal outline-none focus-visible:bg-od-selected"
+                                        value="0"
+                                        step="any"
+                                        autocomplete="off"
+                                        required
+                                    />
+                                ))
+                        }
+                    </div>
+                </label>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    import appState from "@/scripts/state";
+
+    // Expand property panel
+    const panel = document.getElementById("viewport-property-panel")!;
+    const expander = document.getElementById("viewport-property-panel-expander")!;
+    expander.addEventListener("click", () => {
+        panel.dataset.expanded = panel.dataset.expanded === "true" ? "false" : "true";
+    });
+
+    // Fullscreen button
+    const fullscreenBtn = document.getElementById("viewport-fullscreen-btn")!;
+    fullscreenBtn.addEventListener("click", () => {
+        appState.canvas3D?.canvasElement.requestFullscreen();
+    });
+
+    // Pause button
+    const pauseBtn = document.getElementById("viewport-pause-btn")!;
+    pauseBtn.addEventListener("click", () => {
+        if (!appState.canvas3D) return;
+        const newState = !appState.canvas3D.state.isPaused;
+        appState.canvas3D.state.isPaused = newState;
+        pauseBtn.dataset.paused = newState.toString();
+    });
+
+    // Render time display
+    const timeMsSpan = document.getElementById("render-time-ms")!;
+    const timeFpsSpan = document.getElementById("render-time-fps")!;
+    setInterval(() => {
+        if (!appState.canvas3D) return;
+        const deltaTime = appState.canvas3D.state.deltaTime;
+        timeMsSpan.textContent = deltaTime.toFixed(2);
+        timeFpsSpan.textContent = (1 / deltaTime).toFixed(0);
+    }, 500);
+</script>

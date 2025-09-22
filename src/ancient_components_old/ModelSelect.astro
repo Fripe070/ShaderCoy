@@ -37,7 +37,9 @@ export const defaultModelIndex = 1;
                         id={`model-select-${id}`}
                         class:list={[
                             "row clickable",
-                            { selected: id === Object.keys(primitiveModels)[0] },
+                            {
+                                selected: id === Object.keys(primitiveModels)[0],
+                            },
                         ]}
                         tabindex="0"
                     >

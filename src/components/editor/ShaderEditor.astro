@@ -1,0 +1,96 @@
+---
+interface Props {
+    editorId: string;
+    initialContent?: string;
+}
+
+const { editorId, initialContent } = Astro.props;
+---
+
+<shader-editor
+    data-editor-id={editorId}
+    data-initial-content={initialContent ?? ""}
+    class:list={[
+        "[&_.cm-editor]:h-full",
+        "[&_.cm-editor]:max-h-full",
+        "[&_.cm-scroller]:overflow-auto",
+        "[&_.cm-scroller]:pb-12",
+        "[&_*]:font-mono text-xs",
+    ]}
+>
+</shader-editor>
+
+<script>
+    import { EditorView } from "@codemirror/view";
+    import { EditorState } from "@codemirror/state";
+    import appState from "@/scripts/state";
+    import { editorCompartments, updateCompartment } from "./CodeMirrorConfig";
+
+    import { basicSetup } from "codemirror";
+    import { glsl } from "@/scripts/editor/language/glsl";
+    import { indentWithTab } from "@codemirror/commands";
+    import { keymap } from "@codemirror/view";
+    import { redo, toggleComment } from "@codemirror/commands";
+    import { oneDark, oneLight } from "@/scripts/editor/theme";
+
+    // Web component is not actually used to store state,
+    // it's just to get the DOM element to attach CodeMirror to.
+    class CodeMirrorEditor extends HTMLElement {
+        connectedCallback() {
+            const id = this.dataset.editorId;
+            if (!id) {
+                console.error("Editor ID is required");
+                return;
+            }
+            const initialContent = this.dataset.initialContent || "";
+
+            const state = EditorState.create({
+                doc: initialContent,
+                extensions: [
+                    basicSetup,
+                    glsl(),
+                    keymap.of([
+                        indentWithTab,
+                        { key: "Mod-Shift-z", run: redo, preventDefault: true },
+                        { key: "Mod-/", run: toggleComment, preventDefault: true },
+                    ]),
+
+                    editorCompartments.theme.of(
+                        window.matchMedia("(prefers-color-scheme: dark)").matches
+                            ? oneDark
+                            : oneLight,
+                    ),
+                    editorCompartments.wrapLines.of([]),
+
+                    EditorView.updateListener.of((update) => {
+                        if (update.docChanged) {
+                            const newCode = update.state.doc.toString();
+                            console.log("Code updated:", newCode);
+                            // TODO: Send over data to the canvas in a modular way
+                        }
+                    }),
+                ],
+            });
+            const view = new EditorView({
+                state: state,
+                parent: this,
+            });
+            appState.editorViews[id] = view;
+        }
+    }
+    if (!customElements.get("shader-editor")) {
+        customElements.define("shader-editor", CodeMirrorEditor);
+        init();
+    }
+
+    function init() {
+        // Listen for theme changes
+        window
+            .matchMedia("(prefers-color-scheme: dark)")
+            .addEventListener("change", (event: MediaQueryListEvent) => {
+                console.log("Theme changed");
+                const newTheme = event.matches ? oneDark : oneLight;
+                updateCompartment("theme", newTheme);
+            });
+    }
+</script>

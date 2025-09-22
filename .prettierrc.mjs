@@ -19,5 +19,5 @@ export default {
     ],
     useTabs: false,
     tabWidth: 4,
-    printWidth: 100, // I am aware this isn't a max lenght, but I like longer lines
+    printWidth: 100,
 };

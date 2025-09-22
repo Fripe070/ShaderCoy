@@ -1,0 +1,34 @@
+---
+import defaultFragSource from "@/assets/shaders/defaultFrag.glsl?raw";
+import defaultVertSource from "@/assets/shaders/defaultVert.glsl?raw";
+---
+
+<canvas
+    id="render-canvas"
+    data-paused="false"
+    data-use-model="false"
+    data-vertex={defaultVertSource}
+    data-fragment={defaultFragSource}
+    class="w-full h-full touch-none user-select-none"
+>
+</canvas>
+
+<style>
+    #render-canvas {
+        background: repeating-conic-gradient(
+            var(--color-od-dark) 0 25%,
+            var(--color-od-normal) 0 50%
+        );
+        background-size: calc(var(--spacing) * 5) calc(var(--spacing) * 5);
+    }
+</style>
+
+<script>
+    import { Canvas3D } from "./Canvas3D";
+    import appState from "@/scripts/state";
+
+    const canvasElement = document.getElementById("render-canvas")! as HTMLCanvasElement;
+    const canvasInstance = new Canvas3D(canvasElement);
+    appState.canvas3D = canvasInstance;
+    canvasInstance.startRenderLoop();
+</script>

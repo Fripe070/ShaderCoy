@@ -67,15 +67,17 @@ export class OrbitCamera {
     }
 
     getViewMatrix(): mat4 {
-        const viewMatrix = mat4.create();
         const cameraPosition = vec3.fromValues(
             this.orbitPoint[0] + this.distance * Math.sin(this.yaw) * Math.cos(this.pitch),
             this.orbitPoint[1] + this.distance * Math.sin(this.pitch),
             this.orbitPoint[2] + this.distance * Math.cos(this.yaw) * Math.cos(this.pitch),
         );
-
-        mat4.lookAt(viewMatrix, cameraPosition, this.orbitPoint, vec3.fromValues(0, 1, 0));
-        return viewMatrix;
+        return mat4.lookAt(
+            mat4.create(),
+            cameraPosition,
+            this.orbitPoint,
+            vec3.fromValues(0, 1, 0),
+        );
     }
 
     getProjectionMatrix(aspectRatio: number): mat4 {

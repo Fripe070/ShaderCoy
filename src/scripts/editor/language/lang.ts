@@ -6,7 +6,7 @@ import {
     foldInside,
     LRLanguage,
 } from "@codemirror/language";
-import { parser } from "./parser.js";
+import { parser } from "./glsl.grammar";
 
 export const glslLanguage = LRLanguage.define({
     name: "glsl",

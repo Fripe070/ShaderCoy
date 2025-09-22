@@ -66,5 +66,11 @@ export type ThemeColours = Record<
 >;
 
 // Normal
-export const darkTheme: ThemeColours = { ...foregroundColoursDark, ...backgroundColoursDark };
-export const lightTheme: ThemeColours = { ...foregroundColoursLight, ...backgroundColoursLight };
+export const darkTheme: ThemeColours = {
+    ...foregroundColoursDark,
+    ...backgroundColoursDark,
+};
+export const lightTheme: ThemeColours = {
+    ...foregroundColoursLight,
+    ...backgroundColoursLight,
+};

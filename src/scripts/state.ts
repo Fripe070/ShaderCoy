@@ -1,12 +1,10 @@
-import type { ErrorReporter, OpenGLCanvas } from "./rendering/OpenGLCanvas";
+import type { EditorView } from "codemirror";
+import type { Canvas3D } from "@/components/viewport/canvas/Canvas3D";
 
-export interface ApplicationState {
-    openGLCanvas: OpenGLCanvas | null;
-    errorReporter: ErrorReporter | null;
-}
+const appState = {
+    canvas3D: null as Canvas3D | null,
+    textures: [] as WebGLTexture[],
 
-const applicationState: ApplicationState = {
-    openGLCanvas: null,
-    errorReporter: null,
+    editorViews: {} as Record<string, EditorView>,
 };
-export default applicationState;
+export default appState;

@@ -1,0 +1,66 @@
+---
+import { sidebarTabs } from "./Sidebar";
+import Tab from "./Tab.astro";
+---
+
+{/* TODO: Fix sizing with different editor text amounts on mobile */}
+<div class="w-full h-full flex flex-col">
+    <nav>
+        <ul class="flex flex-row bg-od-dark h-7">
+            {
+                Object.entries(sidebarTabs)
+                    .filter(([, tab]) => tab.group === "left")
+                    .map(([key, tab], index) => <Tab key={key} tab={tab} index={index} />)
+            }
+            <div class="grow"></div>
+            {
+                Object.entries(sidebarTabs)
+                    .filter(([, tab]) => tab.group === "right")
+                    .map(([key, tab], index) => <Tab key={key} tab={tab} index={index} />)
+            }
+        </ul>
+    </nav>
+    <main class="grow overflow-auto">
+        {
+            Object.entries(sidebarTabs).map(([key, tab], index) => (
+                <section
+                    class:list={[
+                        // Default
+                        "h-full",
+                        // Inactive
+                        "data-[active=false]:hidden",
+                    ]}
+                    data-active={index === 0 ? "true" : "false"}
+                    id={`sidebar-content-${key}`}
+                >
+                    <tab.component />
+                </section>
+            ))
+        }
+    </main>
+</div>
+
+<script>
+    import { sidebarTabs } from "./Sidebar";
+
+    function setTab(tabId: string, active: boolean) {
+        const tab = document.getElementById(`sidebar-tab-${tabId}`);
+        const content = document.getElementById(`sidebar-content-${tabId}`);
+        if (tab) tab.dataset.active = active ? "true" : "false";
+        if (content) content.dataset.active = active ? "true" : "false";
+    }
+
+    // Set the initial active tab based on the URL hash or default to the first tab
+    const selectedHash = window.location.hash.substring(1) || Object.keys(sidebarTabs)[0];
+    for (const tabId of Object.keys(sidebarTabs)) {
+        setTab(tabId, tabId === selectedHash);
+    }
+
+    // Listen for hash changes to update the active tab
+    window.addEventListener("hashchange", (event) => {
+        const oldTabId = new URL(event.oldURL).hash.substring(1) || Object.keys(sidebarTabs)[0];
+        const newTabId = window.location.hash.substring(1);
+        if (oldTabId) setTab(oldTabId, false);
+        if (newTabId) setTab(newTabId, true);
+    });
+</script>

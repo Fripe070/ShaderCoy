@@ -62,7 +62,12 @@ export class OpenGLCanvas {
 
     private runTime = 0;
     private frameCount = 0;
-    private lastMouseData: { x: number; y: number; left: boolean; right: boolean } = {
+    private lastMouseData: {
+        x: number;
+        y: number;
+        left: boolean;
+        right: boolean;
+    } = {
         x: 0,
         y: 0,
         left: false,
