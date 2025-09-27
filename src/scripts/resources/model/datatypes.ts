@@ -3,7 +3,7 @@
  * Each key maps to an attribute accessible in the vertex shader.
  */
 
-import type { NSizeNumVec, WebGLCtx } from "@/scripts/utils";
+import type { NSizeNumVec } from "@/scripts/utils";
 
 // prettier-ignore
 export const VERTEX_SCHEMA = {
@@ -36,39 +36,7 @@ export interface MeshBuffers {
 }
 
 /** Loaded mesh data stored in normal memory. */
-export class Mesh {
-    constructor(
-        public vertices: MeshVertex[] = [],
-        public indices: number[] = [],
-    ) {}
-
-    toBuffers(glCtx: WebGLCtx): MeshBuffers {
-        const vertexAttrs = Object.keys(VERTEX_SCHEMA) as (keyof MeshVertex)[];
-        const interlacedVertexData = this.vertices.flatMap((vertex) =>
-            vertexAttrs.flatMap((attr) => vertex[attr]),
-        );
-
-        const vertexBuffer = glCtx.createBuffer();
-        glCtx.bindBuffer(glCtx.ARRAY_BUFFER, vertexBuffer);
-        glCtx.bufferData(
-            glCtx.ARRAY_BUFFER,
-            new Float32Array(interlacedVertexData),
-            glCtx.STATIC_DRAW,
-        );
-
-        const indexBuffer = glCtx.createBuffer();
-        glCtx.bindBuffer(glCtx.ELEMENT_ARRAY_BUFFER, indexBuffer);
-        glCtx.bufferData(
-            glCtx.ELEMENT_ARRAY_BUFFER,
-            new Uint16Array(this.indices),
-            glCtx.STATIC_DRAW,
-        );
-
-        return {
-            vertexBuffer,
-            vertexCount: this.vertices.length,
-            indexBuffer,
-            indexCount: this.indices.length,
-        };
-    }
+export interface Mesh {
+    vertices: MeshVertex[];
+    indices: number[];
 }

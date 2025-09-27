@@ -1,6 +1,7 @@
 import { mat3, mat4, vec3 } from "gl-matrix";
-import { Mesh } from "./datatypes";
+import { type Mesh, VERTEX_SCHEMA, type MeshBuffers, type MeshVertex } from "./datatypes";
 import { type AssimpTSFile, type MainModule as AssimpTSModule } from "assimpts";
+import type { WebGLCtx } from "@/scripts/utils";
 
 export async function fileToAssimpFile(file: File): Promise<AssimpTSFile> {
     const arrayBuffer = await file.arrayBuffer();
@@ -16,7 +17,7 @@ export function stringToAssimpFile(path: string, data: string): AssimpTSFile {
     };
 }
 
-// TODO: Perform in web worker
+// TODO: Perform in web worker?
 export function loadMeshes(assimp: AssimpTSModule, files: AssimpTSFile[]): Mesh[] {
     const flags: number = assimp.PostProcessFlags.targetRealtime_MaxQuality.value;
     // | assimp.PostProcessFlags.preTransformVertices.value;
@@ -28,6 +29,28 @@ export function loadMeshes(assimp: AssimpTSModule, files: AssimpTSFile[]): Mesh[
             return assjsonToMesh(json);
         })
         .flat();
+}
+
+export function meshToBuffers(mesh: Mesh, glCtx: WebGLCtx): MeshBuffers {
+    const vertexAttrs = Object.keys(VERTEX_SCHEMA) as (keyof MeshVertex)[];
+    const interlacedVertexData = mesh.vertices.flatMap((vertex) =>
+        vertexAttrs.flatMap((attr) => vertex[attr]),
+    );
+
+    const vertexBuffer = glCtx.createBuffer();
+    glCtx.bindBuffer(glCtx.ARRAY_BUFFER, vertexBuffer);
+    glCtx.bufferData(glCtx.ARRAY_BUFFER, new Float32Array(interlacedVertexData), glCtx.STATIC_DRAW);
+
+    const indexBuffer = glCtx.createBuffer();
+    glCtx.bindBuffer(glCtx.ELEMENT_ARRAY_BUFFER, indexBuffer);
+    glCtx.bufferData(glCtx.ELEMENT_ARRAY_BUFFER, new Uint16Array(mesh.indices), glCtx.STATIC_DRAW);
+
+    return {
+        vertexBuffer,
+        vertexCount: mesh.vertices.length,
+        indexBuffer,
+        indexCount: mesh.indices.length,
+    };
 }
 
 interface AssimpModel {
@@ -52,7 +75,7 @@ interface AssimpMesh {
 }
 
 function convertAssimpMesh(mesh: AssimpMesh, transform: mat4): Mesh {
-    const result = new Mesh();
+    const result: Mesh = { vertices: [], indices: [] };
     const meshName: string = mesh.name ?? "<unnamed>";
 
     // Sanity checks

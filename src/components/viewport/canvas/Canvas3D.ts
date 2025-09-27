@@ -2,13 +2,14 @@ import type { PrimaryShader } from "@/scripts/resources/shader/datatypes";
 import { loadPrimaryShader } from "@/scripts/resources/shader/load";
 import type { WebGLCtx } from "@/scripts/utils";
 import initAssimp, { type MainModule as AssimpTSModule } from "assimpts";
-import { loadMeshes, stringToAssimpFile } from "@/scripts/resources/model/load";
-import defaultCubeObj from "@/assets/models/cube.obj?raw";
 import type { MeshBuffers } from "@/scripts/resources/model/datatypes";
 import { OrbitCamera } from "@/scripts/camera";
 import { VERTEX_SCHEMA, VERTEX_VALUE_COUNT } from "@/scripts/resources//model/datatypes";
 import { mat4 } from "gl-matrix";
 import appState from "@/scripts/state";
+import { meshToBuffers } from "@/scripts/resources/model/load";
+
+import cubeModel from "@/assets/models/cube.obj";
 
 export class RenderState {
     isPaused = false;
@@ -33,6 +34,7 @@ export class Canvas3D {
 
     public state: RenderState;
     private glCtx: WebGLCtx;
+    //TODO: Move to external model loader
     private assimp: AssimpTSModule | null = null;
 
     private renderLoopId: number | null = null;
@@ -75,18 +77,11 @@ export class Canvas3D {
         initAssimp().then((assimpModule) => {
             this.assimp = assimpModule;
             console.debug("Assimp initialized.");
-            // TODO: Load from build-time dumped json to reduce initial load time
-            // (especially bad on mobile)
-            // TODO: Add loading indicator whenever I implement model loading
-            this.state.loadedMeshes = loadMeshes(this.assimp, [
-                stringToAssimpFile("model.obj", defaultCubeObj),
-            ]).map((mesh) => {
-                console.log("Loaded mesh:", mesh);
-                const buffers = mesh.toBuffers(this.glCtx);
-                return buffers;
-            });
-            console.debug("Default model loaded.");
         });
+
+        // TODO: Add loading indicator whenever I implement model loading
+        console.log("DEBUGGING!!!", cubeModel); // TODO: Remove
+        this.state.loadedMeshes = cubeModel.map((mesh) => meshToBuffers(mesh, this.glCtx));
 
         // Set camera
         this.state.camera = new OrbitCamera();
