@@ -1,4 +1,4 @@
-import { mat4, type vec2, vec3 } from "gl-matrix";
+import { mat4, vec2, vec3 } from "gl-matrix";
 
 const cursors = {
     default: "grab",
@@ -11,50 +11,50 @@ const PointerButton = {
     Secondary: 2,
 } as const;
 
+function distBetween(a: vec2, b: vec2): number {
+    return Math.hypot(a[0] - b[0], a[1] - b[1]);
+}
+function averagePos(a: vec2, b: vec2): vec2 {
+    return [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+}
+
 class CameraState {
     constructor(
-        // TODO: Switch from position to distance, yaw, pitch
-        public position: vec3 = vec3.fromValues(0, 0, 10),
         public orbitPoint: vec3 = vec3.create(),
-        public up: vec3 = vec3.fromValues(0, 1, 0),
-        public pointers = new Map<number, vec2>(),
+        public distance = 8,
+        // Isometric angle
+        public yaw = Math.PI / 4,
+        public pitch = Math.atan(1 / Math.sqrt(2)),
 
+        public pointers = new Map<number, vec2>(),
+        public lastTapTime = 0,
+
+        public up: vec3 = vec3.fromValues(0, 1, 0),
         public nearPlane = 0.1,
         public farPlane = 100,
-        public fov = 45 * (Math.PI / 180),
+        public fovRadians = 34 * (Math.PI / 180),
 
-        public sensitivity = 0.005,
-        public zoomSpeed = 0.1,
-        public pinchSensitivity = 1.0,
+        public lookSensitivity = 0.005,
+        public doubleTapTimeout = 200,
+
+        public panSpeed = 0.01,
+        public scrollZoomSpeed = 1,
+
+        public pinchZoomSpeed = 1.5,
+        public pinchPanSpeed = 0.005,
     ) {}
 }
 
+// TODO: Render rotation gizmo overlay
 // TODO: Pause on preview pause
 export class OrbitCamera {
     public state: CameraState;
+    public defaultState: CameraState;
 
     constructor(params?: Partial<CameraState>) {
         this.state = new CameraState() as CameraState;
         Object.assign(this.state, params);
-    }
-
-    getViewMatrix(): mat4 {
-        return mat4.lookAt(
-            mat4.create(),
-            this.state.position,
-            this.state.orbitPoint,
-            this.state.up,
-        );
-    }
-
-    getProjectionMatrix(aspectRatio: number): mat4 {
-        return mat4.perspective(
-            mat4.create(),
-            this.state.fov,
-            aspectRatio,
-            this.state.nearPlane,
-            this.state.farPlane,
-        );
+        this.defaultState = structuredClone(this.state);
     }
 
     public attach(element: HTMLCanvasElement): void {
@@ -76,11 +76,44 @@ export class OrbitCamera {
         }
     }
 
+    public getPosition(): vec3 {
+        const result = vec3.fromValues(
+            Math.sin(this.state.yaw) * Math.cos(this.state.pitch),
+            Math.sin(this.state.pitch),
+            Math.cos(this.state.yaw) * Math.cos(this.state.pitch),
+        );
+        vec3.scale(result, result, this.state.distance);
+        vec3.add(result, result, this.state.orbitPoint);
+        return result;
+    }
+
+    public getViewMatrix(): mat4 {
+        return mat4.lookAt(mat4.create(), this.getPosition(), this.state.orbitPoint, this.state.up);
+    }
+
+    public getProjectionMatrix(aspectRatio: number): mat4 {
+        return mat4.perspective(
+            mat4.create(),
+            this.state.fovRadians,
+            aspectRatio,
+            this.state.nearPlane,
+            this.state.farPlane,
+        );
+    }
+
     private onDown = (event: PointerEvent): void => {
         this.state.pointers.set(event.pointerId, [event.clientX, event.clientY]);
         const targetCanvas = event.currentTarget as HTMLCanvasElement;
         targetCanvas.setPointerCapture(event.pointerId);
-        targetCanvas.style.cursor = cursors.grabbing;
+
+        const now = performance.now();
+        if (
+            now - this.state.lastTapTime < this.state.doubleTapTimeout &&
+            this.state.pointers.size === 1
+        ) {
+            this.doReset();
+        }
+        this.state.lastTapTime = now;
     };
     private onUp = (event: PointerEvent): void => {
         this.state.pointers.delete(event.pointerId);
@@ -90,82 +123,58 @@ export class OrbitCamera {
             targetCanvas.style.cursor = cursors.default;
         }
     };
-
     private onMove = (event: PointerEvent): void => {
-        const targetCanvas = event.currentTarget as HTMLCanvasElement;
-        // Might be undefined when the mouse isn't pressed
+        // Can be undefined when the mouse isn't pressed down
         if (!this.state.pointers.has(event.pointerId)) return;
 
-        // Relative to viewport
         const prevPos = this.state.pointers.get(event.pointerId)!;
-        this.state.pointers.set(event.pointerId, [event.clientX, event.clientY]);
+        const newPos = [event.clientX, event.clientY] as vec2;
+        this.state.pointers.set(event.pointerId, newPos);
 
-        const { right, up } = this.getAxes();
-        const rect = targetCanvas.getBoundingClientRect();
-        const viewDelta: vec2 = [
-            (targetCanvas.width / rect.width) * (event.clientX - prevPos[0]),
-            (targetCanvas.height / rect.height) * (event.clientY - prevPos[1]),
-        ];
+        const targetCanvas = event.currentTarget as HTMLCanvasElement;
+        const canvasRect = targetCanvas.getBoundingClientRect();
 
         if (this.state.pointers.size === 1) {
+            // Convert pointer movement from screen coordinates to canvas coordinates
+            const pointerDelta: vec2 = [
+                (targetCanvas.width / canvasRect.width) * (newPos[0] - prevPos[0]),
+                (targetCanvas.height / canvasRect.height) * (newPos[1] - prevPos[1]),
+            ];
             if (event.buttons === PointerButton.Primary && !event.shiftKey) {
-                // Orbit
-                const angleHorizontal = -viewDelta[0] * this.state.sensitivity;
-                const angleVertical = -viewDelta[1] * this.state.sensitivity;
-                const rotationMatrix = mat4.create();
-                mat4.fromRotation(rotationMatrix, angleHorizontal, this.state.up);
-                mat4.rotate(rotationMatrix, rotationMatrix, angleVertical, right);
-                const focusToCamVec = vec3.subtract(
-                    vec3.create(),
-                    this.state.position,
-                    this.state.orbitPoint,
-                );
-                vec3.transformMat4(focusToCamVec, focusToCamVec, rotationMatrix);
-                vec3.add(this.state.position, this.state.orbitPoint, focusToCamVec);
+                this.doOrbit(pointerDelta);
                 targetCanvas.style.cursor = "grabbing";
             } else {
-                // Pan
-                const focusDist = vec3.distance(this.state.position, this.state.orbitPoint);
-                const worldPerPixel = (2 * focusDist * Math.tan(this.state.fov / 2)) / rect.height;
-                [this.state.position, this.state.orbitPoint].forEach((vector) => {
-                    vec3.scaleAndAdd(vector, vector, right, -viewDelta[0] * worldPerPixel);
-                    vec3.scaleAndAdd(vector, vector, up, viewDelta[1] * worldPerPixel);
-                });
+                this.doPan(vec2.scale(vec2.create(), pointerDelta, this.state.panSpeed));
                 targetCanvas.style.cursor = "all-scroll";
             }
         } else if (this.state.pointers.size === 2) {
+            const otherPointerPos = Array.from(this.state.pointers.values()).find(
+                (pos) => pos !== newPos,
+            )!;
+
             // Pinch zoom
-            // TODO: Fix
-            const [pos1, pos2] = Array.from(this.state.pointers.values()) as [vec2, vec2];
-            const newDist = Math.hypot(pos2[0] - pos1[0], pos2[1] - pos1[1]);
-            const prevDist = Math.hypot(prevPos[0] - pos1[0], prevPos[1] - pos1[1]);
-            vec3.scale(
-                this.state.position,
-                this.state.position,
-                1 - (newDist - prevDist) * this.state.pinchSensitivity,
-            );
+            const prevDist = distBetween(prevPos, otherPointerPos);
+            const newDist = distBetween(newPos, otherPointerPos);
+            const distDelta = newDist - prevDist;
+            this.doDolly(-distDelta * this.state.pinchZoomSpeed);
+            // Pinch pan
+            const prevMid = averagePos(prevPos, otherPointerPos);
+            const newMid = averagePos(newPos, otherPointerPos);
+            const midDelta: vec2 = [
+                (targetCanvas.width / canvasRect.width) * (newMid[0] - prevMid[0]),
+                (targetCanvas.height / canvasRect.height) * (newMid[1] - prevMid[1]),
+            ];
+            this.doPan(vec2.scale(vec2.create(), midDelta, this.state.pinchPanSpeed));
         } else {
             targetCanvas.style.cursor = "default";
         }
     };
-
     private onWheel = (event: WheelEvent): void => {
         event.preventDefault();
-        this.state.fov *= 1 + (event.deltaY > 0 ? 1 : -1) * this.state.zoomSpeed;
+        this.doDolly(event.deltaY * this.state.scrollZoomSpeed);
+        const targetCanvas = event.currentTarget as HTMLCanvasElement;
+        targetCanvas.focus();
     };
-
-    private getAxes(): { forward: vec3; right: vec3; up: vec3 } {
-        const forward = vec3.normalize(
-            vec3.create(),
-            vec3.subtract(vec3.create(), this.state.orbitPoint, this.state.position),
-        );
-        const right = vec3.normalize(
-            vec3.create(),
-            vec3.cross(vec3.create(), forward, this.state.up),
-        );
-        const up = vec3.normalize(vec3.create(), vec3.cross(vec3.create(), right, forward));
-        return { forward, right, up };
-    }
 
     private readonly eventHandlers = {
         contextmenu: (event: Event) => event.preventDefault(),
@@ -176,4 +185,43 @@ export class OrbitCamera {
         pointermove: this.onMove,
         wheel: this.onWheel,
     };
+
+    public doReset(): void {
+        this.state = structuredClone(this.defaultState);
+    }
+    public doOrbit(delta: vec2): void {
+        this.state.yaw -= delta[0] * this.state.lookSensitivity;
+        this.state.pitch += delta[1] * this.state.lookSensitivity;
+
+        const epsilon = 1e-4;
+        if (Math.abs(Math.abs(this.state.pitch) - Math.PI / 2) < epsilon) {
+            // Slight offset to avoid gimbal lock
+            this.state.pitch = (this.state.pitch > 0 ? 1 : -1) * (Math.PI / 2 - epsilon);
+        }
+        // Flip up vector if pitch crosses vertical
+        if (Math.cos(this.state.pitch) < 0) {
+            this.state.up = vec3.fromValues(0, -1, 0);
+        } else {
+            this.state.up = vec3.fromValues(0, 1, 0);
+        }
+    }
+    public doPan(delta: vec2): void {
+        const viewSpacePoint = vec3.transformMat4(
+            vec3.create(),
+            this.state.orbitPoint,
+            this.getViewMatrix(),
+        );
+        viewSpacePoint[0] -= delta[0];
+        viewSpacePoint[1] += delta[1];
+        this.state.orbitPoint = vec3.transformMat4(
+            vec3.create(),
+            viewSpacePoint,
+            mat4.invert(mat4.create(), this.getViewMatrix())!,
+        );
+    }
+    public doDolly(delta: number): void {
+        this.state.distance += delta * 0.01;
+        this.state.distance = Math.max(this.state.nearPlane, this.state.distance);
+        this.state.distance = Math.min(this.state.farPlane, this.state.distance);
+    }
 }
