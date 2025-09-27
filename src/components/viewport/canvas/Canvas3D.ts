@@ -2,14 +2,13 @@ import type { PrimaryShader } from "@/scripts/resources/shader/datatypes";
 import { loadPrimaryShader } from "@/scripts/resources/shader/load";
 import type { WebGLCtx } from "@/scripts/utils";
 import initAssimp, { type MainModule as AssimpTSModule } from "assimpts";
-import defaultFragSource from "@/assets/shaders/defaultFrag.glsl?raw";
-import defaultVertSource from "@/assets/shaders/defaultVert.glsl?raw";
 import { loadMeshes, stringToAssimpFile } from "@/scripts/resources/model/load";
 import defaultCubeObj from "@/assets/models/cube.obj?raw";
 import type { MeshBuffers } from "@/scripts/resources/model/datatypes";
 import { OrbitCamera } from "@/scripts/camera";
 import { VERTEX_SCHEMA, VERTEX_VALUE_COUNT } from "@/scripts/resources//model/datatypes";
 import { mat4 } from "gl-matrix";
+import appState from "@/scripts/state";
 
 export class RenderState {
     isPaused = false;
@@ -57,10 +56,20 @@ export class Canvas3D {
         this.glCtx = context;
         setupGl(this.glCtx);
 
-        // Load default shader
-        this.state.loadedShader = loadPrimaryShader(this.glCtx, {
-            vertex: defaultVertSource,
-            fragment: defaultFragSource,
+        // Load shader
+        this.state.loadedShader = loadPrimaryShader(this.glCtx, appState.$shaderCode.get());
+        // Watch for shader code changes
+        appState.$shaderCode.subscribe((newCode) => {
+            if (this.state.loadedShader !== null) {
+                this.glCtx.deleteProgram(this.state.loadedShader.program);
+                this.state.loadedShader = null;
+            }
+            try {
+                this.state.loadedShader = loadPrimaryShader(this.glCtx, newCode);
+                console.log("Shader reloaded successfully.");
+            } catch (error) {
+                console.error("Failed to reload shader:", error);
+            }
         });
 
         initAssimp().then((assimpModule) => {
@@ -254,8 +263,6 @@ function bindAttributes(glCtx: WebGLCtx, shader: PrimaryShader): void {
         if (attrLoc !== null) {
             glCtx.enableVertexAttribArray(attrLoc);
             glCtx.vertexAttribPointer(attrLoc, attrSize, glCtx.FLOAT, false, vertexBytes, offset);
-        } else {
-            console.warn(`Shader is missing attribute ${key}, skipping.`);
         }
         offset += attrSize * floatBytes;
     }

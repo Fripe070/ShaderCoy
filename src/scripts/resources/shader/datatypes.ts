@@ -1,5 +1,8 @@
 import type { VERTEX_SCHEMA } from "@/scripts/resources//model/datatypes";
 
+export type ShaderState = "vertex" | "fragment";
+export type ShaderCode = Record<ShaderState, string>;
+
 // TODO: Figure out some way of being more lenient in what inputs a shader needs to define
 export const UNIFORM_NAMES = {
     projectionMatrix: "u_projectionMatrix",
