@@ -1,0 +1,32 @@
+---
+interface Props {
+    id: string;
+    dim: number;
+    default?: number[];
+    step?: number;
+}
+const { id, dim, default: defaultValues, step } = Astro.props;
+
+if (dim < 1) throw new Error("Vector length must be at least 1");
+if (defaultValues && defaultValues.length !== dim) {
+    throw new Error("Default values length does not match the specified vector length");
+}
+---
+
+<div class="flex flex-row">
+    {
+        Array(dim)
+            .keys()
+            .map((i) => (
+                <input
+                    id={`vec-${id}-${i}`}
+                    type="number"
+                    class="w-16 bg-od-normal outline-none focus-visible:bg-od-selected"
+                    value={defaultValues ? defaultValues[i]!.toString() : "0"}
+                    step={step ?? "any"}
+                    autocomplete="off"
+                    required
+                />
+            ))
+    }
+</div>

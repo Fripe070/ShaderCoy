@@ -1,4 +1,5 @@
 import { mat4, vec2, vec3 } from "gl-matrix";
+import { atom, computed, deepMap, map, type Atom } from "nanostores";
 
 const cursors = {
     default: "grab",
@@ -48,13 +49,27 @@ class CameraState {
 // TODO: Render rotation gizmo overlay
 // TODO: Pause on preview pause
 export class OrbitCamera {
-    public state: CameraState;
+    public $state = map<CameraState>(new CameraState());
     public defaultState: CameraState;
 
+    public $position = computed(this.$state, (state) => {
+        const result = vec3.fromValues(
+            Math.sin(state.yaw) * Math.cos(state.pitch),
+            Math.sin(state.pitch),
+            Math.cos(state.yaw) * Math.cos(state.pitch),
+        );
+        vec3.scale(result, result, state.distance);
+        vec3.add(result, result, state.orbitPoint);
+        return result;
+    });
+    public $viewMatrix = computed(this.$state, (state) => {
+        return mat4.lookAt(mat4.create(), this.$position.get(), state.orbitPoint, state.up);
+    });
+
     constructor(params?: Partial<CameraState>) {
-        this.state = new CameraState();
-        Object.assign(this.state, params);
-        this.defaultState = structuredClone(this.state);
+        this.defaultState = new CameraState();
+        Object.assign(this.defaultState, params);
+        this.$state.set(structuredClone(this.defaultState));
     }
 
     public attach(element: HTMLCanvasElement): void {
@@ -76,65 +91,57 @@ export class OrbitCamera {
         }
     }
 
-    public getPosition(): vec3 {
-        const result = vec3.fromValues(
-            Math.sin(this.state.yaw) * Math.cos(this.state.pitch),
-            Math.sin(this.state.pitch),
-            Math.cos(this.state.yaw) * Math.cos(this.state.pitch),
-        );
-        vec3.scale(result, result, this.state.distance);
-        vec3.add(result, result, this.state.orbitPoint);
-        return result;
-    }
-
-    public getViewMatrix(): mat4 {
-        return mat4.lookAt(mat4.create(), this.getPosition(), this.state.orbitPoint, this.state.up);
-    }
-
     public getProjectionMatrix(aspectRatio: number): mat4 {
-        return mat4.perspective(
-            mat4.create(),
-            this.state.fovRadians,
-            aspectRatio,
-            this.state.nearPlane,
-            this.state.farPlane,
-        );
+        const { fovRadians, nearPlane, farPlane } = this.$state.get();
+        return mat4.perspective(mat4.create(), fovRadians, aspectRatio, nearPlane, farPlane);
     }
 
     private onDown = (event: PointerEvent): void => {
-        this.state.pointers.set(event.pointerId, [event.clientX, event.clientY]);
+        event.preventDefault();
+        const pointers = this.$state.get().pointers;
+        pointers.set(event.pointerId, [event.clientX, event.clientY]);
+        this.$state.setKey("pointers", pointers);
+
         const targetCanvas = event.currentTarget as HTMLCanvasElement;
         targetCanvas.setPointerCapture(event.pointerId);
 
+        const { lastTapTime, doubleTapTimeout } = this.$state.get();
+
         const now = performance.now();
-        if (
-            now - this.state.lastTapTime < this.state.doubleTapTimeout &&
-            this.state.pointers.size === 1
-        ) {
+        if (now - lastTapTime < doubleTapTimeout && pointers.size === 1) {
             this.doReset();
         }
-        this.state.lastTapTime = now;
+        this.$state.setKey("lastTapTime", now);
     };
     private onUp = (event: PointerEvent): void => {
-        this.state.pointers.delete(event.pointerId);
+        const { pointers } = this.$state.get();
+        pointers.delete(event.pointerId);
+        this.$state.setKey("pointers", pointers);
+
         const targetCanvas = event.currentTarget as HTMLCanvasElement;
         targetCanvas.releasePointerCapture(event.pointerId);
-        if (this.state.pointers.size === 0) {
+        if (pointers.size === 0) {
             targetCanvas.style.cursor = cursors.default;
         }
     };
     private onMove = (event: PointerEvent): void => {
-        // Can be undefined when the mouse isn't pressed down
-        if (!this.state.pointers.has(event.pointerId)) return;
+        const { pointers } = this.$state.get();
 
-        const prevPos = this.state.pointers.get(event.pointerId)!;
+        if (event.pointerType !== "mouse" && event.pointerType !== "touch") return;
+        // Can be undefined when the mouse isn't pressed down
+        if (!pointers.has(event.pointerId)) return;
+
+        const prevPos = pointers.get(event.pointerId)!;
         const newPos = [event.clientX, event.clientY] as vec2;
-        this.state.pointers.set(event.pointerId, newPos);
+        pointers.set(event.pointerId, newPos);
+        this.$state.setKey("pointers", pointers);
 
         const targetCanvas = event.currentTarget as HTMLCanvasElement;
         const canvasRect = targetCanvas.getBoundingClientRect();
 
-        if (this.state.pointers.size === 1) {
+        if (pointers.size === 1) {
+            const { panSpeed } = this.$state.get();
+
             // Convert pointer movement from screen coordinates to canvas coordinates
             const pointerDelta: vec2 = [
                 (targetCanvas.width / canvasRect.width) * (newPos[0] - prevPos[0]),
@@ -144,19 +151,19 @@ export class OrbitCamera {
                 this.doOrbit(pointerDelta);
                 targetCanvas.style.cursor = "grabbing";
             } else {
-                this.doPan(vec2.scale(vec2.create(), pointerDelta, this.state.panSpeed));
+                this.doPan(vec2.scale(vec2.create(), pointerDelta, panSpeed));
                 targetCanvas.style.cursor = "all-scroll";
             }
-        } else if (this.state.pointers.size === 2) {
-            const otherPointerPos = Array.from(this.state.pointers.values()).find(
-                (pos) => pos !== newPos,
-            )!;
+        } else if (pointers.size === 2) {
+            const { pinchZoomSpeed, pinchPanSpeed } = this.$state.get();
+
+            const otherPointerPos = Array.from(pointers.values()).find((pos) => pos !== newPos)!;
 
             // Pinch zoom
             const prevDist = distBetween(prevPos, otherPointerPos);
             const newDist = distBetween(newPos, otherPointerPos);
             const distDelta = newDist - prevDist;
-            this.doDolly(-distDelta * this.state.pinchZoomSpeed);
+            this.doDolly(-distDelta * pinchZoomSpeed);
             // Pinch pan
             const prevMid = averagePos(prevPos, otherPointerPos);
             const newMid = averagePos(newPos, otherPointerPos);
@@ -164,14 +171,15 @@ export class OrbitCamera {
                 (targetCanvas.width / canvasRect.width) * (newMid[0] - prevMid[0]),
                 (targetCanvas.height / canvasRect.height) * (newMid[1] - prevMid[1]),
             ];
-            this.doPan(vec2.scale(vec2.create(), midDelta, this.state.pinchPanSpeed));
+            this.doPan(vec2.scale(vec2.create(), midDelta, pinchPanSpeed));
         } else {
             targetCanvas.style.cursor = "default";
         }
     };
     private onWheel = (event: WheelEvent): void => {
+        const { scrollZoomSpeed } = this.$state.get();
         event.preventDefault();
-        this.doDolly(event.deltaY * this.state.scrollZoomSpeed);
+        this.doDolly(event.deltaY * scrollZoomSpeed);
         const targetCanvas = event.currentTarget as HTMLCanvasElement;
         targetCanvas.focus();
     };
@@ -187,41 +195,49 @@ export class OrbitCamera {
     };
 
     public doReset(): void {
-        this.state = structuredClone(this.defaultState);
+        this.$state.set(structuredClone(this.defaultState));
     }
     public doOrbit(delta: vec2): void {
-        this.state.yaw -= delta[0] * this.state.lookSensitivity;
-        this.state.pitch += delta[1] * this.state.lookSensitivity;
-
-        const epsilon = 1e-4;
-        if (Math.abs(Math.abs(this.state.pitch) - Math.PI / 2) < epsilon) {
-            // Slight offset to avoid gimbal lock
-            this.state.pitch = (this.state.pitch > 0 ? 1 : -1) * (Math.PI / 2 - epsilon);
-        }
-        // Flip up vector if pitch crosses vertical
-        if (Math.cos(this.state.pitch) < 0) {
-            this.state.up = vec3.fromValues(0, -1, 0);
-        } else {
-            this.state.up = vec3.fromValues(0, 1, 0);
-        }
+        const { pitch, yaw, lookSensitivity } = this.$state.get();
+        this.updateRotation(yaw - delta[0] * lookSensitivity, pitch + delta[1] * lookSensitivity);
     }
     public doPan(delta: vec2): void {
-        const viewSpacePoint = vec3.transformMat4(
-            vec3.create(),
-            this.state.orbitPoint,
-            this.getViewMatrix(),
-        );
+        const { orbitPoint } = this.$state.get();
+        const viewMatrix = this.$viewMatrix.get();
+        const viewSpacePoint = vec3.transformMat4(vec3.create(), orbitPoint, viewMatrix);
         viewSpacePoint[0] -= delta[0];
         viewSpacePoint[1] += delta[1];
-        this.state.orbitPoint = vec3.transformMat4(
-            vec3.create(),
-            viewSpacePoint,
-            mat4.invert(mat4.create(), this.getViewMatrix())!,
+        this.$state.setKey(
+            "orbitPoint",
+            vec3.transformMat4(
+                vec3.create(),
+                viewSpacePoint,
+                mat4.invert(mat4.create(), viewMatrix)!,
+            ),
         );
     }
     public doDolly(delta: number): void {
-        this.state.distance += delta * 0.01;
-        this.state.distance = Math.max(this.state.nearPlane, this.state.distance);
-        this.state.distance = Math.min(this.state.farPlane, this.state.distance);
+        const { nearPlane, farPlane } = this.$state.get();
+        let { distance } = this.$state.get();
+        distance += delta * 0.01;
+        distance = Math.max(nearPlane, distance);
+        distance = Math.min(farPlane, distance);
+        this.$state.setKey("distance", distance);
+    }
+
+    public updateRotation(yaw: number, pitch: number): void {
+        const epsilon = 1e-4;
+        if (Math.abs(Math.abs(pitch) - Math.PI / 2) < epsilon) {
+            // Slight offset to avoid gimbal lock
+            pitch = (pitch > 0 ? 1 : -1) * (Math.PI / 2 - epsilon);
+        }
+        // Flip up vector if pitch crosses vertical
+        if (Math.cos(pitch) < 0) {
+            this.$state.setKey("up", vec3.fromValues(0, -1, 0));
+        } else {
+            this.$state.setKey("up", vec3.fromValues(0, 1, 0));
+        }
+        this.$state.setKey("pitch", pitch);
+        this.$state.setKey("yaw", yaw);
     }
 }

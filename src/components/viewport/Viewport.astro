@@ -1,6 +1,7 @@
 ---
 import Canvas3D from "./canvas/Canvas3D.astro";
 import { Icon } from "astro-icon/components";
+import PropertyPanel from "./PropertyPanel.astro";
 ---
 
 <div class="w-full h-full flex flex-col">
@@ -44,66 +45,12 @@ import { Icon } from "astro-icon/components";
 
     <div class="grow relative overflow-hidden">
         <Canvas3D />
-
-        <div
-            id="viewport-property-panel"
-            class:list={[
-                "flex max-h-[calc(100%-2*var(--spacing))] min-h-6 bg-od-light",
-                "absolute top-1 left-[100%] transition-all",
-                "translate-x-0",
-                "data-[expanded=true]:-translate-x-full",
-                "data-[expanded=true]:[&>#viewport-property-panel-expander>svg]:-scale-x-100",
-            ]}
-        >
-            <div
-                id="viewport-property-panel-expander"
-                class:list={[
-                    "w-4 h-6 absolute right-[100%]",
-                    "flex items-center justify-center",
-                    "bg-od-light text-od-muted hover:text-od-text cursor-pointer",
-                    "rounded-l",
-                ]}
-            >
-                <Icon name="material-symbols:arrow-back-ios-new" size={16} />
-            </div>
-            <div
-                id="viewport-property-panel-content"
-                class="flex flex-col text-nowrap p-1 pt-0 overflow-y-scroll"
-            >
-                <h2 class="font-bold">Properties</h2>
-                <label class="flex flex-row gap-1 justify-between">
-                    <span class="mr-2">Pivot point</span>
-                    <div class="flex flex-row">
-                        {
-                            Array(3)
-                                .keys()
-                                .map(() => (
-                                    <input
-                                        type="number"
-                                        class="w-16 bg-od-normal outline-none focus-visible:bg-od-selected"
-                                        value="0"
-                                        step="any"
-                                        autocomplete="off"
-                                        required
-                                    />
-                                ))
-                        }
-                    </div>
-                </label>
-            </div>
-        </div>
+        <PropertyPanel />
     </div>
 </div>
 
 <script>
     import appState from "@/scripts/state";
-
-    // Expand property panel
-    const panel = document.getElementById("viewport-property-panel")!;
-    const expander = document.getElementById("viewport-property-panel-expander")!;
-    expander.addEventListener("click", () => {
-        panel.dataset.expanded = panel.dataset.expanded === "true" ? "false" : "true";
-    });
 
     // Fullscreen button
     const fullscreenBtn = document.getElementById("viewport-fullscreen-btn")!;

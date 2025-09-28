@@ -10,6 +10,7 @@ import appState from "@/scripts/state";
 import { meshToBuffers } from "@/scripts/resources/model/load";
 
 import cubeModel from "@/assets/models/cube.obj";
+import { atom, subscribeKeys } from "nanostores";
 
 export class RenderState {
     isPaused = false;
@@ -21,16 +22,23 @@ export class RenderState {
     // and that x and y are relative to the canvas
     mouseData = { x: 0, y: 0, left: false, right: false };
 
-    camera: OrbitCamera | null = null;
+    camera: OrbitCamera = new OrbitCamera();
 
     loadedShader: PrimaryShader | null = null;
     loadedMeshes: MeshBuffers[] | null = null; // Null represent a fullscreen quad
     loadedTextures: TextureWrapper[] = [];
+
+    // All models are at 0,0,0 rn, so we set the model matrix here
+    modelMatrix = mat4.create();
+    projectionMatrix = mat4.create();
+    viewMatrix = mat4.create();
+
+    canvasNeedResize = true;
+    $canvasSize = atom({ width: 0, height: 0 });
 }
 
 export class Canvas3D {
     public canvasElement: HTMLCanvasElement;
-    private canvasNeedResize = true;
 
     public state: RenderState;
     private glCtx: WebGLCtx;
@@ -80,11 +88,9 @@ export class Canvas3D {
         });
 
         // TODO: Add loading indicator whenever I implement model loading
-        console.log("DEBUGGING!!!", cubeModel); // TODO: Remove
         this.state.loadedMeshes = cubeModel.map((mesh) => meshToBuffers(mesh, this.glCtx));
 
         // Set camera
-        this.state.camera = new OrbitCamera();
         this.state.camera.attach(this.canvasElement);
 
         // Mouse position and click tracking
@@ -102,8 +108,22 @@ export class Canvas3D {
         });
 
         new ResizeObserver(() => {
-            this.canvasNeedResize = true;
+            this.state.canvasNeedResize = true;
         }).observe(this.canvasElement);
+
+        this.state.camera.$viewMatrix.subscribe((newView) => {
+            this.state.viewMatrix = newView;
+        });
+        subscribeKeys(this.state.camera.$state, ["fovRadians", "nearPlane", "farPlane"], () => {
+            this.state.projectionMatrix = this.state.camera!.getProjectionMatrix(
+                this.state.$canvasSize.get().width / this.state.$canvasSize.get().height,
+            );
+        });
+        this.state.$canvasSize.subscribe((newSize) => {
+            this.state.projectionMatrix = this.state.camera!.getProjectionMatrix(
+                newSize.width / newSize.height,
+            );
+        });
     }
 
     public flushState(): RenderState {
@@ -153,13 +173,17 @@ export class Canvas3D {
         this.canvasElement.width = Math.floor(rect.width * dpr);
         this.canvasElement.height = Math.floor(rect.height * dpr);
         this.glCtx.viewport(0, 0, this.canvasElement.width, this.canvasElement.height);
+        this.state.$canvasSize.set({
+            width: this.canvasElement.width,
+            height: this.canvasElement.height,
+        });
     }
 
     public render(): void {
-        if (this.canvasNeedResize) {
+        if (this.state.canvasNeedResize) {
             // We do this in render instead of in the event to prevent flickering
             this.refreshSize();
-            this.canvasNeedResize = false;
+            this.state.canvasNeedResize = false;
         }
 
         if (this.state.loadedShader === null) throw new Error("No shader loaded for rendering.");
@@ -168,13 +192,21 @@ export class Canvas3D {
         this.glCtx.clear(this.glCtx.COLOR_BUFFER_BIT | this.glCtx.DEPTH_BUFFER_BIT);
         this.glCtx.useProgram(this.state.loadedShader.program);
 
-        // TODO: Improve this to not run every frame
-        // All models are at 0,0,0 rn, so we set the model matrix here
-        const modelMatrix = mat4.create();
         this.glCtx.uniformMatrix4fv(
             this.state.loadedShader.uniforms.modelMatrix,
             false,
-            modelMatrix,
+            this.state.modelMatrix,
+        );
+        // Camera matrices
+        this.glCtx.uniformMatrix4fv(
+            this.state.loadedShader.uniforms.projectionMatrix,
+            false,
+            this.state.projectionMatrix,
+        );
+        this.glCtx.uniformMatrix4fv(
+            this.state.loadedShader.uniforms.viewMatrix,
+            false,
+            this.state.viewMatrix,
         );
 
         this.updateGlobalUniforms();
@@ -191,20 +223,6 @@ export class Canvas3D {
     private updateGlobalUniforms(): void {
         if (this.state.loadedShader === null) return;
         if (this.state.camera === null) return;
-
-        // Camera matrices
-        this.glCtx.uniformMatrix4fv(
-            this.state.loadedShader.uniforms.projectionMatrix,
-            false,
-            this.state.camera.getProjectionMatrix(
-                this.canvasElement.width / this.canvasElement.height,
-            ),
-        );
-        this.glCtx.uniformMatrix4fv(
-            this.state.loadedShader.uniforms.viewMatrix,
-            false,
-            this.state.camera.getViewMatrix(),
-        );
 
         // Time
         this.glCtx.uniform1f(this.state.loadedShader.uniforms.deltaTime, this.state.deltaTime);
