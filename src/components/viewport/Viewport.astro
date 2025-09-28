@@ -22,12 +22,13 @@ import PropertyPanel from "./PropertyPanel.astro";
         </button>
 
         <div
+            title="Render is synced with the display; values smaller than the display's refresh rate are rounded"
             class:list={[
-                "px-2 h-7 flex items-center justify-center text-nowrap",
+                "px-2 h-7 flex flex-row items-center justify-center text-nowrap",
                 "[#viewport-pause-btn[data-paused=true]~&]:text-od-muted",
             ]}
         >
-            <span id="render-time-ms">00.00</span>ms (<span id="render-time-fps">0</span>&nbsp;FPS)
+            <span id="render-time-ms">0.00</span>ms (<span id="render-time-fps">000</span>&nbsp;FPS)
         </div>
 
         <div class="grow"></div>
