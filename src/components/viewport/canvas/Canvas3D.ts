@@ -8,9 +8,9 @@ import { VERTEX_SCHEMA, VERTEX_VALUE_COUNT } from "@/scripts/resources//model/da
 import { mat4 } from "gl-matrix";
 import appState from "@/scripts/state";
 import { meshToBuffers } from "@/scripts/resources/model/load";
-
-import cubeModel from "@/assets/models/cube.obj";
 import { atom, subscribeKeys } from "nanostores";
+
+import cubeModel from "@/assets/models/suzanne.obj";
 
 export class RenderState {
     isPaused = false;
