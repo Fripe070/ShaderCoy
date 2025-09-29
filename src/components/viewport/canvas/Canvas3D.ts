@@ -118,12 +118,12 @@ export class Canvas3D {
             this.state.viewMatrix = newView;
         });
         subscribeKeys(this.state.camera.$state, ["fovRadians", "nearPlane", "farPlane"], () => {
-            this.state.projectionMatrix = this.state.camera!.getProjectionMatrix(
+            this.state.projectionMatrix = this.state.camera.getProjectionMatrix(
                 this.state.$canvasSize.get().width / this.state.$canvasSize.get().height,
             );
         });
         this.state.$canvasSize.subscribe((newSize) => {
-            this.state.projectionMatrix = this.state.camera!.getProjectionMatrix(
+            this.state.projectionMatrix = this.state.camera.getProjectionMatrix(
                 newSize.width / newSize.height,
             );
         });
