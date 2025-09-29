@@ -4,7 +4,11 @@ import Tab from "./Tab.astro";
 ---
 
 {/* TODO: Fix sizing with different editor text amounts on mobile */}
-<div class="w-full h-full flex flex-col">
+<div
+    class="w-full h-full flex flex-col"
+    id="sidebar"
+    data-tabs={Object.keys(sidebarTabs).join(" ")}
+>
     <nav>
         <ul class="flex flex-row bg-od-dark h-7">
             {
@@ -41,7 +45,12 @@ import Tab from "./Tab.astro";
 </div>
 
 <script>
-    import { sidebarTabs } from "./Sidebar";
+    // Importing the object in runtime code caused weird erors with astro-icon
+    // so we just get the ids from the DOM. No clue why that was an issue.
+    const sidebar = document.getElementById("sidebar");
+    if (!sidebar) throw new Error("Sidebar element not found");
+    const sidebarTabIds = sidebar.dataset.tabs?.split(" ") || [];
+    if (sidebarTabIds.length === 0) throw new Error("No sidebar tabs found");
 
     function setTab(tabId: string, active: boolean) {
         const tab = document.getElementById(`sidebar-tab-${tabId}`);
@@ -51,14 +60,14 @@ import Tab from "./Tab.astro";
     }
 
     // Set the initial active tab based on the URL hash or default to the first tab
-    const selectedHash = window.location.hash.substring(1) || Object.keys(sidebarTabs)[0];
-    for (const tabId of Object.keys(sidebarTabs)) {
+    const selectedHash = window.location.hash.substring(1) || sidebarTabIds[0];
+    for (const tabId of sidebarTabIds) {
         setTab(tabId, tabId === selectedHash);
     }
 
     // Listen for hash changes to update the active tab
     window.addEventListener("hashchange", (event) => {
-        const oldTabId = new URL(event.oldURL).hash.substring(1) || Object.keys(sidebarTabs)[0];
+        const oldTabId = new URL(event.oldURL).hash.substring(1) || sidebarTabIds[0];
         const newTabId = window.location.hash.substring(1);
         if (oldTabId) setTab(oldTabId, false);
         if (newTabId) setTab(newTabId, true);

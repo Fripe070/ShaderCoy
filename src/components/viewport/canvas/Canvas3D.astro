@@ -9,19 +9,9 @@ import defaultVertSource from "@/assets/shaders/defaultVert.glsl?raw";
     data-use-model="false"
     data-vertex={defaultVertSource}
     data-fragment={defaultFragSource}
-    class="w-full h-full touch-none user-select-none"
+    class="w-full h-full touch-none user-select-none checkerboard"
 >
 </canvas>
-
-<style>
-    #render-canvas {
-        background: repeating-conic-gradient(
-            var(--color-od-dark) 0 25%,
-            var(--color-od-normal) 0 50%
-        );
-        background-size: calc(var(--spacing) * 5) calc(var(--spacing) * 5);
-    }
-</style>
 
 <script>
     import { Canvas3D } from "./Canvas3D";

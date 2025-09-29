@@ -1,6 +1,7 @@
 import type { AstroInstance } from "astro";
 import FragmentEditor from "@/components/sidebar/tabs/FragmentEditor.astro";
 import VertexEditor from "@/components/sidebar/tabs/VertexEditor.astro";
+import TexturePanel from "./tabs/TexturePanel.astro";
 
 export const sidebarTabs: Record<
     string,
@@ -23,15 +24,10 @@ export const sidebarTabs: Record<
         component: VertexEditor,
         group: "left",
     },
-    // texture: {
-    //     title: "Texture",
-    //     icon: "material-symbols:image",
-    //     component: ,
-    //     group: "left",
-    // },
-    // settings: {
-    //     icon: "material-symbols:settings",
-    //     component: ,
-    //     group: "right",
-    // },
+    texture: {
+        title: "Texture",
+        icon: "material-symbols:image",
+        component: TexturePanel,
+        group: "left",
+    },
 } as const;

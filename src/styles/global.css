@@ -41,3 +41,13 @@
     --color-od-accent: var(--bg-accent);
     --color-od-selected: var(--bg-selected);
 }
+
+@layer components {
+    .checkerboard {
+        background: repeating-conic-gradient(
+            var(--color-od-dark) 0 25%,
+            var(--color-od-normal) 0 50%
+        );
+        background-size: calc(var(--spacing) * 5) calc(var(--spacing) * 5);
+    }
+}

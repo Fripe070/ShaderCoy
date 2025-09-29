@@ -15,7 +15,9 @@ export const UNIFORM_NAMES = {
     deltaTime: "u_deltaTime",
     frameNumber: "u_frameNumber",
 } as const;
-export const textureArrayName = "u_textures" as const;
+export function textureArrayName(index: number): string {
+    return `u_textures[${index}]`;
+}
 
 export interface PrimaryShader {
     program: WebGLProgram;

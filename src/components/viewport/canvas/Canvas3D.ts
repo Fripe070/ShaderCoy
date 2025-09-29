@@ -1,4 +1,4 @@
-import type { PrimaryShader } from "@/scripts/resources/shader/datatypes";
+import { textureArrayName, type PrimaryShader } from "@/scripts/resources/shader/datatypes";
 import { loadPrimaryShader } from "@/scripts/resources/shader/load";
 import type { WebGLCtx } from "@/scripts/utils";
 import initAssimp, { type MainModule as AssimpTSModule } from "assimpts";
@@ -8,7 +8,8 @@ import { VERTEX_SCHEMA, VERTEX_VALUE_COUNT } from "@/scripts/resources//model/da
 import { mat4 } from "gl-matrix";
 import appState from "@/scripts/state";
 import { meshToBuffers } from "@/scripts/resources/model/load";
-import { atom, subscribeKeys } from "nanostores";
+import { atom, subscribeKeys, computed, type ReadableAtom } from "nanostores";
+import type { TextureData } from "@/scripts/resources/texture/datatypes";
 
 import cubeModel from "@/assets/models/suzanne.obj";
 
@@ -24,9 +25,9 @@ export class RenderState {
 
     camera: OrbitCamera = new OrbitCamera();
 
-    loadedShader: PrimaryShader | null = null;
+    $loadedShader: ReadableAtom<PrimaryShader | null>;
     loadedMeshes: MeshBuffers[] | null = null; // Null represent a fullscreen quad
-    loadedTextures: TextureWrapper[] = [];
+    $loadedTextures = atom<TextureData[]>([]);
 
     // All models are at 0,0,0 rn, so we set the model matrix here
     modelMatrix = mat4.create();
@@ -35,13 +36,29 @@ export class RenderState {
 
     canvasNeedResize = true;
     $canvasSize = atom({ width: 0, height: 0 });
+
+    constructor(canvas: Canvas3D) {
+        this.$loadedShader = computed(appState.$shaderCode, (code) => {
+            try {
+                const oldShader = this.$loadedShader.get();
+                if (oldShader) canvas.glCtx.deleteProgram(oldShader.program);
+                while (canvas.glCtx.getError() !== canvas.glCtx.NO_ERROR) {
+                    // Flush existing errors
+                }
+                return loadPrimaryShader(canvas.glCtx, code);
+            } catch (error) {
+                console.error("Failed to load shader:", error);
+                return null;
+            }
+        });
+    }
 }
 
 export class Canvas3D {
     public canvasElement: HTMLCanvasElement;
 
     public state: RenderState;
-    private glCtx: WebGLCtx;
+    public glCtx: WebGLCtx;
     //TODO: Move to external model loader
     private assimp: AssimpTSModule | null = null;
 
@@ -51,11 +68,10 @@ export class Canvas3D {
 
     constructor(canvasElement: HTMLCanvasElement) {
         this.canvasElement = canvasElement;
-        this.state = new RenderState();
 
         // Initialize WebGL context
-        const context: WebGLCtx | null = this.canvasElement.getContext("webgl2");
-        if (!context) {
+        const webglContext: WebGLCtx | null = this.canvasElement.getContext("webgl2");
+        if (!webglContext) {
             const error = new Error(
                 "This site will not function as your system or browser does not support WebGL 2.0. " +
                     "\nWhile support for WebGL 1.0 is planned, it is not yet implemented. " +
@@ -63,24 +79,11 @@ export class Canvas3D {
             );
             throw error;
         }
-        this.glCtx = context;
+        this.glCtx = webglContext;
         setupGl(this.glCtx);
 
-        // Load shader
-        this.state.loadedShader = loadPrimaryShader(this.glCtx, appState.$shaderCode.get());
-        // Watch for shader code changes
-        appState.$shaderCode.subscribe((newCode) => {
-            if (this.state.loadedShader !== null) {
-                this.glCtx.deleteProgram(this.state.loadedShader.program);
-                this.state.loadedShader = null;
-            }
-            try {
-                this.state.loadedShader = loadPrimaryShader(this.glCtx, newCode);
-                console.log("Shader reloaded successfully.");
-            } catch (error) {
-                console.error("Failed to reload shader:", error);
-            }
-        });
+        // Initialize state
+        this.state = new RenderState(this);
 
         initAssimp().then((assimpModule) => {
             this.assimp = assimpModule;
@@ -128,7 +131,7 @@ export class Canvas3D {
 
     public flushState(): RenderState {
         const oldState = { ...this.state };
-        this.state = new RenderState();
+        this.state = new RenderState(this);
         return oldState;
     }
 
@@ -150,7 +153,7 @@ export class Canvas3D {
             }
             this.lastFrameTimestamp = currentTime;
 
-            const cantRender = this.state.isPaused || this.state.loadedShader === null;
+            const cantRender = this.state.isPaused || this.state.$loadedShader.get() === null;
             if (!cantRender) {
                 this.render();
                 this.state.frameNumber++;
@@ -186,28 +189,40 @@ export class Canvas3D {
             this.state.canvasNeedResize = false;
         }
 
-        if (this.state.loadedShader === null) throw new Error("No shader loaded for rendering.");
+        const loadedMainShader = this.state.$loadedShader.get();
+
+        if (loadedMainShader === null) throw new Error("No shader loaded for rendering.");
         if (this.state.camera === null) throw new Error("No camera set for rendering.");
 
         this.glCtx.clear(this.glCtx.COLOR_BUFFER_BIT | this.glCtx.DEPTH_BUFFER_BIT);
-        this.glCtx.useProgram(this.state.loadedShader.program);
+        this.glCtx.useProgram(loadedMainShader.program);
 
         this.glCtx.uniformMatrix4fv(
-            this.state.loadedShader.uniforms.modelMatrix,
+            loadedMainShader.uniforms.modelMatrix,
             false,
             this.state.modelMatrix,
         );
         // Camera matrices
         this.glCtx.uniformMatrix4fv(
-            this.state.loadedShader.uniforms.projectionMatrix,
+            loadedMainShader.uniforms.projectionMatrix,
             false,
             this.state.projectionMatrix,
         );
         this.glCtx.uniformMatrix4fv(
-            this.state.loadedShader.uniforms.viewMatrix,
+            loadedMainShader.uniforms.viewMatrix,
             false,
             this.state.viewMatrix,
         );
+
+        this.state.$loadedTextures.get().forEach((textureData, index) => {
+            this.glCtx.activeTexture(this.glCtx.TEXTURE0 + index);
+            this.glCtx.bindTexture(this.glCtx.TEXTURE_2D, textureData.glTexture);
+            const uniformLocation = this.glCtx.getUniformLocation(
+                loadedMainShader.program,
+                textureArrayName(index),
+            );
+            this.glCtx.uniform1i(uniformLocation, index);
+        });
 
         this.updateGlobalUniforms();
 
@@ -221,24 +236,25 @@ export class Canvas3D {
     }
 
     private updateGlobalUniforms(): void {
-        if (this.state.loadedShader === null) return;
+        const loadedMainShader = this.state.$loadedShader.get();
+        if (loadedMainShader === null) return;
         if (this.state.camera === null) return;
 
         // Time
-        this.glCtx.uniform1f(this.state.loadedShader.uniforms.deltaTime, this.state.deltaTime);
-        this.glCtx.uniform1i(this.state.loadedShader.uniforms.frameNumber, this.state.frameNumber);
-        this.glCtx.uniform1f(this.state.loadedShader.uniforms.time, this.state.secondsSinceStart);
+        this.glCtx.uniform1f(loadedMainShader.uniforms.deltaTime, this.state.deltaTime);
+        this.glCtx.uniform1i(loadedMainShader.uniforms.frameNumber, this.state.frameNumber);
+        this.glCtx.uniform1f(loadedMainShader.uniforms.time, this.state.secondsSinceStart);
 
         // Resolution
         this.glCtx.uniform2f(
-            this.state.loadedShader.uniforms.resolution,
+            loadedMainShader.uniforms.resolution,
             this.canvasElement.width,
             this.canvasElement.height,
         );
 
         // Mouse
         this.glCtx.uniform4f(
-            this.state.loadedShader.uniforms.mouse,
+            loadedMainShader.uniforms.mouse,
             this.state.mouseData.x,
             this.state.mouseData.y,
             this.state.mouseData.left ? 1 : 0,
@@ -247,10 +263,11 @@ export class Canvas3D {
     }
 
     private renderMesh(mesh: MeshBuffers): void {
-        if (this.state.loadedShader === null) return;
+        const loadedMainShader = this.state.$loadedShader.get();
+        if (loadedMainShader === null) return;
 
         this.glCtx.bindBuffer(this.glCtx.ARRAY_BUFFER, mesh.vertexBuffer);
-        bindAttributes(this.glCtx, this.state.loadedShader);
+        bindAttributes(this.glCtx, loadedMainShader);
 
         this.glCtx.bindBuffer(this.glCtx.ELEMENT_ARRAY_BUFFER, mesh.indexBuffer);
         this.glCtx.drawElements(
