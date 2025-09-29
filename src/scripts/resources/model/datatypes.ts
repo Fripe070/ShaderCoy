@@ -2,7 +2,6 @@
  * Defines the structure of a single vertex in a 3D model.
  * Each key maps to an attribute accessible in the vertex shader.
  */
-
 import type { NSizeNumVec } from "@/scripts/utils";
 
 // prettier-ignore

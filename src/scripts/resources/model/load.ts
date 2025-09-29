@@ -1,7 +1,7 @@
-import { mat3, mat4, vec3 } from "gl-matrix";
 import { type Mesh, VERTEX_SCHEMA, type MeshBuffers, type MeshVertex } from "./datatypes";
-import { type AssimpTSFile, type MainModule as AssimpTSModule } from "assimpts";
 import type { WebGLCtx } from "@/scripts/utils";
+import { type AssimpTSFile, type MainModule as AssimpTSModule } from "assimpts";
+import { mat3, mat4, vec3 } from "gl-matrix";
 
 export async function fileToAssimpFile(file: File): Promise<AssimpTSFile> {
     const arrayBuffer = await file.arrayBuffer();

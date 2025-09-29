@@ -1,8 +1,7 @@
-import { stringToAssimpFile, loadMeshes } from "@/scripts/resources/model/load";
-import { expect, test } from "vitest";
-import initAssimp from "assimpts";
-
 import testModel1 from "@/assets/models/cube.obj?raw";
+import { stringToAssimpFile, loadMeshes } from "@/scripts/resources/model/load";
+import initAssimp from "assimpts";
+import { expect, test } from "vitest";
 
 test("Assimp cube model loading", async () => {
     const meshes = loadMeshes(await initAssimp(), [stringToAssimpFile("cube.obj", testModel1)]);

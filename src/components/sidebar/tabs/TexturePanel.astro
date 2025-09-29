@@ -73,7 +73,11 @@ import template from "@/assets/images/pwa_icon.png";
 >
     <div
         id="texture-grid"
-        class="flex flex-row justify-center items-start flex-wrap gap-4 p-4 overflow-y-auto"
+        class:list={[
+            "flex flex-row justify-center items-start flex-wrap gap-4 p-4 overflow-y-auto",
+            "[&:has(>:only-child)]:h-full",
+            "[&:has(>:only-child)]:items-center",
+        ]}
     >
         <label
             class="p-2 gap-2 flex flex-col items-center bg-od-dark group cursor-pointer hover:bg-od-light"
@@ -133,7 +137,6 @@ import template from "@/assets/images/pwa_icon.png";
         event.preventDefault();
         container.dataset.dragover = "false";
         if (event.dataTransfer?.files && event.dataTransfer.files.length > 0) {
-            console.log("Dropped files:", event.dataTransfer.files);
             addTextures(event.dataTransfer.files);
         }
     });
@@ -141,7 +144,6 @@ import template from "@/assets/images/pwa_icon.png";
     fileInput.addEventListener("change", (event) => {
         const target = event.target as HTMLInputElement;
         if (target.files && target.files.length > 0) {
-            console.log("Selected files:", target.files);
             addTextures(target.files);
         }
         target.value = ""; // Clear the input
@@ -180,12 +182,8 @@ import template from "@/assets/images/pwa_icon.png";
                     console.warn("Max texture limit reached. Some textures were not added.");
                 }
                 loadedTexturesStore.set([...loadedTexturesStore.get(), ...textures]);
-                console.log("Added textures:", textures);
             })
-            .catch((error) => console.error(error))
-            .finally(() => {
-                console.log("Finished loading textures");
-            });
+            .catch((error) => console.error(error));
     }
 
     loadedTexturesStore.subscribe((textures) => {

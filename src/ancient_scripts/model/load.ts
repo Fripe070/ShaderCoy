@@ -1,6 +1,6 @@
-import { type AssimpTSFile, type MainModule as AssimpTSModule } from "assimpts";
 import type { Mesh } from "./mesh";
 import { assjsonToMesh } from "./parse";
+import { type AssimpTSFile, type MainModule as AssimpTSModule } from "assimpts";
 
 export async function fileToAssimpFile(file: File): Promise<AssimpTSFile> {
     const arrayBuffer = await file.arrayBuffer();

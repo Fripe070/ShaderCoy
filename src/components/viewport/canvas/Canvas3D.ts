@@ -1,17 +1,16 @@
-import { textureArrayName, type PrimaryShader } from "@/scripts/resources/shader/datatypes";
-import { loadPrimaryShader } from "@/scripts/resources/shader/load";
-import type { WebGLCtx } from "@/scripts/utils";
-import initAssimp, { type MainModule as AssimpTSModule } from "assimpts";
-import type { MeshBuffers } from "@/scripts/resources/model/datatypes";
+import cubeModel from "@/assets/models/suzanne.obj";
 import { OrbitCamera } from "@/scripts/camera";
 import { VERTEX_SCHEMA, VERTEX_VALUE_COUNT } from "@/scripts/resources//model/datatypes";
-import { mat4 } from "gl-matrix";
-import appState from "@/scripts/state";
+import type { MeshBuffers } from "@/scripts/resources/model/datatypes";
 import { meshToBuffers } from "@/scripts/resources/model/load";
-import { atom, subscribeKeys, computed, type ReadableAtom } from "nanostores";
+import { textureArrayName, type PrimaryShader } from "@/scripts/resources/shader/datatypes";
+import { loadPrimaryShader } from "@/scripts/resources/shader/load";
 import type { TextureData } from "@/scripts/resources/texture/datatypes";
-
-import cubeModel from "@/assets/models/suzanne.obj";
+import appState from "@/scripts/state";
+import type { WebGLCtx } from "@/scripts/utils";
+import initAssimp, { type MainModule as AssimpTSModule } from "assimpts";
+import { mat4 } from "gl-matrix";
+import { atom, subscribeKeys, computed, type ReadableAtom } from "nanostores";
 
 export class RenderState {
     isPaused = false;

@@ -1,5 +1,5 @@
-import { ExternalTokenizer } from "@lezer/lr";
 import { PreprocArg } from "./glsl.grammar.terms";
+import { ExternalTokenizer } from "@lezer/lr";
 
 const slash = 47,
     newline = 10;

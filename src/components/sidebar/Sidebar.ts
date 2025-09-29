@@ -1,7 +1,7 @@
-import type { AstroInstance } from "astro";
+import TexturePanel from "./tabs/TexturePanel.astro";
 import FragmentEditor from "@/components/sidebar/tabs/FragmentEditor.astro";
 import VertexEditor from "@/components/sidebar/tabs/VertexEditor.astro";
-import TexturePanel from "./tabs/TexturePanel.astro";
+import type { AstroInstance } from "astro";
 
 export const sidebarTabs: Record<
     string,

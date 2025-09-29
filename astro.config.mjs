@@ -1,9 +1,9 @@
 // @ts-check
-import { defineConfig, fontProviders } from "astro/config";
+import objImportPlugin from "./scripts/generated-assets-plugin.ts";
+import { lezer } from "@lezer/generator/rollup";
 import tailwindcss from "@tailwindcss/vite";
 import icon from "astro-icon";
-import { lezer } from "@lezer/generator/rollup";
-import objImportPlugin from "./scripts/generated-assets-plugin.ts";
+import { defineConfig, fontProviders } from "astro/config";
 
 export default defineConfig({
     devToolbar: { enabled: false },

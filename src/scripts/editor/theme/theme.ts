@@ -1,7 +1,7 @@
-import { EditorView } from "@codemirror/view";
 import * as themeColours from "./colours";
 import type { ThemeColours } from "./colours";
 import type { Extension } from "@codemirror/state";
+import { EditorView } from "@codemirror/view";
 
 function genTheme(pallete: ThemeColours, dark: boolean): Extension {
     return EditorView.theme(

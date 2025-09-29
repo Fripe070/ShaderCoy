@@ -1,5 +1,5 @@
-import { completeFromList } from "@codemirror/autocomplete";
 import { glslLanguage } from "./lang";
+import { completeFromList } from "@codemirror/autocomplete";
 
 export const glslCompletion = glslLanguage.data.of({
     autocomplete: completeFromList([

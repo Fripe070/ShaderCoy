@@ -1,11 +1,8 @@
-import { mat4 } from "gl-matrix";
-
+import { OrbitCamera } from "../3d/camera";
 import { ShaderCompileError, UserError } from "../errors";
+import cubeObj from "@/assets/models/cube.obj?raw";
 import defaultFragSource from "@/assets/shaders/defaultFrag.glsl?raw";
 import defaultVertSource from "@/assets/shaders/defaultVert.glsl?raw";
-import { OrbitCamera } from "../3d/camera";
-import initAssimp, { type MainModule as AssimpTSModule } from "assimpts";
-import cubeObj from "@/assets/models/cube.obj?raw";
 import {
     createShaderProgram,
     getShaderInfo,
@@ -14,13 +11,15 @@ import {
     type ShaderInfo,
     type ShaderStage,
 } from "@/scripts/gl/shader";
+import { loadMeshes, stringToAssimpFile } from "@/scripts/model/load";
 import {
     loadMeshBuffers,
     VERTEX_FLOAT_COUNT,
     VERTEX_SCHEMA,
     type MeshBuffers,
 } from "@/scripts/model/mesh";
-import { loadMeshes, stringToAssimpFile } from "@/scripts/model/load";
+import initAssimp, { type MainModule as AssimpTSModule } from "assimpts";
+import { mat4 } from "gl-matrix";
 
 export const VERT_ATTR_KEY = "data-vertex";
 export const FRAG_ATTR_KEY = "data-fragment";

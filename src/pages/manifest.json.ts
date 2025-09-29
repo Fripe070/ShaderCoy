@@ -1,5 +1,5 @@
-import { getImage } from "astro:assets";
 import appIcon from "../assets/images/pwa_icon.png";
+import { getImage } from "astro:assets";
 
 export async function GET() {
     const icons = await Promise.all(

@@ -1,5 +1,5 @@
-import type { WebGLCtx } from "@/scripts/utils";
 import type { TextureData } from "./datatypes";
+import type { WebGLCtx } from "@/scripts/utils";
 
 // TODO: Allow configuring in textures panel
 export function loadTexture2D(glCtx: WebGLCtx, image: HTMLImageElement): TextureData {

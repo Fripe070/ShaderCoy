@@ -1,6 +1,6 @@
-import { type Plugin } from "vite";
-import initAssimp from "assimpts";
 import { loadMeshes, stringToAssimpFile } from "../src/scripts/resources/model/load.ts";
+import initAssimp from "assimpts";
+import { type Plugin } from "vite";
 
 const fileRegex = /\.(obj)$/;
 

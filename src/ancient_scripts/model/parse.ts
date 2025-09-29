@@ -1,5 +1,5 @@
-import { mat4, vec3 } from "gl-matrix";
 import type { Mesh } from "./mesh";
+import { mat4, vec3 } from "gl-matrix";
 
 interface AssimpModel {
     rootnode: AssimpNode;

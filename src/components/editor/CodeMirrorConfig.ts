@@ -1,6 +1,6 @@
-import { EditorView } from "codemirror";
-import { Compartment, StateEffect, type Extension } from "@codemirror/state";
 import appState from "@/scripts/state";
+import { Compartment, StateEffect, type Extension } from "@codemirror/state";
+import { EditorView } from "codemirror";
 
 export const editorCompartments = {
     theme: new Compartment(),
