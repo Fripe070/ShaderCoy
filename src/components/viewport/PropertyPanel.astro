@@ -13,7 +13,7 @@ import VectorInput from "./VectorInput.astro";
         "data-[expanded=true]:[&>#viewport-property-panel-expander>svg]:-scale-x-100",
     ]}
 >
-    <div
+    <buttton
         id="viewport-property-panel-expander"
         class:list={[
             "w-4 h-6 absolute right-[100%]",
@@ -21,9 +21,11 @@ import VectorInput from "./VectorInput.astro";
             "bg-od-light text-od-muted hover:text-od-text cursor-pointer",
             "rounded-l",
         ]}
+        title="Toggle Property Panel"
+        tabindex="0"
     >
         <Icon name="material-symbols:arrow-back-ios-new" size={16} />
-    </div>
+    </buttton>
     <div
         id="viewport-property-panel-content"
         class="flex flex-col text-nowrap p-1 pt-0 overflow-y-auto"
@@ -111,7 +113,21 @@ import VectorInput from "./VectorInput.astro";
         const panel = document.getElementById("viewport-property-panel")!;
         const expander = document.getElementById("viewport-property-panel-expander")!;
         expander.addEventListener("click", () => {
-            panel.dataset.expanded = panel.dataset.expanded === "true" ? "false" : "true";
+            setExpanded(panel.dataset.expanded !== "true");
         });
+        expander.addEventListener("keydown", (event) => {
+            if (event.key !== "Enter" && event.key !== " ") return;
+            event.preventDefault();
+            setExpanded(panel.dataset.expanded !== "true");
+        });
+        // Start collapsed
+        setExpanded(false);
+
+        function setExpanded(expanded: boolean) {
+            panel.dataset.expanded = expanded ? "true" : "false";
+            [panel, ...panel.getElementsByTagName("input")].forEach((element) => {
+                element.tabIndex = expanded ? 0 : -1;
+            });
+        }
     </script>
 </div>
