@@ -33,6 +33,8 @@ export class RenderState {
     projectionMatrix = mat4.create();
     viewMatrix = mat4.create();
 
+    $backFaceCulling = atom(true);
+
     canvasNeedResize = true;
     $canvasSize = atom({ width: 0, height: 0 });
 
@@ -125,6 +127,11 @@ export class Canvas3D {
             this.state.projectionMatrix = this.state.camera.getProjectionMatrix(
                 newSize.width / newSize.height,
             );
+        });
+
+        this.state.$backFaceCulling.subscribe((enabled) => {
+            if (enabled) this.glCtx.enable(this.glCtx.CULL_FACE);
+            else this.glCtx.disable(this.glCtx.CULL_FACE);
         });
     }
 

@@ -51,6 +51,16 @@ import VectorInput from "./VectorInput.astro";
                 required
             />
         </label>
+        <h2 class="font-bold mt-2">Rendering</h2>
+        <label class="flex flex-row gap-1 justify-between items-center">
+            <span class="mr-2">Back-face culling</span>
+            <input
+                id="property-panel-backface-culling"
+                type="checkbox"
+                class="w-5 h-5 bg-od-normal outline-none focus-visible:bg-od-selected"
+                checked
+            />
+        </label>
     </div>
 
     <script>
@@ -107,6 +117,16 @@ import VectorInput from "./VectorInput.astro";
             const value = parseFloat(fovInput.value);
             if (isNaN(value)) return;
             canvasState.camera.$state.setKey("fovRadians", value * (Math.PI / 180));
+        });
+
+        const backfaceCullingInput = document.getElementById(
+            "property-panel-backface-culling",
+        ) as HTMLInputElement;
+        canvasState.$backFaceCulling.subscribe((enabled) => {
+            backfaceCullingInput.checked = enabled;
+        });
+        backfaceCullingInput.addEventListener("input", () => {
+            canvasState.$backFaceCulling.set(backfaceCullingInput.checked);
         });
 
         // Expand property panel
