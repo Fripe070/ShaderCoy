@@ -15,18 +15,16 @@ if (defaultValues && defaultValues.length !== dim) {
 
 <div class="flex flex-row">
     {
-        Array(dim)
-            .keys()
-            .map((i) => (
-                <input
-                    id={`vec-${id}-${i}`}
-                    type="number"
-                    class="w-16 bg-od-normal outline-none focus-visible:bg-od-selected"
-                    value={defaultValues ? defaultValues[i]!.toString() : "0"}
-                    step={step ?? "any"}
-                    autocomplete="off"
-                    required
-                />
-            ))
+        Array.from({ length: dim }).map((_, i) => (
+            <input
+                id={`vec-${id}-${i}`}
+                type="number"
+                class="w-16 bg-od-normal outline-none focus-visible:bg-od-selected"
+                value={defaultValues ? defaultValues[i]!.toString() : "0"}
+                step={step ?? "any"}
+                autocomplete="off"
+                required
+            />
+        ))
     }
 </div>
