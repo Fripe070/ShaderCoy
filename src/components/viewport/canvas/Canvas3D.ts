@@ -1,4 +1,4 @@
-import cubeModel from "@/assets/models/suzanne.obj";
+import { modelPrimitives } from "../ModelSelector/ModelSelector";
 import { OrbitCamera } from "@/scripts/camera";
 import { VERTEX_SCHEMA, VERTEX_VALUE_COUNT } from "@/scripts/resources//model/datatypes";
 import type { MeshBuffers } from "@/scripts/resources/model/datatypes";
@@ -8,7 +8,6 @@ import { loadPrimaryShader } from "@/scripts/resources/shader/load";
 import type { TextureData } from "@/scripts/resources/texture/datatypes";
 import appState from "@/scripts/state";
 import type { WebGLCtx } from "@/scripts/utils";
-import initAssimp, { type MainModule as AssimpTSModule } from "assimpts";
 import { mat4 } from "gl-matrix";
 import { atom, subscribeKeys, computed, type ReadableAtom } from "nanostores";
 
@@ -60,8 +59,6 @@ export class Canvas3D {
 
     public state: RenderState;
     public glCtx: WebGLCtx;
-    //TODO: Move to external model loader
-    private assimp: AssimpTSModule | null = null;
 
     private renderLoopId: number | null = null;
     private lastFrameTimestamp: DOMHighResTimeStamp = 0;
@@ -86,13 +83,11 @@ export class Canvas3D {
         // Initialize state
         this.state = new RenderState(this);
 
-        initAssimp().then((assimpModule) => {
-            this.assimp = assimpModule;
-            console.debug("Assimp initialized.");
-        });
-
-        // TODO: Add loading indicator whenever I implement model loading
-        this.state.loadedMeshes = cubeModel.map((mesh) => meshToBuffers(mesh, this.glCtx));
+        if (modelPrimitives) {
+            this.state.loadedMeshes = Object.values(modelPrimitives)[0]!.meshes.map((mesh) =>
+                meshToBuffers(mesh, this.glCtx),
+            );
+        }
 
         // Set camera
         this.state.camera.attach(this.canvasElement);

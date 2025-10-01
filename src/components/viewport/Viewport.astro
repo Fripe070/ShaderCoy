@@ -2,10 +2,11 @@
 import Canvas3D from "./canvas/Canvas3D.astro";
 import { Icon } from "astro-icon/components";
 import PropertyPanel from "./PropertyPanel.astro";
+import ModelSelector from "./ModelSelector/ModelSelector.astro";
 ---
 
-<div class="w-full h-full flex flex-col">
-    <section class="flex flex-row bg-od-dark h-7">
+<div class="w-full h-full flex flex-col-reverse md:flex-col">
+    <section class="flex flex-row bg-od-dark h-7 z-10">
         <button
             id="viewport-pause-btn"
             class:list={[
@@ -32,6 +33,8 @@ import PropertyPanel from "./PropertyPanel.astro";
         </div>
 
         <div class="grow"></div>
+
+        <ModelSelector />
 
         <button
             id="viewport-fullscreen-btn"
