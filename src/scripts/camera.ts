@@ -1,5 +1,5 @@
 import { mat4, vec2, vec3 } from "gl-matrix";
-import { atom, computed, deepMap, map, type Atom } from "nanostores";
+import { computed, map } from "nanostores";
 
 const cursors = {
     default: "grab",
