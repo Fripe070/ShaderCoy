@@ -84,7 +84,7 @@ export class Canvas3D {
         this.state = new RenderState(this);
 
         if (modelPrimitives) {
-            this.state.loadedMeshes = modelPrimitives["suzanne"].meshes.map((mesh) =>
+            this.state.loadedMeshes = modelPrimitives.suzanne.meshes.map((mesh) =>
                 meshToBuffers(mesh, this.glCtx),
             );
         }
