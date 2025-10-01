@@ -1,7 +1,7 @@
-import { HighlightStyle } from "@codemirror/language";
-import { tags } from "@lezer/highlight";
 import * as themeColours from "./colours";
 import type { ThemeColours } from "./colours";
+import { HighlightStyle } from "@codemirror/language";
+import { tags } from "@lezer/highlight";
 
 function genHighlightStyle(pallete: ThemeColours): HighlightStyle {
     return HighlightStyle.define([

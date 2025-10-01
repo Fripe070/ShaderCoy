@@ -1,12 +1,18 @@
-import type { ErrorReporter, OpenGLCanvas } from "./rendering/OpenGLCanvas";
+import type { ShaderCode } from "@/ancient_scripts/gl/shader";
+import defaultFragSource from "@/assets/shaders/defaultFrag.glsl?raw";
+import defaultVertSource from "@/assets/shaders/defaultVert.glsl?raw";
+import type { Canvas3D } from "@/components/viewport/canvas/Canvas3D";
+import type { EditorView } from "codemirror";
+import { atom } from "nanostores";
 
-export interface ApplicationState {
-    openGLCanvas: OpenGLCanvas | null;
-    errorReporter: ErrorReporter | null;
-}
+const appState = {
+    canvas3D: null as Canvas3D | null,
+    textures: [] as WebGLTexture[],
 
-const applicationState: ApplicationState = {
-    openGLCanvas: null,
-    errorReporter: null,
+    editorViews: {} as Record<string, EditorView>,
+    $shaderCode: atom<ShaderCode>({
+        vertex: defaultVertSource,
+        fragment: defaultFragSource,
+    }),
 };
-export default applicationState;
+export default appState;

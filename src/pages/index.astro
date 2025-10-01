@@ -1,166 +1,33 @@
 ---
-import CanvasPanel from "../components/CanvasPanel.astro";
-import MetaTags from "../components/MetaTags.astro";
-import Sidebar from "../components/Sidebar.astro";
+import { Font } from "astro:assets";
+import MetaTags from "@/components/MetaTags.astro";
+import Sidebar from "@/components/sidebar/Sidebar.astro";
+import Viewport from "@/components/viewport/Viewport.astro";
 
-import "@/styles/tabs.css";
+import "@/styles/global.css";
 ---
 
+{/* TODO: Implement drag resizing */}
 <html lang="en">
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width" />
         <MetaTags />
+
+        <Font cssVariable="--font-cascadia" preload />
     </head>
-    <body>
-        {/* TODO: allow toggling class="reversed" in settings */}
-        <main id="app">
-            <CanvasPanel />
+    <body
+        id="app"
+        class:list={[
+            "w-full h-svh flex flex-col md:flex-row",
+            "bg-od-normal text-od-text font-mono",
+        ]}
+    >
+        <div class="md:grow not-md:h-[calc(min(100vw,45svh)-30px)]">
+            <Viewport />
+        </div>
+        <div class="md:w-100 lg:w-180 lg:min-w-180 not-md:grow">
             <Sidebar />
-        </main>
+        </div>
     </body>
 </html>
-
-<style>
-    #app {
-        display: flex;
-        flex-direction: row;
-        width: 100vw;
-        height: 100svh;
-        min-height: 100svh;
-        max-height: 100svh;
-    }
-    #app.reversed {
-        flex-direction: row-reverse;
-    }
-
-    @media screen and (max-width: 850px) {
-        #app,
-        #app.reversed {
-            flex-direction: column;
-        }
-    }
-</style>
-
-<style is:global>
-    @import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap");
-    @import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital@0;1&display=swap");
-    @import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:FILL@0..1");
-
-    :root {
-        --bg-dark: hsl(216, 13%, 15%);
-        --bg-normal: hsl(220, 13%, 18%);
-        --bg-light: hsl(220, 13%, 23%);
-
-        --text: hsl(219, 14%, 71%);
-        --text-muted: hsl(219, 10%, 40%);
-
-        --col-purple: hsl(286, 60%, 67%);
-        --col-red: hsl(355, 65%, 65%);
-        --col-red-dark: hsl(5, 48%, 51%);
-        --col-blue: hsl(207, 83%, 66%);
-        --col-cyan: hsl(187, 47%, 55%);
-        --col-green: hsl(95, 38%, 62%);
-        --col-orange: hsl(39, 67%, 69%);
-        --col-orange-dark: hsl(29, 54%, 61%);
-
-        --bg-normal-hover: color-mix(in oklch, var(--bg-normal), var(--bg-light));
-
-        --bg-checkerboard-first: var(--bg-dark);
-        --bg-checkerboard-second: var(--bg-normal);
-        --bg-checkerboard: repeating-conic-gradient(
-                var(--bg-checkerboard-first) 0 25%,
-                var(--bg-checkerboard-second) 0 50%
-            )
-            50% / 20px 20px;
-
-        --font-normal: "Roboto", sans-serif;
-        --font-mono: "JetBrains Mono", monospace;
-        --font-icons: "Material Symbols Outlined";
-    }
-
-    @media (prefers-color-scheme: light) {
-        :root {
-            --bg-dark: hsl(240, 2%, 92%);
-            --bg-normal: hsl(0, 0%, 98%);
-            --bg-light: hsl(0, 0%, 98%);
-
-            --text: hsl(228, 8%, 24%);
-            --text-muted: hsl(231, 4%, 64%);
-
-            --col-purple: #a626a4;
-            --col-red: #e45649;
-            --col-red-dark: #ca1243;
-            --col-blue: #4078f2;
-            --col-cyan: #0184bc;
-            --col-green: #50a14f;
-            --col-orange: #c18401;
-            --col-orange-dark: #986801;
-        }
-    }
-
-    :root {
-        --icon-size: 30px;
-        --icon-font-size: 24px;
-        --icon-whole-margin: calc(var(--icon-size) - var(--icon-font-size));
-        --icon-margin: calc(var(--icon-whole-margin) / 2);
-
-        --standard-spacing: 8px;
-
-        --sidebar-preferred-width: 800px;
-        --sidebar-min-width: 300px;
-        --sidebar-width: min(var(--sidebar-preferred-width), max(var(--sidebar-min-width), 50vw));
-
-        --canvas-height: 100%;
-        --sidebar-height: 100%;
-    }
-
-    @media screen and (max-width: 850px) {
-        :root {
-            --canvas-height: min(100vw, 45svh);
-            --sidebar-height: calc(100svh - var(--canvas-height));
-        }
-    }
-
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-    }
-    html,
-    body {
-        width: 100%;
-        height: 100%;
-    }
-    .sans-serif,
-    body {
-        font-family: var(--font-normal);
-        color: var(--text);
-        background: var(--bg-normal);
-    }
-
-    .cm-editor * {
-        font-size: 13px;
-        line-height: 1.2;
-        &,
-        .mono {
-            font-family: var(--font-mono);
-            font-variant-ligatures: normal;
-        }
-    }
-
-    button,
-    input[type="button"] {
-        all: unset;
-        cursor: pointer;
-        background: var(--bg-light);
-    }
-
-    .material-symbols-outlined {
-        font-family: var(--font-icons) !important;
-        font-variation-settings: "FILL" 1;
-
-        font-size: var(--icon-font-size);
-        padding: var(--icon-margin);
-    }
-</style>

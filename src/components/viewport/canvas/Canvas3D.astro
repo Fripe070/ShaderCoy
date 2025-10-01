@@ -1,0 +1,24 @@
+---
+import defaultFragSource from "@/assets/shaders/defaultFrag.glsl?raw";
+import defaultVertSource from "@/assets/shaders/defaultVert.glsl?raw";
+---
+
+<canvas
+    id="render-canvas"
+    data-paused="false"
+    data-use-model="false"
+    data-vertex={defaultVertSource}
+    data-fragment={defaultFragSource}
+    class="w-full h-full touch-none user-select-none checkerboard"
+>
+</canvas>
+
+<script>
+    import { Canvas3D } from "./Canvas3D";
+    import appState from "@/scripts/state";
+
+    const canvasElement = document.getElementById("render-canvas")! as HTMLCanvasElement;
+    const canvasInstance = new Canvas3D(canvasElement);
+    appState.canvas3D = canvasInstance;
+    canvasInstance.startRenderLoop();
+</script>

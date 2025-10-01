@@ -1,0 +1,30 @@
+---
+import type { sidebarTabs } from "./Sidebar";
+import { Icon } from "astro-icon/components";
+
+interface Props {
+    key: string;
+    tab: (typeof sidebarTabs)[string];
+    index: number;
+}
+const { key, tab, index } = Astro.props;
+---
+
+<li>
+    <a
+        class:list={[
+            "px-2 h-full flex flex-row items-center justify-center gap-1 ",
+            // Hover
+            "hover:bg-od-light",
+            // Active
+            "data-[active=true]:bg-od-normal",
+        ]}
+        title={tab.title}
+        href={`#${key}`}
+        data-active={index === 0 ? "true" : "false"}
+        id={`sidebar-tab-${key}`}
+    >
+        {tab.icon && <Icon class={tab.title && "max-[24rem]:hidden"} name={tab.icon} size={24} />}
+        {tab.title && <span>{tab.title}</span>}
+    </a>
+</li>

@@ -1,0 +1,153 @@
+---
+import { Icon } from "astro-icon/components";
+import VectorInput from "./VectorInput.astro";
+---
+
+<div
+    id="viewport-property-panel"
+    class:list={[
+        "flex max-h-[calc(100%-2*var(--spacing))] min-h-6 bg-od-light",
+        "absolute top-1 left-[100%] transition-all",
+        "translate-x-0",
+        "data-[expanded=true]:-translate-x-full",
+        "data-[expanded=true]:[&>#viewport-property-panel-expander>svg]:-scale-x-100",
+    ]}
+>
+    <buttton
+        id="viewport-property-panel-expander"
+        class:list={[
+            "w-4 h-6 absolute right-[100%]",
+            "flex items-center justify-center",
+            "bg-od-light text-od-muted hover:text-od-text cursor-pointer",
+            "rounded-l",
+        ]}
+        title="Toggle Property Panel"
+        tabindex="0"
+    >
+        <Icon name="material-symbols:arrow-back-ios-new" size={16} />
+    </buttton>
+    <div
+        id="viewport-property-panel-content"
+        class="flex flex-col text-nowrap p-1 pt-0 overflow-y-auto"
+    >
+        <h2 class="font-bold">Camera Properties</h2>
+        <label class="flex flex-row gap-1 justify-between">
+            <span class="mr-2">Pivot point</span>
+            <VectorInput dim={3} id="property-panel-pivot" />
+        </label>
+        <label class="flex flex-row gap-1 justify-between">
+            <span class="mr-2">Rotation (°)</span>
+            <VectorInput dim={2} id="property-panel-rotation" />
+        </label>
+        <label class="flex flex-row gap-1 justify-between">
+            <span class="mr-2">Field of View (°)</span>
+            <input
+                id="property-panel-fov"
+                type="number"
+                class="w-16 bg-od-normal outline-none focus-visible:bg-od-selected"
+                value="34"
+                step="any"
+                autocomplete="off"
+                required
+            />
+        </label>
+        <h2 class="font-bold mt-2">Rendering</h2>
+        <label class="flex flex-row gap-1 justify-between items-center">
+            <span class="mr-2">Back-face culling</span>
+            <input
+                id="property-panel-backface-culling"
+                type="checkbox"
+                class="w-5 h-5 bg-od-normal outline-none focus-visible:bg-od-selected"
+                checked
+            />
+        </label>
+    </div>
+
+    <script>
+        import appState from "@/scripts/state";
+        import { subscribeKeys } from "nanostores";
+
+        function vectorElements(id: string, dim: number): HTMLInputElement[] {
+            return Array.from({ length: dim }).map(
+                (_, i) => document.getElementById(`vec-${id}-${i}`) as HTMLInputElement,
+            );
+        }
+
+        function registerVector(id: string, dim: number, callback: (vec: number[]) => void) {
+            const inputs = vectorElements(id, dim);
+            if (inputs.some((input) => !input)) throw new Error("Input elements not found");
+            if (inputs.length !== dim) throw new Error("Input elements length mismatch");
+            inputs.forEach((input) => {
+                input.addEventListener("input", () => {
+                    const vec = inputs.map((inp) => {
+                        const value = parseFloat(inp.value);
+                        return value;
+                    }) as number[];
+                    if (vec.some((v) => isNaN(v))) return;
+                    callback(vec);
+                });
+            });
+        }
+
+        const canvasState = appState.canvas3D?.state;
+        if (!canvasState) throw new Error("Canvas state not initialized");
+
+        registerVector("property-panel-pivot", 3, (vec) => {
+            canvasState.camera.$state.setKey("orbitPoint", vec);
+        });
+        const rotationElements = vectorElements("property-panel-rotation", 2);
+        subscribeKeys(canvasState.camera.$state, ["yaw", "pitch"], (state) => {
+            // Display in degrees
+            rotationElements[0]!.value = (state.yaw * (180 / Math.PI)).toString();
+            rotationElements[1]!.value = (state.pitch * (180 / Math.PI)).toString();
+        });
+        registerVector("property-panel-rotation", 2, (vec) => {
+            canvasState.camera.updateRotation(
+                // Convert from degrees to radians
+                vec[0]! * (Math.PI / 180),
+                vec[1]! * (Math.PI / 180),
+            );
+        });
+        const fovInput = document.getElementById("property-panel-fov") as HTMLInputElement;
+        subscribeKeys(canvasState.camera.$state, ["fovRadians"], (state) => {
+            // Display in degrees
+            fovInput.value = (state.fovRadians * (180 / Math.PI)).toString();
+        });
+        fovInput.addEventListener("input", () => {
+            const value = parseFloat(fovInput.value);
+            if (isNaN(value)) return;
+            canvasState.camera.$state.setKey("fovRadians", value * (Math.PI / 180));
+        });
+
+        const backfaceCullingInput = document.getElementById(
+            "property-panel-backface-culling",
+        ) as HTMLInputElement;
+        canvasState.$backFaceCulling.subscribe((enabled) => {
+            backfaceCullingInput.checked = enabled;
+        });
+        backfaceCullingInput.addEventListener("input", () => {
+            canvasState.$backFaceCulling.set(backfaceCullingInput.checked);
+        });
+
+        // Expand property panel
+        const panel = document.getElementById("viewport-property-panel")!;
+        const expander = document.getElementById("viewport-property-panel-expander")!;
+        expander.addEventListener("click", () => {
+            setExpanded(panel.dataset.expanded !== "true");
+        });
+        expander.addEventListener("keydown", (event) => {
+            if (event.key !== "Enter" && event.key !== " ") return;
+            event.preventDefault();
+            setExpanded(panel.dataset.expanded !== "true");
+        });
+        // Start collapsed
+        setExpanded(false);
+
+        function setExpanded(expanded: boolean) {
+            panel.dataset.expanded = expanded ? "true" : "false";
+            [panel, ...panel.getElementsByTagName("input")].forEach((element) => {
+                element.tabIndex = expanded ? 0 : -1;
+            });
+        }
+    </script>
+</div>

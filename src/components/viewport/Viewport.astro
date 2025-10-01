@@ -1,0 +1,83 @@
+---
+import Canvas3D from "./canvas/Canvas3D.astro";
+import { Icon } from "astro-icon/components";
+import PropertyPanel from "./PropertyPanel.astro";
+import ModelSelector from "./ModelSelector/ModelSelector.astro";
+---
+
+<div class="w-full h-full flex flex-col-reverse md:flex-col">
+    <section class="flex flex-row bg-od-dark h-7 z-10">
+        <button
+            id="viewport-pause-btn"
+            class:list={[
+                "w-7 h-7 flex items-center justify-center",
+                "bg-od-normal hover:bg-od-light cursor-pointer",
+                "data-[paused=true]:[&>.playing]:hidden",
+                "data-[paused=false]:[&>.paused]:hidden",
+                "data-[paused=true]:bg-red-400/20",
+            ]}
+            data-paused="false"
+        >
+            <Icon class="playing" name="material-symbols:pause" size={24} />
+            <Icon class="paused" name="material-symbols:play-arrow" size={24} />
+        </button>
+
+        <div
+            title="Render is synced with the display; values smaller than the display's refresh rate are rounded"
+            class:list={[
+                "px-2 h-7 flex flex-row items-center justify-center text-nowrap",
+                "[#viewport-pause-btn[data-paused=true]~&]:text-od-muted",
+            ]}
+        >
+            <span id="render-time-ms">0.00</span>ms (<span id="render-time-fps">000</span>&nbsp;FPS)
+        </div>
+
+        <div class="grow"></div>
+
+        <ModelSelector />
+
+        <button
+            id="viewport-fullscreen-btn"
+            class:list={[
+                "w-7 h-7 flex items-center justify-center",
+                "bg-od-normal hover:bg-od-light cursor-pointer",
+            ]}
+        >
+            <Icon name="material-symbols:fullscreen" size={24} />
+        </button>
+    </section>
+
+    <div class="grow relative overflow-hidden">
+        <Canvas3D />
+        <PropertyPanel />
+    </div>
+</div>
+
+<script>
+    import appState from "@/scripts/state";
+
+    // Fullscreen button
+    const fullscreenBtn = document.getElementById("viewport-fullscreen-btn")!;
+    fullscreenBtn.addEventListener("click", () => {
+        appState.canvas3D?.canvasElement.requestFullscreen();
+    });
+
+    // Pause button
+    const pauseBtn = document.getElementById("viewport-pause-btn")!;
+    pauseBtn.addEventListener("click", () => {
+        if (!appState.canvas3D) return;
+        const newState = !appState.canvas3D.state.isPaused;
+        appState.canvas3D.state.isPaused = newState;
+        pauseBtn.dataset.paused = newState.toString();
+    });
+
+    // Render time display
+    const timeMsSpan = document.getElementById("render-time-ms")!;
+    const timeFpsSpan = document.getElementById("render-time-fps")!;
+    setInterval(() => {
+        if (!appState.canvas3D) return;
+        const deltaTime = appState.canvas3D.state.deltaTime;
+        timeMsSpan.textContent = deltaTime.toFixed(2);
+        timeFpsSpan.textContent = (1 / deltaTime).toFixed(0);
+    }, 500);
+</script>

@@ -2,7 +2,7 @@
 
 /** @type {import("prettier").Config} */
 export default {
-    plugins: ["prettier-plugin-astro"],
+    plugins: ["prettier-plugin-astro", "@trivago/prettier-plugin-sort-imports"],
     overrides: [
         {
             files: "*.astro",
@@ -19,5 +19,5 @@ export default {
     ],
     useTabs: false,
     tabWidth: 4,
-    printWidth: 100, // I am aware this isn't a max lenght, but I like longer lines
+    printWidth: 100,
 };

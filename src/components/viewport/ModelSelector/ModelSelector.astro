@@ -1,0 +1,140 @@
+---
+import { Icon } from "astro-icon/components";
+import { modelPrimitives } from "./ModelSelector";
+---
+
+<div
+    id="model-selector-button"
+    class:list={[
+        "h-7 px-1 gap-1 flex items-center justify-center bg-od-normal hover:bg-od-light cursor-pointer",
+        "select-none",
+        "relative",
+        "data-[open=true]:bg-od-selected",
+        "data-[open=false]:[&>div]:hidden",
+    ]}
+    data-open="false"
+    data-active-model="Cube"
+    title="Select 3D Model"
+>
+    <Icon name="material-symbols:interests" size={24} />
+    <div
+        class:list={[
+            // prettier-ignore
+            "absolute top-full right-0",
+            "flex flex-col text-start text-nowrap",
+            "bg-od-normal",
+            "[&>*]:even:bg-od-light [&>*]:odd:bg-od-light/40 [&>*]:hover:bg-od-selected",
+        ]}
+    >
+        {
+            Object.entries(modelPrimitives).map(([key, primitive]) => (
+                <button
+                    id={`model-selector-model-${key}`}
+                    class="pr-2 pl-1 flex flex-row gap-1 items-center"
+                    title={primitive.name}
+                >
+                    <Icon name={primitive.icon ?? "material-symbols:deployed-code"} size={24} />{" "}
+                    {primitive.name}
+                </button>
+            ))
+        }
+        <button
+            id="model-selector-upload"
+            class="pr-2 pl-1 flex flex-row gap-1 items-center"
+            title="Upload Model"
+        >
+            <Icon name="material-symbols:upload-2" size={24} />{" "}
+            Custom
+            <input type="file" class="hidden" accept=".obj,.gltf,.glb,.fbx" />
+        </button>
+    </div>
+</div>
+
+<script>
+    import { fileToAssimpFile, loadMeshes, meshToBuffers } from "@/scripts/resources/model/load";
+    import initAssimp from "assimpts";
+    import appState from "@/scripts/state";
+    import { modelPrimitives } from "./ModelSelector";
+
+    const modelSelectorButton = document.getElementById("model-selector-button");
+    if (!modelSelectorButton) throw new Error("ModelSelector button not found");
+    const uploadButton = modelSelectorButton.querySelector("#model-selector-upload");
+    if (!uploadButton) throw new Error("Upload button not found");
+    const fileInput = uploadButton.querySelector("input[type='file']");
+    if (!fileInput) throw new Error("File input not found");
+
+    const assimp = await initAssimp();
+    if (!assimp) throw new Error("Failed to initialize Assimp");
+
+    modelSelectorButton.addEventListener("click", (event) => {
+        event.stopPropagation();
+        modelSelectorButton.dataset.open =
+            modelSelectorButton.dataset.open === "true" ? "false" : "true";
+
+        const selectedClass = "!bg-od-accent/40";
+        // Change the background color of the selected model button
+        Object.values(modelPrimitives).forEach((primitive) => {
+            const button = document.getElementById(
+                `model-selector-model-${primitive.name.toLowerCase()}`,
+            );
+            if (!button) return;
+
+            button.classList.remove(selectedClass);
+            if (button.id.endsWith(modelSelectorButton.dataset.activeModel!.toLowerCase())) {
+                button.classList.add(selectedClass);
+            }
+        });
+        uploadButton.classList.toggle(
+            selectedClass,
+            modelSelectorButton.dataset.activeModel === "custom",
+        );
+    });
+    document.addEventListener("click", () => {
+        modelSelectorButton.dataset.open = "false";
+    });
+
+    uploadButton.addEventListener("click", (event) => {
+        event.stopPropagation();
+        modelSelectorButton.dataset.open = "false";
+        (fileInput as HTMLInputElement).click();
+    });
+
+    Object.values(modelPrimitives).forEach((primitive) => {
+        console.log("Adding listener to primitive:", primitive.name);
+        const button = document.getElementById(
+            `model-selector-model-${primitive.name.toLowerCase()}`,
+        );
+        if (!button) throw new Error("Primitive button not found");
+
+        button.addEventListener("click", (event) => {
+            console.log("Adding listener to button:", button.id);
+            event.stopPropagation();
+            modelSelectorButton.dataset.open = "false";
+
+            const canvas3D = appState.canvas3D;
+            if (!canvas3D) throw new Error("Canvas3D not initialized");
+
+            canvas3D.state.loadedMeshes = primitive.meshes.map((mesh) =>
+                meshToBuffers(mesh, canvas3D.glCtx),
+            );
+            modelSelectorButton.dataset.activeModel = primitive.name;
+        });
+    });
+
+    fileInput.addEventListener("change", async (event) => {
+        event.stopPropagation();
+        const input = event.target as HTMLInputElement;
+        if (!input.files || input.files.length < 1) return;
+        const file = input.files[0]!;
+        input.value = "";
+
+        const canvas3D = appState.canvas3D;
+        if (!canvas3D) throw new Error("Canvas3D not initialized");
+
+        console.log("File selected:", file);
+        // TODO: Add loading indicator;
+        const meshes = loadMeshes(assimp, [await fileToAssimpFile(file)]);
+        canvas3D.state.loadedMeshes = meshes.map((mesh) => meshToBuffers(mesh, canvas3D.glCtx));
+        modelSelectorButton.dataset.activeModel = "custom";
+    });
+</script>
