@@ -1,0 +1,15 @@
+@layer base {
+	:root, /* This is our default theme */
+	[data-theme="one-dark"] {
+		--theme-background-primary: #282c34;
+		--theme-background-secondary: #21252b;
+		--theme-background-tertiary: #1d1f25;
+		--theme-background-selected: #3e4451;
+		--theme-foreground-primary: #abb2bf;
+		--theme-foreground-muted: #5c6370;
+		--theme-accent: #61afef;
+		--theme-positive: #98c379;
+		--theme-warning: #d19a66;
+		--theme-negative: #e06c75;
+	}
+}

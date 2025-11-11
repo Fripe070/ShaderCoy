@@ -1,0 +1,7 @@
+@tokens {
+  space { $[ \t\v\f\r\n]+ }
+}
+
+@top a {
+  
+}

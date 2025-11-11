@@ -1,0 +1,14 @@
+@layer base {
+	[data-theme="firefox"] {
+		--theme-background-primary: #1f1e25;
+		--theme-background-secondary: #1c1b22;
+		--theme-background-tertiary: #18171d;
+		--theme-background-selected: #38373d;
+		--theme-foreground-primary: #ffffff;
+		--theme-foreground-muted: #c4c4c7;
+		--theme-accent: #ff7139;
+		--theme-positive: #3fe1b0;
+		--theme-warning: #ffea80;
+		--theme-negative: #ff6a75;
+	}
+}

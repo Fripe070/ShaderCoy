@@ -1,0 +1,14 @@
+@layer base {
+	[data-theme="gruvbox"] {
+		--theme-background-primary: #282828;
+		--theme-background-secondary: #1d2021;
+		--theme-background-tertiary: #171a1b;
+		--theme-background-selected: #32302f;
+		--theme-foreground-primary: #ebdbb2;
+		--theme-foreground-muted: #a89984;
+		--theme-accent: #fe8019;
+		--theme-positive: #8ec07c;
+		--theme-warning: #fabd2f;
+		--theme-negative: #fb4934;
+	}
+}

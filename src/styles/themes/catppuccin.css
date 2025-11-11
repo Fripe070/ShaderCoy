@@ -1,0 +1,14 @@
+@layer base {
+	[data-theme="catppuccin"] {
+		--theme-background-primary: #1e1e2e;
+		--theme-background-secondary: #181825;
+		--theme-background-tertiary: #11111b;
+		--theme-background-selected: #313244;
+		--theme-foreground-primary: #cdd6f4;
+		--theme-foreground-muted: #a6adc8;
+		--theme-accent: #cba6f7;
+		--theme-positive: #a6e3a1;
+		--theme-warning: #fab387;
+		--theme-negative: #f38ba8;
+	}
+}

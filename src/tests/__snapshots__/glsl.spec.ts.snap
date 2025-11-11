@@ -1,0 +1,76 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`glsl parsing > parses a simple expression 1`] = `
+Tree {
+  "children": [
+    TreeBuffer {
+      "buffer": Uint16Array [
+        3,
+        0,
+        1,
+        4,
+        0,
+        2,
+        3,
+        8,
+        3,
+        4,
+        5,
+        12,
+      ],
+      "length": 5,
+      "set": NodeSet {
+        "types": [
+          NodeType {
+            "flags": 6,
+            "id": 0,
+            "name": "⚠",
+            "props": {},
+          },
+          NodeType {
+            "flags": 1,
+            "id": 1,
+            "name": "File",
+            "props": {},
+          },
+          NodeType {
+            "flags": 0,
+            "id": 2,
+            "name": "Identifier",
+            "props": {},
+          },
+          NodeType {
+            "flags": 0,
+            "id": 3,
+            "name": "Number",
+            "props": {},
+          },
+          NodeType {
+            "flags": 0,
+            "id": 4,
+            "name": "String",
+            "props": {},
+          },
+          NodeType {
+            "flags": 8,
+            "id": 5,
+            "name": "",
+            "props": {},
+          },
+        ],
+      },
+    },
+  ],
+  "length": 5,
+  "positions": [
+    0,
+  ],
+  "props": null,
+  "type": NodeType {
+    "flags": 1,
+    "id": 1,
+    "name": "File",
+    "props": {},
+  },
+}
+`;

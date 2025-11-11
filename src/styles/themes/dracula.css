@@ -1,0 +1,14 @@
+@layer base {
+	[data-theme="dracula"] {
+		--theme-background-primary: #282a36;
+		--theme-background-secondary: #21222c;
+		--theme-background-tertiary: #191a21;
+		--theme-background-selected: #44475a;
+		--theme-foreground-primary: #f8f8f2;
+		--theme-foreground-muted: #a9a9a3;
+		--theme-accent: #6272a4;
+		--theme-positive: #50fa7b;
+		--theme-warning: #ffb86c;
+		--theme-negative: #ff5555;
+	}
+}

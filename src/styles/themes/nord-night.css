@@ -1,0 +1,14 @@
+@layer base {
+	[data-theme="nord-night"] {
+		--theme-background-primary: #3b4252;
+		--theme-background-secondary: #2e3440;
+		--theme-background-tertiary: #242933;
+		--theme-background-selected: #4c566a;
+		--theme-foreground-primary: #eceff4;
+		--theme-foreground-muted: #d8dee9;
+		--theme-accent: #5e81ac;
+		--theme-positive: #a3be8c;
+		--theme-warning: #ebcb8b;
+		--theme-negative: #bf616a;
+	}
+}

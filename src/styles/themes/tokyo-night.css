@@ -1,0 +1,14 @@
+@layer base {
+	[data-theme="tokyo-night"] {
+		--theme-background-primary: #222436;
+		--theme-background-secondary: #1e2030;
+		--theme-background-tertiary: #1a1b26;
+		--theme-background-selected: #2f334d;
+		--theme-foreground-primary: #c8d3f5;
+		--theme-foreground-muted: #828bb8;
+		--theme-accent: #2d3f76;
+		--theme-positive: #c3e88d;
+		--theme-warning: #ff966c;
+		--theme-negative: #ff757f;
+	}
+}

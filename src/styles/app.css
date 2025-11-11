@@ -1,0 +1,66 @@
+@import "tailwindcss";
+@plugin '@tailwindcss/forms';
+
+@import "./themes/one-dark.css";
+@import "./themes/tokyo-night.css";
+@import "./themes/catppuccin.css";
+@import "./themes/gruvbox.css";
+@import "./themes/discord.css";
+@import "./themes/nord-night.css";
+@import "./themes/nord-snow.css";
+@import "./themes/dracula.css";
+@import "./themes/firefox.css";
+
+@theme {
+	--font-sans: "Inter Variable", sans-serif;
+	--font-mono: "Iosevka", monospace;
+	--color-*: initial;
+}
+@theme inline {
+	--color-background-primary: var(--theme-background-primary);
+	--color-background-secondary: var(--theme-background-secondary);
+	--color-background-tertiary: var(--theme-background-tertiary);
+	--color-background-selected: var(--theme-background-selected);
+	--color-foreground-primary: var(--theme-foreground-primary);
+	--color-foreground-muted: var(--theme-foreground-muted);
+	--color-accent: var(--theme-accent);
+	--color-positive: var(--theme-positive);
+	--color-warning: var(--theme-warning);
+	--color-negative: var(--theme-negative);
+}
+
+html,
+body {
+	@apply bg-background-primary text-foreground-primary;
+	@apply h-full w-full;
+	font-size: 20px;
+}
+
+iconify-icon {
+	font-size: 1.25rem;
+}
+
+@layer components {
+	.checkerboard {
+		background: repeating-conic-gradient(
+			var(--theme-background-secondary) 0 25%,
+			var(--theme-background-tertiary) 0 50%
+		);
+		background-size: calc(var(--spacing) * 5) calc(var(--spacing) * 5);
+	}
+}
+
+@layer components {
+	.all-unset {
+		all: unset;
+	}
+}
+
+@utility absolute-center {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	--tw-translate-x: calc(calc(1 / 2 * 100%) /* 50% */ * -1);
+	--tw-translate-y: calc(calc(1 / 2 * 100%) /* 50% */ * -1);
+	translate: var(--tw-translate-x) var(--tw-translate-y);
+}

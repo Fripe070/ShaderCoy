@@ -1,0 +1,14 @@
+@layer base {
+	[data-theme="discord"] {
+		--theme-background-primary: #323339;
+		--theme-background-secondary: #2c2d32;
+		--theme-background-tertiary: #28292e;
+		--theme-background-selected: #35353a;
+		--theme-foreground-primary: #dfe0e2;
+		--theme-foreground-muted: #9b9ca3;
+		--theme-accent: #5865f2;
+		--theme-positive: #43a25a;
+		--theme-warning: #ca9654;
+		--theme-negative: #d83a42;
+	}
+}
