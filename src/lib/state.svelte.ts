@@ -21,14 +21,15 @@ export interface FrontendState {
 }
 
 export interface AppState {
-	project: ProjectState;
+	saveData: ProjectState;
 	frontend: FrontendState;
+	// Non-serializable runtime state
 	glCtx: WebGL2RenderingContext | null;
 	assimpInstance: AssimpTSModule | null;
 }
 
 export const defaultAppState: Readonly<AppState> = deepFreeze<AppState>({
-	project: {
+	saveData: {
 		vertexSource: defaultVertSource,
 		fragmentSource: defaultFragSource,
 		meshes: [],

@@ -1,16 +1,14 @@
 import type { mat4 } from "gl-matrix";
 
-/* eslint-disable @typescript-eslint/no-unused-vars */
-export abstract class InputHandler {
-	keyDown(event: KeyboardEvent): void {}
-	keyUp(event: KeyboardEvent): void {}
-	mouseDown(event: MouseEvent): void {}
-	mouseUp(event: MouseEvent): void {}
-	mouseMove(event: MouseEvent): void {}
-	mouseWheel(event: WheelEvent): void {}
-}
-export abstract class ViewController extends InputHandler {
-	abstract getMatrix(): mat4;
-	attach(element: HTMLElement, updateCallback: (matrix: mat4) => void): void {}
-	detach(element: HTMLElement): void {}
+export interface CameraController {
+	readonly viewMatrix: mat4;
+	readonly cursor?: string;
+	projectionMatrix(aspectRatio: number): mat4;
+
+	handleKeyDown?(event: KeyboardEvent): void;
+	handleKeyUp?(event: KeyboardEvent): void;
+	handlePointerDown?(event: PointerEvent): void;
+	handlePointerUp?(event: PointerEvent): void;
+	handlePointerMove?(event: PointerEvent): void;
+	handleWheel?(event: WheelEvent): void;
 }

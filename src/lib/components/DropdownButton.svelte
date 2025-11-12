@@ -34,7 +34,6 @@
 			return;
 		}
 		expanded = false;
-		console.log("Clicked outside DropdownButton, collapsing");
 	}}
 />
 

@@ -12,6 +12,7 @@
 	import type { Snippet } from "svelte";
 	import ViewController from "./ViewControlls/ViewController.svelte";
 	import { mat4 } from "gl-matrix";
+	import type { CameraController } from "./ViewControlls/ViewController.js";
 
 	let {
 		toolbarChildren = undefined,
@@ -20,12 +21,12 @@
 	} = $props();
 
 	let shader: CoyShader | CoyErrorReport[] | null = $derived.by(() => {
-		console.log("Compiling shader...");
 		if (!appState.glCtx) return null;
+		console.log("Compiling shader...");
 		try {
 			const compiled = loadCoyShader(appState.glCtx, {
-				vertex: appState.project.vertexSource,
-				fragment: appState.project.fragmentSource,
+				vertex: appState.saveData.vertexSource,
+				fragment: appState.saveData.fragmentSource,
 			});
 			console.log("Shader compiled successfully.");
 			return compiled;
@@ -49,7 +50,7 @@
 	// We keep the last compiling shader around so that we can see it during errors
 	let cachedShader: CoyShader | null = $state(null);
 	$effect(() => {
-		if (shader instanceof Array) return;
+		if (!shader || shader instanceof Array) return;
 		cachedShader = shader ?? cachedShader;
 	});
 
@@ -57,38 +58,7 @@
 	let frameDeltas: number[] = $state([]);
 	let viewportDimensions: [number | null, number | null] = $state([null, null]);
 
-	let viewMatrix: mat4 = $state(mat4.create());
-	let projectionMatrix = $derived.by(() => {
-		// FIXME: THis all needs to be somehow integrated into our view controller,
-		// so that we can take scroll inputs to zoom, for example.
-		// Maybe turn the view controller into a more general perspective/input handler?
-		if (appState.project.viewMode === "2d") {
-			return mat4.identity(mat4.create());
-		}
-		const near = 0.1;
-		const far = 1000;
-
-		if (appState.project.viewMode.startsWith("orthographic")) {
-			return (aspectRatio: number) => {
-				const orthoHeight = 2;
-				const orthoWidth = orthoHeight * aspectRatio;
-				return mat4.ortho(
-					mat4.create(),
-					-orthoWidth / 2,
-					orthoWidth / 2,
-					-orthoHeight / 2,
-					orthoHeight / 2,
-					near,
-					far
-				);
-			};
-		}
-
-		return (aspectRatio: number) => {
-			const fov = (60 * Math.PI) / 180;
-			return mat4.perspective(mat4.create(), fov, aspectRatio, near, far);
-		};
-	});
+	let cameraController = $state<CameraController | undefined>(undefined);
 </script>
 
 <div class="flex h-full w-full flex-col">
@@ -97,7 +67,7 @@
 		<span class="grow"></span>
 		<DimensionsSelector bind:dimensions={viewportDimensions} />
 		<ViewModePicker />
-		<ModelSelector bind:meshes={appState.project.meshes} />
+		<ModelSelector bind:meshes={appState.saveData.meshes} />
 		<button
 			class={[
 				"flex h-6 w-6 flex-row items-center justify-center",
@@ -115,13 +85,13 @@
 		{/if}
 	</div>
 	<div class="checkerboard relative grow bg-background-tertiary" bind:this={fullscreenHandle}>
-		<ViewController bind:viewMatrix mode={appState.project.viewMode}>
+		<ViewController mode={appState.saveData.viewMode} bind:controller={cameraController}>
 			<Renderer
 				shader={cachedShader}
-				meshes={appState.project.meshes}
+				meshes={appState.saveData.meshes}
 				textures={[]}
-				{viewMatrix}
-				{projectionMatrix}
+				viewMatrix={cameraController?.viewMatrix ?? mat4.create()}
+				projectionMatrix={cameraController?.projectionMatrix ?? mat4.create()}
 				paused={!appState.frontend.playing}
 				dimensions={viewportDimensions}
 				bind:glContext={appState.glCtx}
