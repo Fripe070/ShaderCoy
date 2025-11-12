@@ -25,7 +25,10 @@ const SPEEDS = {
 	PAN_PINCH: 3e-3,
 	ZOOM_SCROLL: 4e-3,
 	ZOOM_PINCH: 1e-2,
+	ORTHO_ZOOM_SCROLL: 1e-3,
+	ORTHO_ZOOM_PINCH: 1e-2,
 	FOV_ZOOM: 1e-3,
+	SHIFT_MODIFIER: 0.25,
 } as const;
 
 function isometricQuaternion(): quat {
@@ -45,12 +48,14 @@ interface CameraOrbitState {
 	distance: number;
 	rotation: quat;
 	fov: number;
+	orthoHeight: number;
 }
 const DEFAULT_ORBIT_STATE: CameraOrbitState = {
 	orbitPoint: [0, 0, 0],
 	distance: 4,
 	rotation: isometricQuaternion(),
 	fov: (60 * Math.PI) / 180,
+	orthoHeight: 2,
 } as const;
 
 function getPosition(state: CameraOrbitState): vec3 {
@@ -78,6 +83,24 @@ const trackedPointers = new SvelteMap<number, vec2>();
 export default function orbitCameraController(
 	projectionMode: "perspective" | "orthographic",
 ): CameraController {
+	function doZoom(event: WheelEvent | PointerEvent, delta: number) {
+		const shiftMod = event.shiftKey ? SPEEDS.SHIFT_MODIFIER : 1;
+
+		if (projectionMode === "orthographic") {
+			orbitState.orthoHeight *= 1 + delta * shiftMod;
+			orbitState.orthoHeight = Math.max(1e-3, orbitState.orthoHeight);
+			return;
+		}
+
+		if (event.ctrlKey || event.metaKey) {
+			orbitState.fov += delta * shiftMod;
+			orbitState.fov = Math.max(1e-3, Math.min(Math.PI - 1e-3, orbitState.fov));
+		} else {
+			orbitState.distance += delta * shiftMod;
+			orbitState.distance = Math.max(NEAR, Math.min(FAR, orbitState.distance));
+		}
+	}
+
 	return {
 		handlePointerDown(event: PointerEvent) {
 			trackedPointers.set(event.pointerId, [event.clientX, event.clientY]);
@@ -134,21 +157,22 @@ export default function orbitCameraController(
 				const previousAverage = averageVec2(previousPos, otherPos);
 				const currentAverage = averageVec2(currentPos, otherPos);
 				const panDelta = vec2.subtract(vec2.create(), currentAverage, previousAverage);
+				vec2.scale(
+					panDelta,
+					panDelta,
+					projectionMode === "perspective" ? orbitState.distance : DEFAULT_ORBIT_STATE.distance,
+				);
 
 				const previousDist = vec2.distance(previousPos, otherPos);
 				const currentDist = vec2.distance(currentPos, otherPos);
 				const zoomDelta = currentDist - previousDist;
-
-				// Higher pan speed when we move further from the orbit point
-				vec2.scale(panDelta, panDelta, orbitState.distance);
 
 				orbitState.orbitPoint = vec3.add(
 					vec3.create(),
 					orbitState.orbitPoint,
 					getPanVector(orbitState.rotation, panDelta, SPEEDS.PAN_PINCH),
 				);
-				orbitState.distance -= zoomDelta * SPEEDS.ZOOM_PINCH;
-				orbitState.distance = Math.max(NEAR, Math.min(FAR, orbitState.distance));
+				doZoom(event, -zoomDelta * SPEEDS.ZOOM_PINCH);
 			} else if (
 				(event.buttons !== 0 && event.buttons !== PointerButton.Primary) ||
 				(event.buttons == PointerButton.Primary && event.shiftKey)
@@ -156,8 +180,15 @@ export default function orbitCameraController(
 				cursorState = cursors.grabbing;
 				// Pan
 				const panDelta = getPanVector(orbitState.rotation, elementDelta, SPEEDS.PAN_MOUSE);
-				// Higher pan speed when we move further from the orbit point
-				vec3.scale(panDelta, panDelta, orbitState.distance);
+				vec2.scale(
+					panDelta,
+					panDelta,
+					projectionMode === "perspective" ? orbitState.distance : DEFAULT_ORBIT_STATE.distance,
+				);
+
+				if (event.shiftKey) {
+					vec3.scale(panDelta, panDelta, SPEEDS.SHIFT_MODIFIER);
+				}
 				orbitState.orbitPoint = vec3.add(vec3.create(), orbitState.orbitPoint, panDelta);
 			} else if (event.buttons & PointerButton.Primary) {
 				cursorState = cursors.grabbing;
@@ -173,23 +204,11 @@ export default function orbitCameraController(
 			}
 		},
 		handleWheel(event) {
-			let shouldFovZoom = event.ctrlKey || event.metaKey;
-			if (projectionMode === "orthographic") {
-				shouldFovZoom = !shouldFovZoom;
-			}
-
-			if (shouldFovZoom) {
-				event.preventDefault(); // Stop page zoom
-				// TODO: Change FOV instead
-				orbitState.fov += event.deltaY * SPEEDS.FOV_ZOOM;
-				orbitState.fov = Math.max(1e-3, Math.min(Math.PI - 1e-3, orbitState.fov));
-			} else {
-				orbitState.distance += event.deltaY * SPEEDS.ZOOM_SCROLL;
-				// FIXME: Use real near and far planes
-				const NEAR_PLANE = 0.1;
-				const FAR_PLANE = 100;
-				orbitState.distance = Math.max(NEAR_PLANE, Math.min(FAR_PLANE, orbitState.distance));
-			}
+			event.preventDefault();
+			doZoom(
+				event,
+				event.deltaY * (event.ctrlKey || event.metaKey ? SPEEDS.FOV_ZOOM : SPEEDS.ZOOM_SCROLL),
+			);
 		},
 
 		get cursor() {
@@ -204,7 +223,7 @@ export default function orbitCameraController(
 				case "perspective":
 					return mat4.perspective(mat4.create(), orbitState.fov, aspectRatio, NEAR, FAR);
 				case "orthographic": {
-					const orthoHeight = 4;
+					const orthoHeight = orbitState.orthoHeight;
 					const orthoWidth = orthoHeight * aspectRatio;
 					return mat4.ortho(
 						mat4.create(),
