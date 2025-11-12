@@ -1,11 +1,20 @@
 <script lang="ts">
 	import { appState } from "$lib/state.svelte.js";
-	import { isSmallerScreen } from "$lib/utils.svelte.js";
+	import { isSmallScreen } from "$lib/utils.svelte.js";
+	import { MediaQuery } from "svelte/reactivity";
 
 	let { frameDeltas }: { frameDeltas: number[] } = $props();
 
 	let frameTime = $derived(frameDeltas.reduce((a, b) => a + b, 0) / frameDeltas.length);
 	let fps = $derived(frameTime === 0 ? 0 : 1 / frameTime);
+
+	const tooSmallVertical = new MediaQuery("max-width: 28rem");
+	const tooSmallHorizontal = new MediaQuery("max-width: 55rem");
+
+	let isTooSmall = $derived.by(() => {
+		if (isSmallScreen()) return tooSmallVertical.current;
+		else return tooSmallHorizontal.current;
+	});
 </script>
 
 <div class="flex h-6 min-w-6 shrink flex-row bg-background-primary select-none">
@@ -41,7 +50,7 @@
 	>
 		<span class="px-2">
 			{(frameTime * 1000).toFixed(0)}ms
-			{#if !isSmallerScreen()}
+			{#if !isTooSmall}
 				({fps.toFixed(0)}&nbsp;FPS)
 			{/if}
 		</span>

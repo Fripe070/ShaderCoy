@@ -2,8 +2,6 @@ import { MediaQuery } from "svelte/reactivity";
 
 const smallQuery = new MediaQuery("max-width: 48rem"); // Tailwind 'md'
 export const isSmallScreen = () => smallQuery.current;
-const smallerQuery = new MediaQuery("max-width: 28rem");
-export const isSmallerScreen = () => smallerQuery.current;
 
 export function deepFreeze<T>(obj: T): Readonly<T> {
 	Object.getOwnPropertyNames(obj).forEach((prop) => {
