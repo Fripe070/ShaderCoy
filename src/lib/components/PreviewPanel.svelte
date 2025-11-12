@@ -56,30 +56,32 @@
 
 	let fullscreenHandle: HTMLElement;
 	let frameDeltas: number[] = $state([]);
-	let viewportDimensions: [number | null, number | null] = $state([null, null]);
+	let forcedViewportDimensions: [number | null, number | null] = $state([null, null]);
 
 	let cameraController = $state<CameraController | undefined>(undefined);
 </script>
 
 <div class="flex h-full w-full flex-col">
-	<div class="z-10 flex w-full flex-row items-center bg-background-secondary">
+	<div class="z-10 flex w-full flex-row flex-wrap items-center justify-end bg-background-secondary">
 		<PlaybackControls {frameDeltas} />
 		<span class="grow"></span>
-		<DimensionsSelector bind:dimensions={viewportDimensions} />
-		<ViewModePicker />
-		<ModelSelector bind:meshes={appState.saveData.meshes} />
-		<button
-			class={[
-				"flex h-6 w-6 flex-row items-center justify-center",
-				"bg-background-primary hover:bg-background-selected",
-			]}
-			onclick={() => {
-				fullscreenHandle?.requestFullscreen();
-			}}
-			title="Toggle Fullscreen"
-		>
-			<iconify-icon icon="material-symbols:fullscreen"></iconify-icon>
-		</button>
+		<DimensionsSelector bind:dimensions={forcedViewportDimensions} />
+		<div class="flex flex-row">
+			<ViewModePicker />
+			<ModelSelector bind:meshes={appState.saveData.meshes} />
+			<button
+				class={[
+					"flex h-6 w-6 flex-row items-center justify-center",
+					"bg-background-primary hover:bg-background-selected",
+				]}
+				onclick={() => {
+					fullscreenHandle?.requestFullscreen();
+				}}
+				title="Toggle Fullscreen"
+			>
+				<iconify-icon icon="material-symbols:fullscreen"></iconify-icon>
+			</button>
+		</div>
 		{#if toolbarChildren}
 			{@render toolbarChildren()}
 		{/if}
@@ -93,7 +95,7 @@
 				viewMatrix={cameraController?.viewMatrix ?? mat4.create()}
 				projectionMatrix={cameraController?.projectionMatrix ?? mat4.create()}
 				paused={!appState.frontend.playing}
-				dimensions={viewportDimensions}
+				dimensions={forcedViewportDimensions}
 				bind:glContext={appState.glCtx}
 				bind:frameDeltas
 			/>

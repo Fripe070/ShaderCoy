@@ -1,21 +1,13 @@
-import { mat4, vec2 } from "gl-matrix";
+import { mat4, quat, vec2, vec3 } from "gl-matrix";
 import type { CameraController } from "./ViewController.js";
 import { SvelteMap } from "svelte/reactivity";
+import { noUnhandledCase } from "$lib/utils.svelte.js";
 
-interface CameraOrbitState {
-	orbitPoint: [number, number, number];
-	distance: number;
-	yaw: number;
-	pitch: number;
-}
-const DEFAULT_ORBIT_STATE: CameraOrbitState = {
-	orbitPoint: [0, 0, 0],
-	distance: 8,
-	// Isometric angle
-	yaw: Math.PI / 4,
-	pitch: Math.atan(1 / Math.sqrt(2)),
+const BASIS = {
+	forward: [0, 0, -1],
+	up: [0, 1, 0],
+	right: [1, 0, 0],
 } as const;
-
 const cursors = {
 	default: "grab",
 	grabbing: "all-scroll",
@@ -25,25 +17,67 @@ const PointerButton = {
 	Middle: 4,
 	Secondary: 2,
 } as const;
-const UP: [number, number, number] = [0, 1, 0] as const;
 const DOUBLE_CLICK_DELTA = 300; // ms
 
-function getPosition(state: CameraOrbitState): [number, number, number] {
-	const { orbitPoint, distance, yaw, pitch } = state;
-	const x = orbitPoint[0] + distance * Math.sin(yaw) * Math.cos(pitch);
-	const y = orbitPoint[1] + distance * Math.sin(pitch);
-	const z = orbitPoint[2] + distance * Math.cos(yaw) * Math.cos(pitch);
-	return [x, y, z];
+const SPEEDS = {
+	ROTATION: 4,
+	PAN_MOUSE: 1,
+	PAN_PINCH: 3e-3,
+	ZOOM_SCROLL: 4e-3,
+	ZOOM_PINCH: 1e-2,
+	FOV_ZOOM: 1e-3,
+} as const;
+
+function isometricQuaternion(): quat {
+	const yaw = Math.PI / 4;
+	const pitch = -Math.atan(1 / Math.sqrt(2));
+	const qYaw = quat.setAxisAngle(quat.create(), BASIS.up, yaw);
+	const qPitch = quat.setAxisAngle(quat.create(), BASIS.right, pitch);
+	return quat.multiply(quat.create(), qYaw, qPitch);
 }
 
-export default function orbitCameraController(
-	projectionProvider: (aspectRatio: number) => mat4,
-): CameraController {
-	let orbitState: CameraOrbitState = $state({ ...DEFAULT_ORBIT_STATE });
-	let cursorState: string = $state(cursors.default);
-	let lastClickTime: DOMHighResTimeStamp = -Infinity;
-	const trackedPointers = new SvelteMap<number, vec2>();
+function averageVec2(a: vec2, b: vec2): vec2 {
+	return vec2.scale(vec2.create(), vec2.add(vec2.create(), a, b), 0.5);
+}
 
+interface CameraOrbitState {
+	orbitPoint: vec3;
+	distance: number;
+	rotation: quat;
+	fov: number;
+}
+const DEFAULT_ORBIT_STATE: CameraOrbitState = {
+	orbitPoint: [0, 0, 0],
+	distance: 4,
+	rotation: isometricQuaternion(),
+	fov: (60 * Math.PI) / 180,
+} as const;
+
+function getPosition(state: CameraOrbitState): vec3 {
+	const offset = vec3.fromValues(0, 0, state.distance);
+	vec3.transformQuat(offset, offset, state.rotation);
+	return vec3.add(vec3.create(), state.orbitPoint, offset);
+}
+
+function getPanVector(rotation: quat, delta: vec2, speed: number): vec3 {
+	const right = vec3.transformQuat(vec3.create(), BASIS.right, rotation);
+	const up = vec3.transformQuat(vec3.create(), BASIS.up, rotation);
+	const panRight = vec3.scale(vec3.create(), right, -delta[0] * speed);
+	const panUp = vec3.scale(vec3.create(), up, delta[1] * speed);
+	return vec3.add(vec3.create(), panRight, panUp);
+}
+
+const NEAR = 0.1;
+const FAR = 100.0;
+
+let orbitState: CameraOrbitState = $state({ ...DEFAULT_ORBIT_STATE });
+let cursorState: string = $state(cursors.default);
+let lastClickTime: DOMHighResTimeStamp = -Infinity;
+const trackedPointers = new SvelteMap<number, vec2>();
+
+export default function orbitCameraController(
+	projectionMode: "perspective" | "orthographic",
+): CameraController {
 	return {
 		handlePointerDown(event: PointerEvent) {
 			trackedPointers.set(event.pointerId, [event.clientX, event.clientY]);
@@ -51,6 +85,7 @@ export default function orbitCameraController(
 			cursorState = cursors.grabbing;
 
 			if (
+				trackedPointers.size == 1 &&
 				event.buttons & PointerButton.Primary &&
 				performance.now() - lastClickTime < DOUBLE_CLICK_DELTA
 			) {
@@ -75,7 +110,6 @@ export default function orbitCameraController(
 			trackedPointers.set(event.pointerId, currentPos);
 
 			const windowDelta = vec2.subtract(vec2.create(), currentPos, previousPos);
-			vec2.multiply(windowDelta, windowDelta, [1, -1]); // Invert Y-axis to have down be negative
 
 			// If the pointer moved a significant (non-noise) amount, we did not mean to double-click
 			const doubleTapThreshold = 5; // css pixels
@@ -90,30 +124,71 @@ export default function orbitCameraController(
 				windowDelta[1] / maxSide,
 			);
 
-			const ROTATION_SPEED = 2 * Math.PI; // radians per full drag //FIXME: Not the units I want
-			const ZOOM_SPEED = 20; // units per full drag
-			const PAN_SPEED = 10; // units per full drag
+			if (trackedPointers.size === 2) {
+				// Pinch zoom and pan
+				const otherPos = trackedPointers.get(
+					Array.from(trackedPointers.keys()).find((id) => id !== event.pointerId) ?? -1,
+				);
+				if (!otherPos) return;
 
-			console.log("Norm:", elementDelta[1]);
-			console.log("Abs:", windowDelta[1]);
-			console.log("Bounds:", elementBounds);
-			if (
-				trackedPointers.size === 2 ||
+				const previousAverage = averageVec2(previousPos, otherPos);
+				const currentAverage = averageVec2(currentPos, otherPos);
+				const panDelta = vec2.subtract(vec2.create(), currentAverage, previousAverage);
+
+				const previousDist = vec2.distance(previousPos, otherPos);
+				const currentDist = vec2.distance(currentPos, otherPos);
+				const zoomDelta = currentDist - previousDist;
+
+				// Higher pan speed when we move further from the orbit point
+				vec2.scale(panDelta, panDelta, orbitState.distance);
+
+				orbitState.orbitPoint = vec3.add(
+					vec3.create(),
+					orbitState.orbitPoint,
+					getPanVector(orbitState.rotation, panDelta, SPEEDS.PAN_PINCH),
+				);
+				orbitState.distance -= zoomDelta * SPEEDS.ZOOM_PINCH;
+				orbitState.distance = Math.max(NEAR, Math.min(FAR, orbitState.distance));
+			} else if (
 				(event.buttons !== 0 && event.buttons !== PointerButton.Primary) ||
 				(event.buttons == PointerButton.Primary && event.shiftKey)
 			) {
+				cursorState = cursors.grabbing;
 				// Pan
-				cursorState = cursors.grabbing;
+				const panDelta = getPanVector(orbitState.rotation, elementDelta, SPEEDS.PAN_MOUSE);
+				// Higher pan speed when we move further from the orbit point
+				vec3.scale(panDelta, panDelta, orbitState.distance);
+				orbitState.orbitPoint = vec3.add(vec3.create(), orbitState.orbitPoint, panDelta);
 			} else if (event.buttons & PointerButton.Primary) {
-				// Orbit (rotate)
-				orbitState.yaw -= elementDelta[0] * ROTATION_SPEED;
-				orbitState.pitch -= elementDelta[1] * ROTATION_SPEED;
-				// Clamp pitch to avoid gimbal lock
-				const PITCH_LIMIT = Math.PI / 2 - 0.01;
-				orbitState.pitch = Math.min(Math.max(orbitState.pitch, -PITCH_LIMIT), PITCH_LIMIT);
 				cursorState = cursors.grabbing;
+				// Orbit (rotate)
+				const yawDelta = -elementDelta[0] * SPEEDS.ROTATION;
+				const pitchDelta = -elementDelta[1] * SPEEDS.ROTATION;
+				const qYaw = quat.setAxisAngle(quat.create(), BASIS.up, yawDelta);
+				const qPitch = quat.setAxisAngle(quat.create(), BASIS.right, pitchDelta);
+				const newRotation = quat.clone(orbitState.rotation);
+				quat.multiply(newRotation, qYaw, newRotation);
+				quat.multiply(newRotation, newRotation, qPitch);
+				orbitState.rotation = newRotation;
+			}
+		},
+		handleWheel(event) {
+			let shouldFovZoom = event.ctrlKey || event.metaKey;
+			if (projectionMode === "orthographic") {
+				shouldFovZoom = !shouldFovZoom;
+			}
+
+			if (shouldFovZoom) {
+				event.preventDefault(); // Stop page zoom
+				// TODO: Change FOV instead
+				orbitState.fov += event.deltaY * SPEEDS.FOV_ZOOM;
+				orbitState.fov = Math.max(1e-3, Math.min(Math.PI - 1e-3, orbitState.fov));
 			} else {
-				console.log("No camera move");
+				orbitState.distance += event.deltaY * SPEEDS.ZOOM_SCROLL;
+				// FIXME: Use real near and far planes
+				const NEAR_PLANE = 0.1;
+				const FAR_PLANE = 100;
+				orbitState.distance = Math.max(NEAR_PLANE, Math.min(FAR_PLANE, orbitState.distance));
 			}
 		},
 
@@ -121,10 +196,29 @@ export default function orbitCameraController(
 			return cursorState;
 		},
 		get viewMatrix() {
-			return mat4.lookAt(mat4.create(), getPosition(orbitState), orbitState.orbitPoint, UP);
+			const up = vec3.transformQuat(vec3.create(), BASIS.up, orbitState.rotation);
+			return mat4.lookAt(mat4.create(), getPosition(orbitState), orbitState.orbitPoint, up);
 		},
 		projectionMatrix: (aspectRatio: number): mat4 => {
-			return projectionProvider(aspectRatio);
+			switch (projectionMode) {
+				case "perspective":
+					return mat4.perspective(mat4.create(), orbitState.fov, aspectRatio, NEAR, FAR);
+				case "orthographic": {
+					const orthoHeight = 4;
+					const orthoWidth = orthoHeight * aspectRatio;
+					return mat4.ortho(
+						mat4.create(),
+						-orthoWidth / 2,
+						orthoWidth / 2,
+						-orthoHeight / 2,
+						orthoHeight / 2,
+						NEAR,
+						FAR,
+					);
+				}
+				default:
+					noUnhandledCase(projectionMode);
+			}
 		},
 	};
 }

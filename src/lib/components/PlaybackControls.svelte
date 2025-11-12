@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { appState } from "$lib/state.svelte.js";
+	import { isSmallerScreen } from "$lib/utils.svelte.js";
 
 	let { frameDeltas }: { frameDeltas: number[] } = $props();
 
@@ -7,10 +8,10 @@
 	let fps = $derived(frameTime === 0 ? 0 : 1 / frameTime);
 </script>
 
-<div class="flex h-full min-w-6 shrink flex-row bg-background-primary select-none">
+<div class="flex h-6 min-w-6 shrink flex-row bg-background-primary select-none">
 	<button
 		class={[
-			"flex h-full w-6 cursor-pointer items-center justify-center ",
+			"flex h-6 w-6 cursor-pointer items-center justify-center ",
 			appState.frontend.playing
 				? "hover:bg-background-selected"
 				: "bg-negative/10 hover:bg-negative/25",
@@ -39,7 +40,10 @@
 		]}
 	>
 		<span class="px-2">
-			{(frameTime * 1000).toFixed(0)}ms ({fps.toFixed(0)}&nbsp;FPS)
+			{(frameTime * 1000).toFixed(0)}ms
+			{#if !isSmallerScreen()}
+				({fps.toFixed(0)}&nbsp;FPS)
+			{/if}
 		</span>
 	</div>
 </div>

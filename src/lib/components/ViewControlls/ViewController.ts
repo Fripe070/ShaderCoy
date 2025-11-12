@@ -5,6 +5,7 @@ export interface CameraController {
 	readonly cursor?: string;
 	projectionMatrix(aspectRatio: number): mat4;
 
+	handleContextMenu?(event: MouseEvent): void;
 	handleKeyDown?(event: KeyboardEvent): void;
 	handleKeyUp?(event: KeyboardEvent): void;
 	handlePointerDown?(event: PointerEvent): void;

@@ -4,7 +4,6 @@
 	import { type CameraController } from "./ViewController.js";
 	import staticCameraController from "./StaticViewController.svelte.js";
 	import orbitCameraController from "./OrbitViewController.svelte.js";
-	import { orthoProjMatrix, perspectiveProjMatrix } from "./projections.js";
 
 	let {
 		children,
@@ -18,8 +17,9 @@
 
 	const controllers: Record<ProjectState["viewMode"], CameraController> = {
 		"2d": staticCameraController(),
-		"orthographic-orbit": orbitCameraController(orthoProjMatrix),
-		"perspective-orbit": orbitCameraController(perspectiveProjMatrix),
+		// TODO: Make these two share the same internal state, only differing by projection matrix
+		"orthographic-orbit": orbitCameraController("orthographic"),
+		"perspective-orbit": orbitCameraController("perspective"),
 	};
 	$effect(() => {
 		controller = controllers[mode];
@@ -28,12 +28,14 @@
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
-	class="contents"
+	class="user-select-none contents touch-none"
 	style:cursor={controller?.cursor ?? "auto"}
+	oncontextmenu={(event) => {
+		controller?.handleContextMenu ? controller.handleContextMenu(event) : event.preventDefault();
+	}}
 	onkeydown={(event) => controller?.handleKeyDown?.(event)}
 	onkeyup={(event) => controller?.handleKeyUp?.(event)}
 	onwheel={(event) => controller?.handleWheel?.(event)}
-
 	onpointerdown={(event) => controller?.handlePointerDown?.(event)}
 	onpointerup={(event) => controller?.handlePointerUp?.(event)}
 	onpointermove={(event) => controller?.handlePointerMove?.(event)}
