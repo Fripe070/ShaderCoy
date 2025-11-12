@@ -16,7 +16,7 @@
 		meshes,
 		textures,
 		viewMatrix = mat4.create(),
-		projectionMatrix = mat4.create(),
+		projectionMatrix: projection = mat4.create(),
 
 		renderCallback,
 		paused = false,
@@ -73,7 +73,7 @@
 			glContext.SRC_ALPHA,
 			glContext.ONE_MINUS_SRC_ALPHA,
 			glContext.ONE,
-			glContext.ONE_MINUS_SRC_ALPHA
+			glContext.ONE_MINUS_SRC_ALPHA,
 		);
 
 		glContext.frontFace(glContext.CCW);
@@ -138,22 +138,21 @@
 		canvas.height = height;
 		glContext?.viewport(0, 0, width, height);
 
-		if (typeof projectionMatrix === "function") {
-			projection = projectionMatrix(width / height);
+		if (typeof projection === "function") {
+			projectionMatrix = projection(canvas.clientWidth / canvas.clientHeight);
 		}
 	}
 
 	let modelMatrix = mat4.create();
-	let projection = mat4.create();
+	let projectionMatrix = mat4.create();
 	$effect(() => {
-		if (typeof projectionMatrix !== "function") {
-			projection = projectionMatrix;
+		if (typeof projection !== "function") {
+			projectionMatrix = projection;
 			return;
 		}
-		const width = dimensions[0] ?? canvas.clientWidth * devicePixelRatio;
-		const height = dimensions[1] ?? canvas.clientHeight * devicePixelRatio;
-		projection = projectionMatrix(width / height);
-		console.debug("Updated projection matrix with aspect ratio", width / height);
+		const aspectRatio = canvas.clientWidth / canvas.clientHeight;
+		projectionMatrix = projection(aspectRatio);
+		console.debug("Updated projection matrix with aspect ratio", aspectRatio);
 	});
 
 	function paint(deltaTime: number) {
@@ -178,7 +177,7 @@
 
 		glContext.uniformMatrix4fv(shader.uniforms["modelMatrix"], false, modelMatrix);
 		glContext.uniformMatrix4fv(shader.uniforms["viewMatrix"], false, viewMatrix);
-		glContext.uniformMatrix4fv(shader.uniforms["projectionMatrix"], false, projection);
+		glContext.uniformMatrix4fv(shader.uniforms["projectionMatrix"], false, projectionMatrix);
 
 		for (const [index, texture] of textures.entries()) {
 			glContext.activeTexture(glContext.TEXTURE0 + index);
