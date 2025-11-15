@@ -21,7 +21,7 @@ export const VERTEX_SCHEMA = {
  */
 export const VERTEX_VALUE_COUNT: number = Object.values(VERTEX_SCHEMA).reduce(
 	(sum, attr) => sum + attr.size,
-	0
+	0,
 );
 
 /**
@@ -43,6 +43,6 @@ export interface MeshBuffers {
 export class Mesh {
 	constructor(
 		public vertices: MeshVertex[],
-		public indices: number[]
+		public indices: number[],
 	) {}
 }

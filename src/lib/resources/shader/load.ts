@@ -9,7 +9,7 @@ export type ShaderStage =
 function compileShader(
 	glCtx: WebGLRenderingContext,
 	shaderCode: string,
-	shaderType: ShaderStage
+	shaderType: ShaderStage,
 ): WebGLShader {
 	const shader = glCtx.createShader(shaderType);
 	if (!shader) throw new Error("Failed to create shader object");
@@ -21,7 +21,7 @@ function compileShader(
 
 export function createShaderProgram(
 	glCtx: WebGLRenderingContext,
-	shaders: { vertex: string; fragment: string }
+	shaders: { vertex: string; fragment: string },
 ): WebGLProgram {
 	const vertexShader = compileShader(glCtx, shaders.vertex, glCtx.VERTEX_SHADER);
 	const fragmentShader = compileShader(glCtx, shaders.fragment, glCtx.FRAGMENT_SHADER);
@@ -57,7 +57,7 @@ export function createShaderProgram(
 
 export function loadCoyShader(
 	glCtx: WebGLRenderingContext,
-	shaders: { vertex: string; fragment: string }
+	shaders: { vertex: string; fragment: string },
 ): CoyShader {
 	const program = createShaderProgram(glCtx, shaders);
 	const attributes = {} as CoyShader["attributes"];

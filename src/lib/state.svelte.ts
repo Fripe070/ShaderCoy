@@ -55,3 +55,4 @@ export const defaultAppState: Readonly<AppState> = deepFreeze<AppState>({
 });
 
 export const appState: AppState = $state(deepClone(defaultAppState));
+export default appState;

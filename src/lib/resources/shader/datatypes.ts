@@ -23,6 +23,6 @@ export class CoyShader {
 	constructor(
 		public program: WebGLProgram,
 		public attributes: Record<keyof typeof VERTEX_SCHEMA, number | null>,
-		public uniforms: Record<keyof typeof UNIFORM_NAMES, WebGLUniformLocation | null>
+		public uniforms: Record<keyof typeof UNIFORM_NAMES, WebGLUniformLocation | null>,
 	) {}
 }

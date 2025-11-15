@@ -6,7 +6,7 @@ const glsl = () => {
 		LRLanguage.define({
 			parser: parser.configure({}),
 		}),
-		[]
+		[],
 	);
 };
 export default glsl;

@@ -13,7 +13,7 @@ function mix(color1: string, weight: number, color2: string): string {
 const hcSelectionColor = mix(
 	mix(themeVar("accent"), 80, themeVar("background-tertiary")),
 	50,
-	"transparent"
+	"transparent",
 );
 
 const panelsThemeStyles = {
@@ -85,6 +85,6 @@ const theme = EditorView.theme(
 	{
 		...panelsThemeStyles,
 	},
-	{ dark: true }
+	{ dark: true },
 );
 export default theme;

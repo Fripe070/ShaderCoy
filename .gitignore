@@ -1,3 +1,6 @@
+src/lib/editor/glsl/parser.js
+src/lib/editor/glsl/parser.terms.js
+
 node_modules
 
 # Output
