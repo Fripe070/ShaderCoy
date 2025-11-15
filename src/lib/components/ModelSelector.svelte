@@ -123,6 +123,19 @@
 			return result;
 		},
 	}));
+
+	// Default model loading
+	let assimpInitialised = $derived(appState.assimpInstance !== null);
+	$effect(() => {
+		if (!assimpInitialised) return;
+		const defaultPrimitive = modelPrimitives.find((m) => m.id === "cube") || modelPrimitives[0];
+		loadModel(defaultPrimitive).then((success) => {
+			if (success) {
+				fileName = defaultPrimitive.name;
+				currentIcon = defaultPrimitive.icon;
+			}
+		});
+	});
 </script>
 
 <!-- FIXME: Not closing when view mode dropdown is clicked -->

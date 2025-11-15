@@ -7,14 +7,14 @@
 <div
 	class={[
 		"flex flex-col gap-1 p-1",
-		"border-1 border-negative",
+		"border border-negative",
 		"bg-[color-mix(in_oklab,var(--theme-negative),var(--theme-background-secondary)90%)]",
 	]}
 >
 	{#each errorLogs.shaderErrors as report}
 		<div class="flex flex-col gap-0.5 bg-background-tertiary/50 p-1">
 			<h2 class="font-bold">{report.cause}</h2>
-			<div class="w-full border-t-1 border-foreground-muted"></div>
+			<div class="w-full border-t border-foreground-muted"></div>
 			<p class="text-sm">{report.description}</p>
 		</div>
 	{/each}

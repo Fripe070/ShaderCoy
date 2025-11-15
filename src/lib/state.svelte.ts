@@ -6,10 +6,15 @@ import defaultFragSource from "$lib/shaders//defaultFrag.glsl?raw";
 import type { CoyErrorLogs } from "./errors.js";
 import { deepClone, deepFreeze } from "./utils.svelte.js";
 
+export interface Texture {
+	dataUri: string;
+}
+
 export interface ProjectState {
 	vertexSource: string;
 	fragmentSource: string;
 	meshes: Mesh[];
+	textures: Texture[];
 	viewMode: "2d" | "perspective-orbit" | "orthographic-orbit";
 }
 export interface FrontendState {
@@ -33,7 +38,8 @@ export const defaultAppState: Readonly<AppState> = deepFreeze<AppState>({
 		vertexSource: defaultVertSource,
 		fragmentSource: defaultFragSource,
 		meshes: [],
-		viewMode: "2d",
+		textures: [],
+		viewMode: "perspective-orbit",
 	},
 	frontend: {
 		playing: true,

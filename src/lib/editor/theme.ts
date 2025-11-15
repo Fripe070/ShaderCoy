@@ -27,8 +27,6 @@ const panelsThemeStyles = {
 		height: "100%",
 		maxHeight: "100%",
 		width: "100%",
-		scrollbarColor: `${themeVar("foreground-muted")} ${themeVar("background-secondary")}`,
-		scrollbarWidth: "thin",
 	},
 	".cm-scroller": {
 		overflow: "auto",

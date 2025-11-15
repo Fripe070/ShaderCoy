@@ -28,7 +28,7 @@
 		<ProjectManager />
 		<ThemePicker />
 	</div>
-	<div class="grow overflow-y-auto">
+	<div class="relative grow overflow-y-auto">
 		{#each Object.entries(tabs) as [id, { component: TabComponent }]}
 			<div class={id === activeTabId ? "contents" : "hidden"}>
 				<TabComponent />

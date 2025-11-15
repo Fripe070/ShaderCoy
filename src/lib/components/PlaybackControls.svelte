@@ -26,7 +26,7 @@
 				: "bg-negative/10 hover:bg-negative/25",
 		]}
 		onclick={() => (appState.frontend.playing = !appState.frontend.playing)}
-		aria-label={appState.frontend.playing ? "Pause" : "Play"}
+		title={appState.frontend.playing ? "Pause" : "Play"}
 	>
 		<iconify-icon
 			icon={appState.frontend.playing ? "material-symbols:pause" : "material-symbols:play-arrow"}

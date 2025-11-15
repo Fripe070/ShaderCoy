@@ -28,7 +28,7 @@
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
-	class="user-select-none contents touch-none"
+	class="user-select-none touch-none"
 	style:cursor={controller?.cursor ?? "auto"}
 	oncontextmenu={(event) => {
 		controller?.handleContextMenu ? controller.handleContextMenu(event) : event.preventDefault();

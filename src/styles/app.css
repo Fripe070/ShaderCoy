@@ -34,6 +34,8 @@ body {
 	@apply bg-background-primary text-foreground-primary;
 	@apply h-full w-full;
 	font-size: 20px;
+	scrollbar-width: thin;
+	scrollbar-color: var(--theme-foreground-muted) var(--theme-background-secondary);
 }
 
 iconify-icon {
