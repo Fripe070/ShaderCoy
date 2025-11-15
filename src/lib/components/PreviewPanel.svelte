@@ -65,7 +65,12 @@
 	<div class="z-10 flex w-full flex-row flex-wrap items-center justify-end bg-background-secondary">
 		<PlaybackControls {frameDeltas} />
 		<span class="grow"></span>
-		<DimensionsSelector bind:dimensions={forcedViewportDimensions} />
+		<DimensionsSelector
+			bind:width={forcedViewportDimensions[0]}
+			bind:height={forcedViewportDimensions[1]}
+			allowNulls={true}
+			maxAxisSize={2 ** 13}
+		/>
 		<div class="flex flex-row">
 			<ViewModePicker />
 			<ModelSelector bind:meshes={appState.saveData.meshes} />

@@ -1,6 +1,7 @@
 <script lang="ts">
-	import { appState } from "$lib/state.svelte.js";
+	import { appState, type Texture } from "$lib/state.svelte.js";
 	import { flip } from "svelte/animate";
+	import TextureEditModal from "./TextureEditModal.svelte";
 
 	const maxFragTextures: number = $derived.by(() => {
 		appState.saveData.fragmentSource; // Recompute when shader changes
@@ -17,9 +18,8 @@
 		}
 	});
 
-	type NullableTexture = (typeof appState.saveData.textures)[number] | null;
-	const textureCards: NullableTexture[] = $derived.by(() => {
-		const textures: NullableTexture[] = [...appState.saveData.textures];
+	const textureCards: (Texture | null)[] = $derived.by(() => {
+		const textures: (Texture | null)[] = [...appState.saveData.textures];
 		if (textures.length < maxFragTextures) {
 			textures.push(null);
 		}
@@ -56,6 +56,7 @@
 				}
 				appState.saveData.textures.push({
 					dataUri: result,
+					name: file.name,
 				});
 				resolve();
 			};
@@ -78,9 +79,20 @@
 	});
 
 	let isDraggingOver: boolean = $state(false);
+
+	let isEditingModalOpen: boolean = $state(false);
+	let editingTexture: Texture | null = $state(null);
+	$effect(() => {
+		if (!isEditingModalOpen) editingTexture = null;
+	});
 	// TODO: Render textures with a canvas instead to make them more accurately
 	//  display like they will when used in the shader?
 </script>
+
+<!-- Texture editing modal -->
+{#if editingTexture}
+	<TextureEditModal bind:isEditingModalOpen texture={editingTexture} />
+{/if}
 
 <ul
 	class="min-h-full"
@@ -147,12 +159,11 @@
 	</div>
 </ul>
 
-{#snippet textureCard(index: number, texture: (typeof appState.saveData.textures)[number])}
+{#snippet textureCard(index: number, texture: Texture)}
 	<div class="flex flex-col bg-background-secondary">
-		<div class="h-34 w-34">
-			<!-- Temporary placeholder texture https://picsum.photos/200 -->
+		<div class="flex h-34 w-34 items-center justify-center">
 			<img
-				class="checkerboard flex h-full w-full items-center justify-center object-contain"
+				class="checkerboard h-full max-w-full border border-foreground-muted/20 object-contain"
 				src={texture.dataUri}
 				alt={`Texture ${index}`}
 			/>
@@ -166,6 +177,10 @@
 					"cursor-pointer hover:bg-background-selected",
 				]}
 				title="Edit Texture"
+				onclick={() => {
+					editingTexture = texture;
+					isEditingModalOpen = !isEditingModalOpen;
+				}}
 			>
 				<iconify-icon icon="material-symbols:edit"></iconify-icon>
 			</button>

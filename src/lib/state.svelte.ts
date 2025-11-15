@@ -8,6 +8,7 @@ import { deepClone, deepFreeze } from "./utils.svelte.js";
 
 export interface Texture {
 	dataUri: string;
+	name: string;
 }
 
 export interface ProjectState {
