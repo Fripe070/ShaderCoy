@@ -170,9 +170,22 @@
 				<iconify-icon icon="material-symbols:arrow-back-ios-new"></iconify-icon>
 			</button>
 
-			<span class="h-6 grow bg-background-secondary text-center text-xl leading-6 font-semibold">
-				{index}
-			</span>
+			<input
+				type="text"
+				class="h-6 w-14 appearance-none border-none bg-background-secondary text-center text-xl font-semibold"
+				value={index.toString()}
+				oninput={(event) => {
+					const target = event.currentTarget as HTMLInputElement;
+					const filtered = target.value.replace(/\D/g, "");
+					const newIndex = parseInt(filtered) || 0;
+					const clamped = Math.max(0, Math.min(appState.saveData.textures.length - 1, newIndex));
+					target.value = clamped.toString();
+					if (clamped === index) return;
+					const textures = appState.saveData.textures;
+					const [moved] = textures.splice(index, 1);
+					textures.splice(clamped, 0, moved);
+				}}
+			/>
 
 			<button
 				class={[
