@@ -122,7 +122,7 @@
 
 	<input bind:this={fileInput} class="hidden" type="file" accept="image/*" multiple />
 
-	<div class="flex flex-wrap justify-evenly gap-2 p-2">
+	<div class="flex flex-wrap justify-center gap-2 p-2">
 		{#each textureCards as texture, index (texture)}
 			<li animate:flip={{ duration: 80 }}>
 				{#if texture}

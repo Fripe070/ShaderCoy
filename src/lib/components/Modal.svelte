@@ -28,9 +28,8 @@
 		isOpen = false;
 	}}
 	class={[
-		"absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
-		"bg-background-primary text-foreground-primary",
-		"p-2 shadow-sm",
+		"absolute-center p-2",
+		"bg-background-primary text-foreground-primary shadow-sm",
 		"backdrop:bg-background-tertiary/50 backdrop:brightness-75",
 	]}
 >
