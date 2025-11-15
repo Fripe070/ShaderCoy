@@ -18,6 +18,12 @@
 		return textures;
 	});
 
+	function getValidIndex(value: string) {
+		const filtered = value.replace(/\D/g, "");
+		const index = parseInt(filtered) || 0;
+		return Math.max(0, Math.min(appState.saveData.textures.length - 1, index));
+	}
+
 	function addTexture(file: File): Promise<void> {
 		return new Promise<void>((resolve, reject) => {
 			// Check file type
@@ -32,6 +38,11 @@
 				const result = reader.result;
 				if (typeof result !== "string") {
 					console.error(`Failed to load texture: result for file ${file.name} is not a string`);
+					reject();
+					return;
+				}
+				if (appState.saveData.textures.length >= maxFragTextures) {
+					console.warn(`Cannot add texture: maximum of ${maxFragTextures} textures reached`);
 					reject();
 					return;
 				}
@@ -173,17 +184,18 @@
 			<input
 				type="text"
 				class="h-6 w-14 appearance-none border-none bg-background-secondary text-center text-xl font-semibold"
+				required
 				value={index.toString()}
 				oninput={(event) => {
-					const target = event.currentTarget as HTMLInputElement;
-					const filtered = target.value.replace(/\D/g, "");
-					const newIndex = parseInt(filtered) || 0;
-					const clamped = Math.max(0, Math.min(appState.saveData.textures.length - 1, newIndex));
-					target.value = clamped.toString();
-					if (clamped === index) return;
+					const newIndex = getValidIndex(event.currentTarget.value);
+					event.currentTarget.value = newIndex.toString();
+				}}
+				onchange={(event) => {
+					const newIndex = getValidIndex(event.currentTarget.value);
+					if (newIndex === index) return;
 					const textures = appState.saveData.textures;
 					const [moved] = textures.splice(index, 1);
-					textures.splice(clamped, 0, moved);
+					textures.splice(newIndex, 0, moved);
 				}}
 			/>
 
