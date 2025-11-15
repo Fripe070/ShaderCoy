@@ -7,13 +7,21 @@
 		if (!appState.glCtx!) return 0;
 		return appState.glCtx.getParameter(appState.glCtx.MAX_TEXTURE_IMAGE_UNITS);
 	});
+	$effect(() => {
+		if (appState.saveData.textures.length > maxFragTextures) {
+			console.warn(
+				`Number of textures (${appState.saveData.textures.length}) ` +
+					`exceeds maximum supported by GPU (${maxFragTextures}). Truncating.`,
+			);
+			appState.saveData.textures.splice(maxFragTextures);
+		}
+	});
 
-	const textureCards: ((typeof appState.saveData.textures)[number] | null)[] = $derived.by(() => {
-		const textures = [];
-		for (let i = 0; i < maxFragTextures; i++) {
-			const texture = appState.saveData.textures[i];
-			textures.push(texture);
-			if (!texture) return textures;
+	type NullableTexture = (typeof appState.saveData.textures)[number] | null;
+	const textureCards: NullableTexture[] = $derived.by(() => {
+		const textures: NullableTexture[] = [...appState.saveData.textures];
+		if (textures.length < maxFragTextures) {
+			textures.push(null);
 		}
 		return textures;
 	});
