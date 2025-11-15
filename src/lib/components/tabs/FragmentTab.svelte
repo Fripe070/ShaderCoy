@@ -6,4 +6,4 @@
 	let props: CodeMirrorProps = $props();
 </script>
 
-<ShaderEditor {...props} bind:value={appState.saveData.fragmentSource} />
+<ShaderEditor {...props} bind:value={appState.save.fragmentSource} />

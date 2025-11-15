@@ -37,7 +37,7 @@
 				return false;
 			}
 			const objText = await data.text();
-			const assimp = appState.assimpInstance;
+			const assimp = appState.ephemeral.assimpInstance;
 			if (!assimp) {
 				console.error("Assimp instance not initialized");
 				return false;
@@ -91,7 +91,7 @@
 						}
 						const file = files[0];
 
-						const assimp = appState.assimpInstance;
+						const assimp = appState.ephemeral.assimpInstance;
 						if (!assimp) {
 							console.error("Assimp instance not initialized");
 							resolve(false);
@@ -125,9 +125,8 @@
 	}));
 
 	// Default model loading
-	let assimpInitialised = $derived(appState.assimpInstance !== null);
 	$effect(() => {
-		if (!assimpInitialised) return;
+		if (appState.ephemeral.assimpInstance === null) return;
 		const defaultPrimitive = modelPrimitives.find((m) => m.id === "cube") || modelPrimitives[0];
 		loadModel(defaultPrimitive).then((success) => {
 			if (success) {

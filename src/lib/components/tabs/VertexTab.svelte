@@ -6,4 +6,4 @@
 	let props: CodeMirrorProps = $props();
 </script>
 
-<ShaderEditor {...props} bind:value={appState.saveData.vertexSource} />
+<ShaderEditor {...props} bind:value={appState.save.vertexSource} />

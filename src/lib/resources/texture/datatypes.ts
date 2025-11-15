@@ -1,5 +1,8 @@
-export interface CoyTexture {
+export interface Texture {
 	name: string;
-	imageUri: string;
+	dataUri: string;
+}
+
+export interface TextureInstance {
 	glTexture: WebGLTexture;
 }

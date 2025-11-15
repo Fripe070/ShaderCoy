@@ -9,7 +9,7 @@
 
 	onMount(() => {
 		initAssimp().then((module) => {
-			appState.assimpInstance = module;
+			appState.ephemeral.assimpInstance = module;
 			console.log("Assimp initialized");
 		});
 	});

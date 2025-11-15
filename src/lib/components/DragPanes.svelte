@@ -53,8 +53,8 @@
 				class={[
 					"absolute z-50 flex items-center justify-center",
 					direction === "vertical"
-						? "top-1/2 h-[var(--bar-size)] w-full -translate-y-1/2"
-						: "left-1/2 h-full w-[var(--bar-size)] -translate-x-1/2",
+						? "top-1/2 h-(--bar-size) w-full -translate-y-1/2"
+						: "left-1/2 h-full w-(--bar-size) -translate-x-1/2",
 					"text-current/50 hover:bg-current/25 hover:text-current",
 					direction === "vertical"
 						? dragging

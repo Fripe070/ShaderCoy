@@ -1,7 +1,10 @@
-import type { CoyTexture } from "./datatypes.js";
+import type { TextureInstance } from "./datatypes.js";
 
 // TODO: Allow configuring in textures panel
-export function loadTexture2D(glCtx: WebGL2RenderingContext, image: HTMLImageElement): CoyTexture {
+export function loadTexture2D(
+	glCtx: WebGL2RenderingContext,
+	image: HTMLImageElement,
+): TextureInstance {
 	const texture = glCtx.createTexture();
 	if (!texture) throw new Error("Failed to create texture");
 	glCtx.bindTexture(glCtx.TEXTURE_2D, texture);
@@ -18,5 +21,5 @@ export function loadTexture2D(glCtx: WebGL2RenderingContext, image: HTMLImageEle
 	glCtx.texParameteri(glCtx.TEXTURE_2D, glCtx.TEXTURE_WRAP_S, glCtx.REPEAT);
 	glCtx.texParameteri(glCtx.TEXTURE_2D, glCtx.TEXTURE_WRAP_T, glCtx.REPEAT);
 
-	return { name: image.src, imageUri: image.src, glTexture: texture };
+	return { glTexture: texture };
 }

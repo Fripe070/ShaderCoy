@@ -6,7 +6,7 @@
 	let elements: ThemeElement[] = Object.entries(THEMES).map(([id, name]) => ({
 		name,
 		callback: () => {
-			appState.frontend.persistentSettings.theme = id;
+			appState.persistent.theme = id;
 			// Save in localstorage
 			localStorage.setItem("theme", id);
 		},
@@ -19,9 +19,7 @@
 		class={[
 			"flex h-full w-full flex-row items-center gap-1 px-1",
 			"bg-background-primary text-foreground-primary",
-			element.themeId === appState.frontend.persistentSettings.theme
-				? "border-l-3 border-accent"
-				: "",
+			element.themeId === appState.persistent.theme ? "border-l-3 border-accent" : "",
 		]}
 		data-theme={/* Used for preview styling */ element.themeId}
 	>

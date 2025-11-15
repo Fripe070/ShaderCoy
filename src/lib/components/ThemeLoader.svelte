@@ -23,7 +23,7 @@
 	onMount(() => {
 		const savedTheme = localStorage.getItem("theme");
 		if (savedTheme && THEMES[savedTheme]) {
-			appState.frontend.persistentSettings.theme = savedTheme;
+			appState.persistent.theme = savedTheme;
 		}
 	});
 </script>

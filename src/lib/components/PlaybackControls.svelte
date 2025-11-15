@@ -1,9 +1,14 @@
 <script lang="ts">
-	import { appState } from "$lib/state.svelte.js";
 	import { isSmallScreen } from "$lib/utils.svelte.js";
 	import { MediaQuery } from "svelte/reactivity";
 
-	let { frameDeltas }: { frameDeltas: number[] } = $props();
+	let {
+		isPlaying = $bindable(),
+		frameDeltas,
+	}: {
+		isPlaying: boolean;
+		frameDeltas: number[];
+	} = $props();
 
 	let frameTime = $derived(frameDeltas.reduce((a, b) => a + b, 0) / frameDeltas.length);
 	let fps = $derived(frameTime === 0 ? 0 : 1 / frameTime);
@@ -21,15 +26,12 @@
 	<button
 		class={[
 			"flex h-6 w-6 cursor-pointer items-center justify-center ",
-			appState.frontend.playing
-				? "hover:bg-background-selected"
-				: "bg-negative/10 hover:bg-negative/25",
+			isPlaying ? "hover:bg-background-selected" : "bg-negative/10 hover:bg-negative/25",
 		]}
-		onclick={() => (appState.frontend.playing = !appState.frontend.playing)}
-		title={appState.frontend.playing ? "Pause" : "Play"}
+		onclick={() => (isPlaying = !isPlaying)}
+		title={isPlaying ? "Pause" : "Play"}
 	>
-		<iconify-icon
-			icon={appState.frontend.playing ? "material-symbols:pause" : "material-symbols:play-arrow"}
+		<iconify-icon icon={isPlaying ? "material-symbols:pause" : "material-symbols:play-arrow"}
 		></iconify-icon>
 	</button>
 	<div
@@ -38,7 +40,7 @@
 			"line-height-6 bg-background-secondary/50 text-nowrap select-text",
 			"min-x-0 shrink overflow-x-hidden",
 			(() => {
-				if (!appState.frontend.playing) return "text-foreground-muted";
+				if (!isPlaying) return "text-foreground-muted";
 				if (fps >= 55) {
 					return "text-positive";
 				} else if (fps >= 30) {

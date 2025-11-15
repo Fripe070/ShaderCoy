@@ -5,54 +5,50 @@ import defaultVertSource from "$lib/shaders//defaultVert.glsl?raw";
 import defaultFragSource from "$lib/shaders//defaultFrag.glsl?raw";
 import type { CoyErrorLogs } from "./errors.js";
 import { deepClone, deepFreeze } from "./utils.svelte.js";
+import type { Texture, TextureInstance } from "./resources/texture/datatypes.js";
 
-export interface Texture {
-	dataUri: string;
-	name: string;
-}
-
-export interface ProjectState {
+export interface SaveData {
+	viewMode: "2d" | "perspective-orbit" | "orthographic-orbit";
 	vertexSource: string;
 	fragmentSource: string;
 	meshes: Mesh[];
 	textures: Texture[];
-	viewMode: "2d" | "perspective-orbit" | "orthographic-orbit";
 }
-export interface FrontendState {
-	playing: boolean;
+// TODO: Store entire object in localStorage
+export interface PersistentData {
+	theme: string;
+}
+export interface EphemeralData {
 	errorLogs: CoyErrorLogs;
-	persistentSettings: {
-		theme: string;
-	};
-}
+	textureInstances: TextureInstance[];
 
-export interface AppState {
-	saveData: ProjectState;
-	frontend: FrontendState;
-	// Non-serializable runtime state
 	glCtx: WebGL2RenderingContext | null;
 	assimpInstance: AssimpTSModule | null;
 }
 
+export interface AppState {
+	save: SaveData;
+	persistent: PersistentData;
+	ephemeral: EphemeralData;
+}
+
 export const defaultAppState: Readonly<AppState> = deepFreeze<AppState>({
-	saveData: {
+	save: {
+		viewMode: "perspective-orbit",
 		vertexSource: defaultVertSource,
 		fragmentSource: defaultFragSource,
 		meshes: [],
 		textures: [],
-		viewMode: "perspective-orbit",
 	},
-	frontend: {
-		playing: true,
+	persistent: {
+		theme: "one-dark",
+	},
+	ephemeral: {
 		errorLogs: { shaderErrors: [] },
-		// TODO: Store in localStorage
-		persistentSettings: {
-			theme: "one-dark",
-		},
+		textureInstances: [],
+		glCtx: null,
+		assimpInstance: null,
 	},
-	glCtx: null,
-	assimpInstance: null,
 });
 
 export const appState: AppState = $state(deepClone(defaultAppState));
-export default appState;

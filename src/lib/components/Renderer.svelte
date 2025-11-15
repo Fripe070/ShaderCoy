@@ -7,7 +7,7 @@
 	} from "$lib/resources/model/datatypes.js";
 	import { meshToBuffers } from "$lib/resources/model/load.js";
 	import { samplerArray, type CoyShader } from "$lib/resources/shader/datatypes.js";
-	import type { CoyTexture } from "$lib/resources/texture/datatypes.js";
+	import type { TextureInstance } from "$lib/resources/texture/datatypes.js";
 	import { mat4 } from "gl-matrix";
 	import { onMount } from "svelte";
 
@@ -29,7 +29,7 @@
 	}: {
 		shader: CoyShader | null;
 		meshes: Mesh[];
-		textures: CoyTexture[];
+		textures: TextureInstance[];
 		viewMatrix?: mat4;
 		projectionMatrix?: mat4 | ((aspectRatio: number) => mat4);
 

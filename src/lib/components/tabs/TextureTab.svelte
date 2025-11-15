@@ -1,25 +1,26 @@
 <script lang="ts">
-	import { appState, type Texture } from "$lib/state.svelte.js";
+	import { appState } from "$lib/state.svelte.js";
 	import { flip } from "svelte/animate";
 	import TextureEditModal from "./TextureEditModal.svelte";
+	import type { Texture } from "$lib/resources/texture/datatypes.js";
 
 	const maxFragTextures: number = $derived.by(() => {
-		appState.saveData.fragmentSource; // Recompute when shader changes
-		if (!appState.glCtx!) return 0;
-		return appState.glCtx.getParameter(appState.glCtx.MAX_TEXTURE_IMAGE_UNITS);
+		appState.save.fragmentSource; // Recompute when shader changes
+		if (!appState.ephemeral.glCtx!) return 0;
+		return appState.ephemeral.glCtx.getParameter(appState.ephemeral.glCtx.MAX_TEXTURE_IMAGE_UNITS);
 	});
 	$effect(() => {
-		if (appState.saveData.textures.length > maxFragTextures) {
+		if (appState.save.textures.length > maxFragTextures) {
 			console.warn(
-				`Number of textures (${appState.saveData.textures.length}) ` +
+				`Number of textures (${appState.save.textures.length}) ` +
 					`exceeds maximum supported by GPU (${maxFragTextures}). Truncating.`,
 			);
-			appState.saveData.textures.splice(maxFragTextures);
+			appState.save.textures.splice(maxFragTextures);
 		}
 	});
 
 	const textureCards: (Texture | null)[] = $derived.by(() => {
-		const textures: (Texture | null)[] = [...appState.saveData.textures];
+		const textures: (Texture | null)[] = [...appState.save.textures];
 		if (textures.length < maxFragTextures) {
 			textures.push(null);
 		}
@@ -29,7 +30,7 @@
 	function getValidIndex(value: string) {
 		const filtered = value.replace(/\D/g, "");
 		const index = parseInt(filtered) || 0;
-		return Math.max(0, Math.min(appState.saveData.textures.length - 1, index));
+		return Math.max(0, Math.min(appState.save.textures.length - 1, index));
 	}
 
 	function addTexture(file: File): Promise<void> {
@@ -49,12 +50,12 @@
 					reject();
 					return;
 				}
-				if (appState.saveData.textures.length >= maxFragTextures) {
+				if (appState.save.textures.length >= maxFragTextures) {
 					console.warn(`Cannot add texture: maximum of ${maxFragTextures} textures reached`);
 					reject();
 					return;
 				}
-				appState.saveData.textures.push({
+				appState.save.textures.push({
 					dataUri: result,
 					name: file.name,
 				});
@@ -195,7 +196,7 @@
 				title="Move Backward"
 				onclick={() => {
 					if (index === 0) return;
-					const textures = appState.saveData.textures;
+					const textures = appState.save.textures;
 					const temp = textures[index - 1];
 					textures[index - 1] = textures[index];
 					textures[index] = temp;
@@ -216,7 +217,7 @@
 				onchange={(event) => {
 					const newIndex = getValidIndex(event.currentTarget.value);
 					if (newIndex === index) return;
-					const textures = appState.saveData.textures;
+					const textures = appState.save.textures;
 					const [moved] = textures.splice(index, 1);
 					textures.splice(newIndex, 0, moved);
 				}}
@@ -225,14 +226,14 @@
 			<button
 				class={[
 					"flex h-6 w-4 items-center justify-center",
-					index == appState.saveData.textures.length - 1
+					index == appState.save.textures.length - 1
 						? "cursor-not-allowed text-foreground-primary/20"
 						: "cursor-pointer hover:bg-background-selected",
 				]}
 				title="Move Forward"
 				onclick={() => {
-					if (index === appState.saveData.textures.length - 1) return;
-					const textures = appState.saveData.textures;
+					if (index === appState.save.textures.length - 1) return;
+					const textures = appState.save.textures;
 					const temp = textures[index + 1];
 					textures[index + 1] = textures[index];
 					textures[index] = temp;
@@ -245,7 +246,7 @@
 				class="flex h-6 w-6 cursor-pointer items-center justify-center bg-negative/30 hover:bg-negative/50"
 				title="Delete Texture"
 				onclick={() => {
-					appState.saveData.textures.splice(index, 1);
+					appState.save.textures.splice(index, 1);
 				}}
 			>
 				<iconify-icon icon="material-symbols:delete"></iconify-icon>

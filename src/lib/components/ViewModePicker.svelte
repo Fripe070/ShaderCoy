@@ -21,11 +21,11 @@
 <DropdownPicker
 	title="Rendering Mode"
 	showTitle={false}
-	icon={elements[appState.saveData.viewMode].icon}
+	icon={elements[appState.save.viewMode].icon}
 	elements={Object.entries(elements).map(([modelId, value]) => ({
 		...value,
 		callback: () => {
-			appState.saveData.viewMode = modelId as keyof typeof elements;
+			appState.save.viewMode = modelId as keyof typeof elements;
 		},
 	}))}
 />

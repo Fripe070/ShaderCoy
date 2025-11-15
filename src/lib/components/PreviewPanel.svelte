@@ -21,12 +21,12 @@
 	} = $props();
 
 	let shader: CoyShader | CoyErrorReport[] | null = $derived.by(() => {
-		if (!appState.glCtx) return null;
+		if (!appState.ephemeral.glCtx) return null;
 		console.log("Compiling shader...");
 		try {
-			const compiled = loadCoyShader(appState.glCtx, {
-				vertex: appState.saveData.vertexSource,
-				fragment: appState.saveData.fragmentSource,
+			const compiled = loadCoyShader(appState.ephemeral.glCtx, {
+				vertex: appState.save.vertexSource,
+				fragment: appState.save.fragmentSource,
 			});
 			console.log("Shader compiled successfully.");
 			return compiled;
@@ -41,9 +41,9 @@
 	});
 	$effect(() => {
 		if (shader instanceof Array) {
-			appState.frontend.errorLogs.shaderErrors = shader;
+			appState.ephemeral.errorLogs.shaderErrors = shader;
 		} else {
-			appState.frontend.errorLogs.shaderErrors = [];
+			appState.ephemeral.errorLogs.shaderErrors = [];
 		}
 	});
 
@@ -55,6 +55,7 @@
 	});
 
 	let fullscreenHandle: HTMLElement;
+	let isPlaying: boolean = $state(true);
 	let frameDeltas: number[] = $state([]);
 	let forcedViewportDimensions: [number | null, number | null] = $state([null, null]);
 
@@ -63,7 +64,7 @@
 
 <div class="flex h-full w-full flex-col">
 	<div class="z-10 flex w-full flex-row flex-wrap items-center justify-end bg-background-secondary">
-		<PlaybackControls {frameDeltas} />
+		<PlaybackControls bind:isPlaying {frameDeltas} />
 		<span class="grow"></span>
 		<DimensionsSelector
 			bind:width={forcedViewportDimensions[0]}
@@ -73,7 +74,7 @@
 		/>
 		<div class="flex flex-row">
 			<ViewModePicker />
-			<ModelSelector bind:meshes={appState.saveData.meshes} />
+			<ModelSelector bind:meshes={appState.save.meshes} />
 			<button
 				class={[
 					"flex h-6 w-6 flex-row items-center justify-center",
@@ -92,22 +93,22 @@
 		{/if}
 	</div>
 	<div class="checkerboard relative grow bg-background-tertiary" bind:this={fullscreenHandle}>
-		<ViewController mode={appState.saveData.viewMode} bind:controller={cameraController}>
+		<ViewController mode={appState.save.viewMode} bind:controller={cameraController}>
 			<Renderer
 				shader={cachedShader}
-				meshes={appState.saveData.meshes}
+				meshes={appState.save.meshes}
 				textures={[]}
 				viewMatrix={cameraController?.viewMatrix ?? mat4.create()}
 				projectionMatrix={cameraController?.projectionMatrix ?? mat4.create()}
-				paused={!appState.frontend.playing}
+				paused={!isPlaying}
 				dimensions={forcedViewportDimensions}
-				bind:glContext={appState.glCtx}
+				bind:glContext={appState.ephemeral.glCtx}
 				bind:frameDeltas
 			/>
 		</ViewController>
-		{#if hasErrors(appState.frontend.errorLogs)}
+		{#if hasErrors(appState.ephemeral.errorLogs)}
 			<div class="absolute inset-0 h-fit max-h-full overflow-y-auto md:p-2">
-				<ErrorReporter errorLogs={appState.frontend.errorLogs} />
+				<ErrorReporter errorLogs={appState.ephemeral.errorLogs} />
 			</div>
 		{/if}
 	</div>

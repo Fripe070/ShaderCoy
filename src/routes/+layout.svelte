@@ -10,8 +10,7 @@
 	let { children } = $props();
 
 	const themeAttachment: Attachment = (element) => {
-		(element as HTMLElement).parentElement!.dataset.theme =
-			appState.frontend.persistentSettings.theme;
+		(element as HTMLElement).parentElement!.dataset.theme = appState.persistent.theme;
 		return () => {};
 	};
 </script>

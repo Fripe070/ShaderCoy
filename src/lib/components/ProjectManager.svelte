@@ -7,7 +7,7 @@
 			name: "Save Project",
 			icon: "material-symbols:save",
 			callback: () => {
-				const projectData = JSON.stringify($state.snapshot(appState.saveData));
+				const projectData = JSON.stringify($state.snapshot(appState.save));
 
 				// As of 2025/11/02, the file system access api is only supported in chromium-based browsers
 				if ("showSaveFilePicker" in window) {
@@ -51,7 +51,7 @@
 				function loadProject(content: string) {
 					try {
 						const project = JSON.parse(content);
-						// appState.saveData = project;
+						// appState.save = project;
 					} catch (error) {
 						alert("Failed to load project: Invalid JSON");
 					}
@@ -83,7 +83,7 @@
 			icon: "material-symbols:delete",
 			callback: () => {
 				if (!confirm("Are you sure you want to delete the current project?")) return;
-				appState.saveData = { ...defaultAppState.saveData };
+				appState.save = { ...defaultAppState.save };
 			},
 			class: "text-negative hover:!bg-negative/10",
 		},
