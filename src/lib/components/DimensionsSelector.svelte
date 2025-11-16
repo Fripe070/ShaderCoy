@@ -5,8 +5,10 @@
 		allowNulls = false,
 		width = $bindable(0),
 		height = $bindable(0),
+		minAxisSize = 1,
 		maxAxisSize,
 	}: {
+		minAxisSize?: number;
 		maxAxisSize?: number;
 	} & (
 		| {
@@ -31,7 +33,7 @@
 			// prettier-ignore
 			width = result == null
 				? (allowNulls ? null : 0)
-				: Math.max(0, Math.min(result, maxAxisSize ?? Infinity));
+				: Math.max(minAxisSize ?? -Infinity, Math.min(result, maxAxisSize ?? Infinity));
 		},
 		get height() {
 			return height?.toString() ?? "";
@@ -42,7 +44,7 @@
 			// prettier-ignore
 			height = result == null
 				? (allowNulls ? null : 0)
-				: Math.max(0, Math.min(result, maxAxisSize ?? Infinity));
+				: Math.max(minAxisSize ?? -Infinity, Math.min(result, maxAxisSize ?? Infinity));
 		},
 	};
 </script>

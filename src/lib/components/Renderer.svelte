@@ -160,6 +160,10 @@
 		texturesChanged = true;
 	});
 
+	let frameNumber: GLuint = 0;
+	let time: number = 0;
+	let mouseData = { x: 0, y: 0, left: false, right: false };
+
 	function paint(deltaTime: number) {
 		if (!glContext) return;
 		if (paused) return;
@@ -183,6 +187,21 @@
 		glContext.uniformMatrix4fv(shader.uniforms["modelMatrix"], false, modelMatrix);
 		glContext.uniformMatrix4fv(shader.uniforms["viewMatrix"], false, viewMatrix);
 		glContext.uniformMatrix4fv(shader.uniforms["projectionMatrix"], false, projectionMatrix);
+
+		// Set all the other uniforms
+		frameNumber++;
+		time += deltaTime;
+		glContext.uniform1ui(shader.uniforms["frameNumber"], frameNumber);
+		glContext.uniform1f(shader.uniforms["time"], time);
+		glContext.uniform1f(shader.uniforms["deltaTime"], deltaTime);
+		glContext.uniform2f(shader.uniforms["resolution"], canvas.width, canvas.height);
+		glContext.uniform4f(
+			shader.uniforms["mouse"],
+			mouseData.x,
+			mouseData.y,
+			mouseData.left ? 1 : 0,
+			mouseData.right ? 1 : 0,
+		);
 
 		if (texturesChanged) {
 			texturesChanged = false;
@@ -232,6 +251,42 @@
 			offset += attrSize * floatBytes;
 		}
 	}
+
+	let layoutWidth: number = $state(1);
+	let layoutHeight: number = $state(1);
+	let elementDimensions: [string, string] = $derived.by(() => {
+		if (dimensions[0] === null || dimensions[1] === null) {
+			return ["100%", "100%"];
+		}
+		const actualAspect = layoutWidth / layoutHeight;
+		const desiredAspect = dimensions[0] / dimensions[1];
+		if (actualAspect < desiredAspect) {
+			return ["100%", `${(layoutWidth / desiredAspect).toFixed(2)}px`];
+		} else {
+			return [`${(layoutHeight * desiredAspect).toFixed(2)}px`, "100%"];
+		}
+	});
+	const updateButtons = (buttonBitField: number) => {
+		mouseData.left = (buttonBitField & 1) !== 0;
+		mouseData.right = (buttonBitField & 2) !== 0;
+	};
 </script>
 
-<canvas class="absolute-center h-full w-full pixelated" bind:this={canvas}></canvas>
+<div
+	bind:clientWidth={layoutWidth}
+	bind:clientHeight={layoutHeight}
+	class="invisible absolute-center h-full w-full"
+></div>
+<canvas
+	bind:this={canvas}
+	class="absolute-center h-full w-full border border-background-primary pixelated"
+	style:width={elementDimensions[0]}
+	style:height={elementDimensions[1]}
+	onpointermove={(event) => {
+		const canvasRect = canvas.getBoundingClientRect();
+		mouseData.x = (event.clientX - canvasRect.left) / canvasRect.width;
+		mouseData.y = 1 - (event.clientY - canvasRect.top) / canvasRect.height;
+	}}
+	onpointerdown={(event) => updateButtons(event.buttons)}
+	onpointerup={(event) => updateButtons(event.buttons)}
+></canvas>

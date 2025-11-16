@@ -19,7 +19,7 @@ const PointerButton = {
 } as const;
 const DOUBLE_CLICK_DELTA = 300; // ms
 
-const SPEEDS = {
+const SPEEDS: Record<string, number> = {
 	ROTATION: 4,
 	PAN_MOUSE: 1,
 	PAN_PINCH: 3e-3,
@@ -55,7 +55,7 @@ const DEFAULT_ORBIT_STATE: CameraOrbitState = {
 	distance: 4,
 	rotation: isometricQuaternion(),
 	fov: (60 * Math.PI) / 180,
-	orthoHeight: 2,
+	orthoHeight: 4,
 } as const;
 
 function getPosition(state: CameraOrbitState): vec3 {
@@ -205,10 +205,11 @@ export default function orbitCameraController(
 		},
 		handleWheel(event) {
 			event.preventDefault();
-			doZoom(
-				event,
-				event.deltaY * (event.ctrlKey || event.metaKey ? SPEEDS.FOV_ZOOM : SPEEDS.ZOOM_SCROLL),
-			);
+			let speed = SPEEDS.ZOOM_SCROLL;
+			if (projectionMode === "orthographic") {
+				speed = SPEEDS.ORTHO_ZOOM_SCROLL;
+			}
+			doZoom(event, event.deltaY * (event.ctrlKey || event.metaKey ? SPEEDS.FOV_ZOOM : speed));
 		},
 
 		get cursor() {
