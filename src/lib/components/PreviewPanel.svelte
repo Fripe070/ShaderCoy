@@ -13,8 +13,6 @@
 	import ViewController from "./ViewControlls/ViewController.svelte";
 	import { mat4 } from "gl-matrix";
 	import type { CameraController } from "./ViewControlls/ViewController.js";
-	import { loadTexture2D } from "$lib/resources/texture/load.js";
-	import type { TextureInstance } from "$lib/resources/texture/datatypes.js";
 
 	let {
 		toolbarChildren = undefined,

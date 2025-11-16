@@ -8,7 +8,7 @@
 
 <div class="flex h-full w-full flex-col">
 	<div class="z-10 flex flex-row bg-background-secondary">
-		{#each Object.entries(tabs) as [id, tab]}
+		{#each Object.entries(tabs) as [id, tab] (id)}
 			<button
 				class={[
 					"flex h-6 shrink flex-row items-center gap-1 overflow-x-hidden overflow-y-hidden px-1",
@@ -29,7 +29,7 @@
 		<ThemePicker />
 	</div>
 	<div class="relative grow overflow-y-auto">
-		{#each Object.entries(tabs) as [id, { component: TabComponent }]}
+		{#each Object.entries(tabs) as [id, { component: TabComponent }] (id) }
 			<div class={id === activeTabId ? "contents" : "hidden"}>
 				<TabComponent />
 			</div>

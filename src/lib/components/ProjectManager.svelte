@@ -12,17 +12,15 @@
 
 				// As of 2025/11/02, the file system access api is only supported in chromium-based browsers
 				if ("showSaveFilePicker" in window) {
-					// @ts-ignore
-					window
-						.showSaveFilePicker({
-							suggestedName: "project.json",
-							types: [
-								{
-									description: "JSON Files",
-									accept: { "application/json": [".json"] },
-								},
-							],
-						})
+					(window.showSaveFilePicker as any)({
+						suggestedName: "project.json",
+						types: [
+							{
+								description: "JSON Files",
+								accept: { "application/json": [".json"] },
+							},
+						],
+					})
 						.then(async (fileHandle: any) => {
 							const writable = await fileHandle.createWritable();
 							await writable.write(projectData);

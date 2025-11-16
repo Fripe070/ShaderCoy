@@ -72,14 +72,14 @@
 			name: "Custom",
 			callback: async (event: MouseEvent): Promise<boolean> => {
 				// Return true if a file was selected and loaded successfully, false otherwise.
-				return await new Promise<boolean>(async (resolver) => {
+				return await new Promise<boolean>((resolver) => {
 					const fileInput = document.createElement("input");
 					fileInput.type = "file";
 					fileInput.accept = ".obj,.gltf,.glb,.fbx";
 					fileInput.style.display = "none";
 					(event.currentTarget as Node).parentElement!.appendChild(fileInput);
 
-					const resolve = async (val: boolean) => {
+					const resolve = (val: boolean) => {
 						fileInput.remove();
 						resolver(val);
 					};
@@ -140,7 +140,7 @@
 <!-- FIXME: Not closing when view mode dropdown is clicked -->
 <DropdownPicker
 	bind:dropdownElement
-	class={"min-w-14"}
+	class="min-w-14"
 	title={fileName}
 	icon={currentIcon}
 	swapIcon={false}

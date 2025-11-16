@@ -3,7 +3,6 @@
 	import { flip } from "svelte/animate";
 	import TextureEditModal from "./TextureEditModal.svelte";
 	import type { Texture } from "$lib/resources/texture/datatypes.js";
-	import { loadTexture2D } from "$lib/resources/texture/load.js";
 
 	const maxFragTextures: number = $derived.by(() => {
 		appState.save.fragmentSource; // Recompute when shader changes

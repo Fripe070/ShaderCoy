@@ -49,10 +49,6 @@
 		return meshes.map((mesh) => meshToBuffers(mesh, glContext!));
 	});
 
-	$effect(() => {
-		$inspect(shader, "Used shader");
-	});
-
 	// Context initialization
 	onMount(() => {
 		console.log("Initializing WebGL2 context...");
