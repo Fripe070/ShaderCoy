@@ -92,7 +92,7 @@
 			{@render toolbarChildren()}
 		{/if}
 	</div>
-	<div class="checkerboard relative grow bg-background-tertiary" bind:this={fullscreenHandle}>
+	<div class="relative grow bg-background-tertiary" bind:this={fullscreenHandle}>
 		<ViewController mode={appState.save.viewMode} bind:controller={cameraController}>
 			<Renderer
 				shader={cachedShader}

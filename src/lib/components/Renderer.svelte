@@ -279,7 +279,7 @@
 ></div>
 <canvas
 	bind:this={canvas}
-	class="absolute-center h-full w-full border border-background-primary pixelated"
+	class="checkerboard absolute-center h-full w-full border border-background-primary pixelated"
 	style:width={elementDimensions[0]}
 	style:height={elementDimensions[1]}
 	onpointermove={(event) => {
