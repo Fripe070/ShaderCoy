@@ -55,9 +55,8 @@
 	});
 
 	let fullscreenHandle: HTMLElement;
-	let canFullscreen: boolean = $state(false);
-	$effect(() => {
-		canFullscreen = fullscreenHandle?.requestFullscreen !== undefined && document.fullscreenEnabled;
+	let canFullscreen: boolean = $derived.by(() => {
+		return fullscreenHandle?.requestFullscreen !== undefined && document.fullscreenEnabled;
 	});
 
 	let isPlaying: boolean = $state(true);

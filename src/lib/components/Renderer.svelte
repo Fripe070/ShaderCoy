@@ -120,8 +120,7 @@
 	$effect(() => {
 		needsResize = true;
 		// Force reactivity
-		dimensions[0];
-		dimensions[1];
+		[dimensions[0], dimensions[1]];
 	});
 
 	function doResize() {
@@ -155,8 +154,7 @@
 	let previousTextureCount: number = 0;
 	let texturesChanged: boolean = false;
 	$effect(() => {
-		glContext; // React to context changes
-		textures; // React to texture array changes
+		[glContext, textures]; // React when either changes
 		texturesChanged = true;
 	});
 

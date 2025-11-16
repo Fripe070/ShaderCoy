@@ -10,7 +10,7 @@
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"format": "prettier --write .",
-		"lint": "prettier --check . && eslint .",
+		"lint": "eslint . && prettier --check .",
 		"test:unit": "vitest",
 		"test": "npm run test:unit -- --run",
 		"grammar:build": "npx lezer-generator src/lib/editor/glsl/glsl.grammar -o src/lib/editor/glsl/parser.js"

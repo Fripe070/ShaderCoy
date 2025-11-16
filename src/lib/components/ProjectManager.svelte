@@ -12,6 +12,8 @@
 
 				// As of 2025/11/02, the file system access api is only supported in chromium-based browsers
 				if ("showSaveFilePicker" in window) {
+					// Ignore eslint warning about any
+					// eslint-disable-next-line @typescript-eslint/no-explicit-any
 					(window.showSaveFilePicker as any)({
 						suggestedName: "project.json",
 						types: [
@@ -21,7 +23,7 @@
 							},
 						],
 					})
-						.then(async (fileHandle: any) => {
+						.then(async (fileHandle: FileSystemFileHandle) => {
 							const writable = await fileHandle.createWritable();
 							await writable.write(projectData);
 							await writable.close();
@@ -52,7 +54,7 @@
 						const project = JSON.parse(content);
 						appState.save = project;
 					} catch (error) {
-						alert("Failed to load project: Invalid JSON");
+						alert("Failed to load project: Invalid file format.");
 					}
 				}
 

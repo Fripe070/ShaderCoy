@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { type Snippet } from "svelte";
-	import { type ProjectState } from "$lib/state.svelte.js";
+	import { type SaveData } from "$lib/state.svelte.js";
 	import { type CameraController } from "./ViewController.js";
 	import staticCameraController from "./StaticViewController.svelte.js";
 	import orbitCameraController from "./OrbitViewController.svelte.js";
@@ -11,11 +11,11 @@
 		controller = $bindable<CameraController>(undefined),
 	}: {
 		children: Snippet;
-		mode: ProjectState["viewMode"];
+		mode: SaveData["viewMode"];
 		controller?: CameraController;
 	} = $props();
 
-	const controllers: Record<ProjectState["viewMode"], CameraController> = {
+	const controllers: Record<SaveData["viewMode"], CameraController> = {
 		"2d": staticCameraController(),
 		// TODO: Make these two share the same internal state, only differing by projection matrix
 		"orthographic-orbit": orbitCameraController("orthographic"),
@@ -31,7 +31,11 @@
 	class="user-select-none touch-none"
 	style:cursor={controller?.cursor ?? "auto"}
 	oncontextmenu={(event) => {
-		controller?.handleContextMenu ? controller.handleContextMenu(event) : event.preventDefault();
+		if (controller?.handleContextMenu) {
+			controller.handleContextMenu(event);
+		} else {
+			event.preventDefault();
+		}
 	}}
 	onkeydown={(event) => controller?.handleKeyDown?.(event)}
 	onkeyup={(event) => controller?.handleKeyUp?.(event)}

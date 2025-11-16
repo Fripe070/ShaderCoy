@@ -37,5 +37,8 @@ export default defineConfig(
 				svelteConfig,
 			},
 		},
+		rules: {
+			"@typescript-eslint/no-unused-expressions": "off",
+		},
 	},
 );

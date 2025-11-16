@@ -52,9 +52,9 @@
 	<div
 		class={[
 			"flex flex-col",
-			"[&>*]:even:bg-background-secondary",
-			"[&>*]:odd:bg-background-tertiary",
-			"[&>*]:hover:bg-background-selected",
+			"*:even:bg-background-secondary",
+			"*:odd:bg-background-tertiary",
+			"*:hover:bg-background-selected",
 		]}
 	>
 		{#each Object.values(elements) as element}

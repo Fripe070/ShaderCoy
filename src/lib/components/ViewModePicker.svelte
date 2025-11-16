@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { appState, type ProjectState } from "$lib/state.svelte.js";
+	import { appState, type SaveData } from "$lib/state.svelte.js";
 	import DropdownPicker from "./DropdownPicker.svelte";
 
-	const elements: Record<ProjectState["viewMode"], { name: string; icon: string }> = {
+	const elements: Record<SaveData["viewMode"], { name: string; icon: string }> = {
 		"2d": {
 			name: "2D Viewport",
 			icon: "material-symbols:monitor-outline",

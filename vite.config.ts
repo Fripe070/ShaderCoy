@@ -4,7 +4,8 @@ import { sveltekit } from "@sveltejs/kit/vite";
 import { lezer } from "@lezer/generator/rollup";
 
 export default defineConfig({
-	plugins: [tailwindcss(), sveltekit(), lezer()],
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	plugins: [tailwindcss() as any, sveltekit() as any, lezer()],
 	test: {
 		expect: { requireAssertions: true },
 		projects: [

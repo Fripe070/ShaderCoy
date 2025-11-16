@@ -29,7 +29,7 @@
 		<ThemePicker />
 	</div>
 	<div class="relative grow overflow-y-auto">
-		{#each Object.entries(tabs) as [id, { component: TabComponent }] (id) }
+		{#each Object.entries(tabs) as [id, { component: TabComponent }] (id)}
 			<div class={id === activeTabId ? "contents" : "hidden"}>
 				<TabComponent />
 			</div>

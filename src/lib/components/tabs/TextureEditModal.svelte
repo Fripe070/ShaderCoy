@@ -1,7 +1,7 @@
 <script lang="ts">
-	import type { Texture } from "$lib/state.svelte.js";
 	import Modal from "../Modal.svelte";
 	import DimensionsSelector from "../DimensionsSelector.svelte";
+	import type { Texture } from "$lib/resources/texture/datatypes.js";
 
 	let {
 		isEditingModalOpen = $bindable(false),
@@ -19,7 +19,7 @@
 <Modal bind:isOpen={isEditingModalOpen}>
 	<div class="flex flex-col items-center">
 		<h1 class="text-2xl font-bold">
-			Editing <code class="bg-background-secondary">{texture.name}</code>
+			Editing <code class="bg-background-secondary">{texture.fileName}</code>
 		</h1>
 		<img
 			class="checkerboard h-70 max-w-full border border-foreground-muted/20 object-contain"

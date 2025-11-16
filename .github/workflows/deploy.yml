@@ -39,7 +39,7 @@ jobs:
         working-directory: ${{ env.BUILD_PATH }}
 
       - name: Build
-        run: bun run build 
+        run: bun run build
         working-directory: ${{ env.BUILD_PATH }}
 
       - name: Upload artifact
