@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { appState } from "$lib/state.svelte.js";
+	import { canUseLocalStorage } from "$lib/utils.svelte.js";
 	import DropdownPicker from "./DropdownPicker.svelte";
 	import { THEMES, type ThemeElement } from "./ThemeLoader.svelte";
 
@@ -7,12 +8,30 @@
 		name,
 		callback: () => {
 			appState.persistent.theme = id;
-			// Save in localstorage
-			localStorage.setItem("theme", id);
+			if (canUseLocalStorage()) {
+				localStorage.setItem("theme", id);
+			}
 		},
 		themeId: id,
 	}));
 </script>
+
+<svelte:window
+	onmessage={(event) => {
+		// Allow iframe host to set theme
+		if (event.data?.type === "setTheme" && event.data?.theme) {
+			const themeId = event.data.theme;
+			if (THEMES[themeId]) {
+				appState.persistent.theme = themeId;
+			} else {
+				console.warn(
+					`Received invalid theme ID: "${themeId}". ` +
+						`Available themes: ${Object.keys(THEMES).join(", ")}`,
+				);
+			}
+		}
+	}}
+/>
 
 {#snippet elementSnippet(element: ThemeElement)}
 	<div

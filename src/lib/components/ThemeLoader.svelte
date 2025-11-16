@@ -20,7 +20,9 @@
 <script lang="ts">
 	import { onMount } from "svelte";
 	import { appState } from "$lib/state.svelte.js";
+	import { canUseLocalStorage } from "$lib/utils.svelte.js";
 	onMount(() => {
+		if (!canUseLocalStorage()) return;
 		const savedTheme = localStorage.getItem("theme");
 		if (savedTheme && THEMES[savedTheme]) {
 			appState.persistent.theme = savedTheme;

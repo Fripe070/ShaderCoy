@@ -55,6 +55,11 @@
 	});
 
 	let fullscreenHandle: HTMLElement;
+	let canFullscreen: boolean = $state(false);
+	$effect(() => {
+		canFullscreen = fullscreenHandle?.requestFullscreen !== undefined && document.fullscreenEnabled;
+	});
+
 	let isPlaying: boolean = $state(true);
 	let frameDeltas: number[] = $state([]);
 	let forcedViewportDimensions: [number | null, number | null] = $state([null, null]);
@@ -75,18 +80,20 @@
 		<div class="flex flex-row">
 			<ViewModePicker />
 			<ModelSelector bind:meshes={appState.save.meshes} />
-			<button
-				class={[
-					"flex h-6 w-6 flex-row items-center justify-center",
-					"bg-background-primary hover:bg-background-selected",
-				]}
-				onclick={() => {
-					fullscreenHandle?.requestFullscreen();
-				}}
-				title="Toggle Fullscreen"
-			>
-				<iconify-icon icon="material-symbols:fullscreen"></iconify-icon>
-			</button>
+			{#if canFullscreen}
+				<button
+					class={[
+						"flex h-6 w-6 flex-row items-center justify-center",
+						"bg-background-primary hover:bg-background-selected",
+					]}
+					onclick={() => {
+						fullscreenHandle?.requestFullscreen();
+					}}
+					title="Toggle Fullscreen"
+				>
+					<iconify-icon icon="material-symbols:fullscreen"></iconify-icon>
+				</button>
+			{/if}
 		</div>
 		{#if toolbarChildren}
 			{@render toolbarChildren()}

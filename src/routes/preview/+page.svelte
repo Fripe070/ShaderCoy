@@ -11,6 +11,9 @@
 			console.log("Assimp initialized");
 		});
 	});
+
+	// TODO: Don't load any default shader or model
+	// TODO: Allow passing in a shader/model through an iframe
 </script>
 
 <svelte:head>

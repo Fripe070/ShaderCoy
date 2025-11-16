@@ -20,3 +20,13 @@ export function deepClone<T>(obj: T): T {
 export function noUnhandledCase(_case: never): never {
 	throw new Error(`Unhandled case: ${_case}`);
 }
+
+export function canUseLocalStorage(): boolean {
+	// If embedded in an iframe we might not have access localStorage
+	try {
+		return window.localStorage !== undefined;
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	} catch (error) {
+		return false;
+	}
+}
