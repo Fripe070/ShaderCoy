@@ -50,7 +50,7 @@
 				function loadProject(content: string) {
 					try {
 						const project = JSON.parse(content);
-						// appState.save = project;
+						appState.save = project;
 					} catch (error) {
 						alert("Failed to load project: Invalid JSON");
 					}
