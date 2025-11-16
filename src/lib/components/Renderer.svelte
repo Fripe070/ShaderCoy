@@ -6,8 +6,9 @@
 		type MeshBuffers,
 	} from "$lib/resources/model/datatypes.js";
 	import { meshToBuffers } from "$lib/resources/model/load.js";
-	import { samplerArray, type CoyShader } from "$lib/resources/shader/datatypes.js";
+	import { textureArrayName, type CoyShader } from "$lib/resources/shader/datatypes.js";
 	import type { TextureInstance } from "$lib/resources/texture/datatypes.js";
+	import { appState } from "$lib/state.svelte.js";
 	import { mat4 } from "gl-matrix";
 	import { onMount } from "svelte";
 
@@ -155,6 +156,14 @@
 		console.debug("Updated projection matrix with aspect ratio", aspectRatio);
 	});
 
+	let previousTextureCount: number = 0;
+	let texturesChanged: boolean = false;
+	$effect(() => {
+		glContext; // React to context changes
+		textures; // React to texture array changes
+		texturesChanged = true;
+	});
+
 	function paint(deltaTime: number) {
 		if (!glContext) return;
 		if (paused) return;
@@ -179,11 +188,26 @@
 		glContext.uniformMatrix4fv(shader.uniforms["viewMatrix"], false, viewMatrix);
 		glContext.uniformMatrix4fv(shader.uniforms["projectionMatrix"], false, projectionMatrix);
 
-		for (const [index, texture] of textures.entries()) {
-			glContext.activeTexture(glContext.TEXTURE0 + index);
-			glContext.bindTexture(glContext.TEXTURE_2D, texture.glTexture);
-			const samplerLocation = glContext.getUniformLocation(shader.program, samplerArray(index));
-			glContext.uniform1i(samplerLocation, index);
+		if (texturesChanged) {
+			texturesChanged = false;
+			for (let i = 0; i < Math.max(textures.length, previousTextureCount); i++) {
+				glContext.activeTexture(glContext.TEXTURE0 + i);
+				const texture = textures[i];
+				if (texture) {
+					glContext.bindTexture(glContext.TEXTURE_2D, texture.glTexture);
+				} else {
+					glContext.bindTexture(glContext.TEXTURE_2D, null);
+				}
+				console.debug(
+					"Bound to texture unit",
+					i,
+					"texture",
+					texture ? (appState.save.textures[i]?.fileName ?? "unknown") : "null",
+				);
+				const samplerLocation = glContext.getUniformLocation(shader.program, textureArrayName(i));
+				glContext.uniform1i(samplerLocation, i);
+			}
+			previousTextureCount = textures.length;
 		}
 
 		for (const mesh of meshBuffers) {

@@ -6,6 +6,8 @@ import defaultFragSource from "$lib/shaders//defaultFrag.glsl?raw";
 import type { CoyErrorLogs } from "./errors.js";
 import { deepClone, deepFreeze } from "./utils.svelte.js";
 import type { Texture, TextureInstance } from "./resources/texture/datatypes.js";
+import { loadTexture2D } from "./resources/texture/load.js";
+import { SvelteMap } from "svelte/reactivity";
 
 export interface SaveData {
 	viewMode: "2d" | "perspective-orbit" | "orthographic-orbit";
@@ -32,14 +34,16 @@ export interface AppState {
 	ephemeral: EphemeralData;
 }
 
-export const defaultAppState: Readonly<AppState> = deepFreeze<AppState>({
-	save: {
-		viewMode: "perspective-orbit",
-		vertexSource: defaultVertSource,
-		fragmentSource: defaultFragSource,
-		meshes: [],
-		textures: [],
-	},
+export const defaultSaveState: Readonly<SaveData> = deepFreeze<SaveData>({
+	viewMode: "perspective-orbit",
+	vertexSource: defaultVertSource,
+	fragmentSource: defaultFragSource,
+	meshes: [],
+	textures: [],
+});
+
+export const appState: AppState = $state({
+	save: deepClone(defaultSaveState),
 	persistent: {
 		theme: "one-dark",
 	},
@@ -51,4 +55,47 @@ export const defaultAppState: Readonly<AppState> = deepFreeze<AppState>({
 	},
 });
 
-export const appState: AppState = $state(deepClone(defaultAppState));
+const textureInstanceMap = new SvelteMap<Texture["id"], TextureInstance>();
+
+$effect.root(() => {
+	$effect(() => {
+		console.log("WebGL Context changed:", appState.ephemeral.glCtx);
+	});
+
+	$effect(() => {
+		const glCtx = appState.ephemeral.glCtx;
+		if (!glCtx) return;
+
+		// Make sure all texture instances are of the same GL context
+		for (const instance of textureInstanceMap.values()) {
+			if (glCtx.isTexture(instance.glTexture)) continue;
+			textureInstanceMap.clear();
+			appState.ephemeral.textureInstances = [];
+			console.log("Cleared texture instances due to WebGL Context change");
+			break;
+		}
+
+		// Update texture instances
+		for (const [id, instance] of textureInstanceMap.entries()) {
+			if (appState.save.textures.find((tex) => tex.id === id)) continue;
+			glCtx.deleteTexture(instance.glTexture);
+			textureInstanceMap.delete(id);
+		}
+
+		// Make sure the sveltw compiler tracks these correctly
+		const instanceMap = textureInstanceMap;
+		const textures = appState.save.textures;
+		Promise.all(
+			textures.map(async (texture) => {
+				if (instanceMap.has(texture.id)) return;
+				const textureInstance = await loadTexture2D(glCtx, texture);
+				instanceMap.set(texture.id, textureInstance);
+			}),
+		).then(() => {
+			// To array in the correct order
+			appState.ephemeral.textureInstances = appState.save.textures.map(
+				(tex) => instanceMap.get(tex.id)!,
+			);
+		});
+	});
+});

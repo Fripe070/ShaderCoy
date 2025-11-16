@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { appState, defaultAppState } from "$lib/state.svelte.js";
+	import { appState, defaultSaveState } from "$lib/state.svelte.js";
+	import { deepClone } from "$lib/utils.svelte.js";
 	import DropdownPicker, { type DropdownElement } from "./DropdownPicker.svelte";
 
 	const elements: DropdownElement[] = [
@@ -83,7 +84,7 @@
 			icon: "material-symbols:delete",
 			callback: () => {
 				if (!confirm("Are you sure you want to delete the current project?")) return;
-				appState.save = { ...defaultAppState.save };
+				appState.save = deepClone(defaultSaveState);
 			},
 			class: "text-negative hover:!bg-negative/10",
 		},
