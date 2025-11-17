@@ -8,10 +8,14 @@
 	import { isSmallScreen } from "$lib/utils.svelte.js";
 
 	onMount(() => {
-		initAssimp().then((module) => {
-			appState.ephemeral.assimpInstance = module;
-			console.log("Assimp initialized");
-		});
+		initAssimp()
+			.then((module) => {
+				appState.ephemeral.assimpInstance = module;
+				console.log("Assimp initialized");
+			})
+			.catch((err) => {
+				console.error("Failed to initialize Assimp:", err);
+			});
 	});
 </script>
 

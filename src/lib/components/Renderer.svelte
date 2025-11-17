@@ -92,7 +92,7 @@
 			}
 			lastTimestamp = timestamp;
 			if (frameDeltas !== null) {
-				if (frameDeltas.length >= maxFrameDeltas!) {
+				if (frameDeltas.length >= maxFrameDeltas) {
 					frameDeltas.shift();
 				}
 				frameDeltas.push(deltaTime);
@@ -182,19 +182,19 @@
 			renderCallback(glContext, deltaTime);
 		}
 
-		glContext.uniformMatrix4fv(shader.uniforms["modelMatrix"], false, modelMatrix);
-		glContext.uniformMatrix4fv(shader.uniforms["viewMatrix"], false, viewMatrix);
-		glContext.uniformMatrix4fv(shader.uniforms["projectionMatrix"], false, projectionMatrix);
+		glContext.uniformMatrix4fv(shader.uniforms.modelMatrix, false, modelMatrix);
+		glContext.uniformMatrix4fv(shader.uniforms.viewMatrix, false, viewMatrix);
+		glContext.uniformMatrix4fv(shader.uniforms.projectionMatrix, false, projectionMatrix);
 
 		// Set all the other uniforms
 		frameNumber++;
 		time += deltaTime;
-		glContext.uniform1ui(shader.uniforms["frameNumber"], frameNumber);
-		glContext.uniform1f(shader.uniforms["time"], time);
-		glContext.uniform1f(shader.uniforms["deltaTime"], deltaTime);
-		glContext.uniform2f(shader.uniforms["resolution"], canvas.width, canvas.height);
+		glContext.uniform1ui(shader.uniforms.frameNumber, frameNumber);
+		glContext.uniform1f(shader.uniforms.time, time);
+		glContext.uniform1f(shader.uniforms.deltaTime, deltaTime);
+		glContext.uniform2f(shader.uniforms.resolution, canvas.width, canvas.height);
 		glContext.uniform4f(
-			shader.uniforms["mouse"],
+			shader.uniforms.mouse,
 			mouseData.x,
 			mouseData.y,
 			mouseData.left ? 1 : 0,

@@ -11,5 +11,13 @@
 		"strict": true,
 		"module": "NodeNext",
 		"moduleResolution": "NodeNext"
-	}
+	},
+	"include": [
+		"src",
+		"tests",
+		".svelte-kit/types",
+		"eslint.config.js",
+		"eslint.types.config.js",
+		"vite.config.ts"
+	]
 }

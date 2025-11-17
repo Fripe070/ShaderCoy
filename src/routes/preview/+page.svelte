@@ -6,10 +6,14 @@
 	import ThemePicker from "$lib/components/ThemePicker.svelte";
 
 	onMount(() => {
-		initAssimp().then((module) => {
-			appState.ephemeral.assimpInstance = module;
-			console.log("Assimp initialized");
-		});
+		initAssimp()
+			.then((module) => {
+				appState.ephemeral.assimpInstance = module;
+				console.log("Assimp initialized");
+			})
+			.catch((err) => {
+				console.error("Failed to initialize Assimp:", err);
+			});
 	});
 
 	// TODO: Don't load any default shader or model

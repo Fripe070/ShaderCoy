@@ -30,7 +30,7 @@
 
 <svelte:window
 	onmouseup={() => (dragging = false)}
-	onmousemove={(event) => {
+	onmousemove={(event: MouseEvent) => {
 		if (!dragging) return;
 
 		factor =

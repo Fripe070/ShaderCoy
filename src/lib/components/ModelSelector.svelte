@@ -44,7 +44,7 @@
 			}
 			modelCache[model.id] = loadMeshes(assimp, [stringToAssimpFile(`${model.id}.obj`, objText)]);
 		}
-		meshes = modelCache[model.id] || meshes;
+		meshes = modelCache[model.id] ?? meshes;
 		return true;
 	}
 
@@ -99,9 +99,9 @@
 						}
 						try {
 							meshes = loadMeshes(assimp, [await fileToAssimpFile(file)]);
-							resolve(true);
 							fileName = file.name;
 							currentIcon = "material-symbols:attach-file";
+							resolve(true);
 						} catch (error) {
 							console.error("Failed to load mesh from user file", error);
 							resolve(false);
@@ -128,12 +128,16 @@
 	$effect(() => {
 		if (appState.ephemeral.assimpInstance === null) return;
 		const defaultPrimitive = modelPrimitives.find((m) => m.id === "cube") || modelPrimitives[0];
-		loadModel(defaultPrimitive).then((success) => {
-			if (success) {
-				fileName = defaultPrimitive.name;
-				currentIcon = defaultPrimitive.icon;
-			}
-		});
+		loadModel(defaultPrimitive)
+			.then((success) => {
+				if (success) {
+					fileName = defaultPrimitive.name;
+					currentIcon = defaultPrimitive.icon;
+				}
+			})
+			.catch((err) => {
+				console.error("Failed to load default model:", err);
+			});
 	});
 </script>
 
