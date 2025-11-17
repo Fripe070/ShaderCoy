@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@plugin '@tailwindcss/forms';
+@plugin "@tailwindcss/forms";
 
 @import "./themes/one-dark.css";
 @import "./themes/tokyo-night.css";
