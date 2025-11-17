@@ -81,7 +81,7 @@
 
 						const assimpFiles = [];
 						for (let i = 0; i < files.length; i++) {
-							assimpFiles.push(await fileToAssimpFile(files[i]!));
+							assimpFiles.push(await fileToAssimpFile(files[i]));
 						}
 						try {
 							loadedModel = loadModel(assimp, assimpFiles);
