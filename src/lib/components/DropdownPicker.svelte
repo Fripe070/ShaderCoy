@@ -15,8 +15,7 @@
 		elements,
 		title = null,
 		showTitle = true,
-		icon: defaultIcon = null,
-		swapIcon = true,
+		icon = null,
 		expanded = $bindable(false),
 		elementSnippet = null,
 		buttonChildren = undefined,
@@ -28,7 +27,6 @@
 		title?: string | null;
 		showTitle?: boolean;
 		icon?: string | null;
-		swapIcon?: boolean;
 		expanded?: boolean;
 		elementSnippet?: Snippet<[E]> | null;
 		buttonChildren?: Snippet;
@@ -36,14 +34,12 @@
 		class?: string[] | string;
 		dropdownElement?: HTMLElement | null;
 	} = $props();
-
-	let swappedIcon = $state(defaultIcon);
 </script>
 
 <DropdownButton
 	bind:expanded
 	bind:dropdownElement
-	icon={swapIcon && defaultIcon ? swappedIcon : defaultIcon}
+	{icon}
 	label={title}
 	showLabel={showTitle}
 	class={className}
@@ -64,7 +60,6 @@
 					event.stopPropagation();
 					const close = () => {
 						expanded = false;
-						if (element.icon) swappedIcon = element.icon;
 					};
 					// Only close after the callback returns successfully
 					let result = element.callback(event);
@@ -72,12 +67,6 @@
 						result = await result;
 					}
 					if (result !== false) close();
-
-					// let result = element.callback(event);
-					// if (result instanceof Promise) {
-					// 	result = await result;
-					// }
-					// if (result === false) return;
 				}}
 			>
 				{#if elementSnippet}

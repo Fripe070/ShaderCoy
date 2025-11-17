@@ -14,6 +14,7 @@
 	import { mat4 } from "gl-matrix";
 	import type { CameraController } from "./ViewControlls/ViewController.js";
 
+	// TODO: Decouple preview from appState
 	let {
 		toolbarChildren = undefined,
 	}: {
@@ -78,11 +79,11 @@
 		/>
 		<div class="flex flex-row">
 			<ViewModePicker />
-			<ModelSelector bind:meshes={appState.save.meshes} />
+			<ModelSelector bind:model={appState.save.model} />
 			{#if canFullscreen}
 				<button
 					class={[
-						"flex h-6 w-6 flex-row items-center justify-center",
+						"flex size-6 flex-row items-center justify-center",
 						"bg-background-primary hover:bg-background-selected",
 					]}
 					onclick={() => {
@@ -102,7 +103,7 @@
 		<ViewController mode={appState.save.viewMode} bind:controller={cameraController}>
 			<Renderer
 				shader={cachedShader}
-				meshes={appState.save.meshes}
+				meshes={appState.save.model?.meshes ?? []}
 				textures={appState.ephemeral.textureInstances}
 				viewMatrix={cameraController?.viewMatrix ?? mat4.create()}
 				projectionMatrix={cameraController?.projectionMatrix ?? mat4.create()}

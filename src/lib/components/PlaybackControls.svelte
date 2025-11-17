@@ -25,7 +25,7 @@
 <div class="flex h-6 min-w-6 shrink flex-row bg-background-primary select-none">
 	<button
 		class={[
-			"flex h-6 w-6 cursor-pointer items-center justify-center ",
+			"flex size-6 cursor-pointer items-center justify-center ",
 			isPlaying ? "hover:bg-background-selected" : "bg-negative/10 hover:bg-negative/25",
 		]}
 		onclick={() => (isPlaying = !isPlaying)}
@@ -51,9 +51,9 @@
 		]}
 	>
 		<span class="px-2">
-			{(frameTime * 1000).toFixed(0)}ms
+			{isNaN(frameTime) ? "--" : (frameTime * 1000).toFixed(0)}ms
 			{#if !isTooSmall}
-				({fps.toFixed(0)}&nbsp;FPS)
+				({isNaN(fps) ? "--" : fps.toFixed(0)}&nbsp;FPS)
 			{/if}
 		</span>
 	</div>

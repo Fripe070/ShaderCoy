@@ -2,7 +2,7 @@
 	import { appState, type SaveData } from "$lib/state.svelte.js";
 	import DropdownPicker from "./DropdownPicker.svelte";
 
-	const elements: Record<SaveData["viewMode"], { name: string; icon: string }> = {
+	const elements = {
 		"2d": {
 			name: "2D Viewport",
 			icon: "material-symbols:monitor-outline",
@@ -15,7 +15,7 @@
 			name: "Orthographic",
 			icon: "material-symbols:crop-rotate",
 		},
-	};
+	} as const satisfies Record<SaveData["viewMode"], { name: string; icon: string }>;
 </script>
 
 <DropdownPicker

@@ -7,7 +7,7 @@ const BASIS = {
 	forward: [0, 0, -1],
 	up: [0, 1, 0],
 	right: [1, 0, 0],
-} as const;
+} as const satisfies Record<string, vec3>;
 const cursors = {
 	default: "grab",
 	grabbing: "all-scroll",

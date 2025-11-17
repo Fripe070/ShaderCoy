@@ -6,15 +6,23 @@
 	import PreviewPanel from "$lib/components/PreviewPanel.svelte";
 	import EditingPanel from "$lib/components/EditingPanel.svelte";
 	import { isSmallScreen } from "$lib/utils.svelte.js";
+	import { loadModelPrimitive } from "$lib/components/ModelSelector.svelte";
+
+	const setup = async () => {
+		appState.ephemeral.assimpInstance = await initAssimp();
+		console.log("Assimp initialized");
+		if (!appState.save.model) {
+			appState.save.model = await loadModelPrimitive("cube");
+		}
+	};
 
 	onMount(() => {
-		initAssimp()
-			.then((module) => {
-				appState.ephemeral.assimpInstance = module;
-				console.log("Assimp initialized");
+		setup()
+			.then(() => {
+				console.log("Finished setup");
 			})
-			.catch((err) => {
-				console.error("Failed to initialize Assimp:", err);
+			.catch((error) => {
+				console.error("Failed on setup:", error);
 			});
 	});
 </script>

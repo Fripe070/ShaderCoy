@@ -1,4 +1,4 @@
-import { Mesh, VERTEX_SCHEMA, type MeshBuffers, type MeshVertex } from "./datatypes.js";
+import { Mesh, VERTEX_SCHEMA, type MeshBuffers, type MeshVertex, type Model } from "./datatypes.js";
 import { type AssimpTSFile, type MainModule as AssimpTSModule } from "assimpts";
 import { mat3, mat4, vec3 } from "gl-matrix";
 
@@ -17,17 +17,22 @@ export function stringToAssimpFile(path: string, data: string): AssimpTSFile {
 }
 
 // TODO: Perform in web worker?
-export function loadMeshes(assimp: AssimpTSModule, files: AssimpTSFile[]): Mesh[] {
+export function loadModel(assimp: AssimpTSModule, files: AssimpTSFile[]): Model {
 	const flags: number = assimp.PostProcessFlags.targetRealtime_MaxQuality.value;
 	// | assimp.PostProcessFlags.preTransformVertices.value;
-	return assimp
+	const [fileName, meshes] = assimp
 		.processFiles(files, "assjson", flags)
 		.map((file) => {
 			const decoder = new TextDecoder("utf-8");
 			const json = JSON.parse(decoder.decode(file));
-			return assjsonToMesh(json);
+			return [json.rootnode.name, assjsonToMesh(json)] as const;
 		})
 		.flat();
+
+	return {
+		name: fileName || "Unnamed Model",
+		meshes,
+	};
 }
 
 export function meshToBuffers(mesh: Mesh, glCtx: WebGL2RenderingContext): MeshBuffers {
@@ -74,8 +79,8 @@ interface AssimpMesh {
 }
 
 function convertAssimpMesh(mesh: AssimpMesh, transform: mat4): Mesh {
-	const result = new Mesh([], []);
 	const meshName: string = mesh.name ?? "<unnamed>";
+	const result = new Mesh(meshName, [], []);
 
 	// Sanity checks
 	if (mesh.vertices.length % 3 !== 0)

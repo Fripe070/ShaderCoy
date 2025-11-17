@@ -4,9 +4,10 @@
 	import TextureEditModal from "./TextureEditModal.svelte";
 	import type { Texture } from "$lib/resources/texture/datatypes.js";
 
+	// TODO: This component should not directly depend on appState
 	const maxFragTextures: number = $derived.by(() => {
-		appState.save.fragmentSource; // Recompute when shader changes
 		if (!appState.ephemeral.glCtx!) return 0;
+		appState.save.fragmentSource; // Recompute when shader changes
 		return appState.ephemeral.glCtx.getParameter(appState.ephemeral.glCtx.MAX_TEXTURE_IMAGE_UNITS);
 	});
 	$effect(() => {
@@ -175,7 +176,7 @@
 			<!-- Edit and delete buttons -->
 			<button
 				class={[
-					"flex h-6 w-6 items-center justify-center",
+					"flex size-6 items-center justify-center",
 					"cursor-pointer hover:bg-background-selected",
 				]}
 				title="Edit Texture"
@@ -244,7 +245,7 @@
 			</button>
 
 			<button
-				class="flex h-6 w-6 cursor-pointer items-center justify-center bg-negative/30 hover:bg-negative/50"
+				class="flex size-6 cursor-pointer items-center justify-center bg-negative/30 hover:bg-negative/50"
 				title="Delete Texture"
 				onclick={() => {
 					appState.save.textures.splice(index, 1);

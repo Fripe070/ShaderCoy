@@ -1,4 +1,4 @@
-import type { Mesh } from "$lib/resources/model/datatypes.js";
+import type { Mesh, Model } from "$lib/resources/model/datatypes.js";
 import type { MainModule as AssimpTSModule } from "assimpts";
 
 import defaultVertSource from "$lib/shaders//defaultVert.glsl?raw";
@@ -13,7 +13,7 @@ export interface SaveData {
 	viewMode: "2d" | "perspective-orbit" | "orthographic-orbit";
 	vertexSource: string;
 	fragmentSource: string;
-	meshes: Mesh[];
+	model: Model | null;
 	textures: Texture[];
 }
 // TODO: Store entire object in localStorage
@@ -38,7 +38,7 @@ export const defaultSaveState: Readonly<SaveData> = deepFreeze<SaveData>({
 	viewMode: "perspective-orbit",
 	vertexSource: defaultVertSource,
 	fragmentSource: defaultFragSource,
-	meshes: [],
+	model: null,
 	textures: [],
 });
 
@@ -56,12 +56,7 @@ export const appState: AppState = $state({
 });
 
 const textureInstanceMap = new SvelteMap<Texture["id"], TextureInstance>();
-
 $effect.root(() => {
-	$effect(() => {
-		console.log("WebGL Context changed:", appState.ephemeral.glCtx);
-	});
-
 	$effect(() => {
 		const glCtx = appState.ephemeral.glCtx;
 		if (!glCtx) return;

@@ -8,7 +8,6 @@
 	import { meshToBuffers } from "$lib/resources/model/load.js";
 	import { textureArrayName, type CoyShader } from "$lib/resources/shader/datatypes.js";
 	import type { TextureInstance } from "$lib/resources/texture/datatypes.js";
-	import { appState } from "$lib/state.svelte.js";
 	import { mat4 } from "gl-matrix";
 	import { onMount } from "svelte";
 
@@ -124,12 +123,8 @@
 	});
 
 	function doResize() {
-		// FIXME: I think that I want specified dimensions to constrain
-		// the aspect ratio of our canvas, but right now it just forces a size.
-		// Is this something I want to change?
 		const width = dimensions[0] ?? canvas.clientWidth * devicePixelRatio;
 		const height = dimensions[1] ?? canvas.clientHeight * devicePixelRatio;
-		console.log("Resizing canvas to", width, height);
 		canvas.width = width;
 		canvas.height = height;
 		glContext?.viewport(0, 0, width, height);
@@ -148,7 +143,6 @@
 		}
 		const aspectRatio = canvas.clientWidth / canvas.clientHeight;
 		projectionMatrix = projection(aspectRatio);
-		console.debug("Updated projection matrix with aspect ratio", aspectRatio);
 	});
 
 	let previousTextureCount = 0;
@@ -211,12 +205,6 @@
 				} else {
 					glContext.bindTexture(glContext.TEXTURE_2D, null);
 				}
-				console.debug(
-					"Bound to texture unit",
-					i,
-					"texture",
-					texture ? (appState.save.textures[i]?.fileName ?? "unknown") : "null",
-				);
 				const samplerLocation = glContext.getUniformLocation(shader.program, textureArrayName(i));
 				glContext.uniform1i(samplerLocation, i);
 			}

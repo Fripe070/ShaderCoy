@@ -39,10 +39,15 @@ export interface MeshBuffers {
 	indexCount: number;
 }
 
-/** Loaded mesh data stored in normal memory. */ // is a class so that $state does not track its properties (lag)
+/** Mesh data loaded and stored in RAM. */ // is a class so that $state does not track its properties (laggy)
 export class Mesh {
 	constructor(
+		public name: string,
 		public vertices: MeshVertex[],
 		public indices: number[],
 	) {}
+}
+export interface Model {
+	name: string;
+	meshes: Mesh[];
 }
