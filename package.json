@@ -9,10 +9,12 @@
 		"prepack": "svelte-kit sync && svelte-package && publint",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+		"lint": "eslint .",
+		"lint:fix": "eslint . --fix",
+		"lint:types": "eslint --config eslint.types.config.js .",
+		"lint:types:fix": "eslint --config eslint.types.config.js . --fix",
 		"format": "prettier --write .",
-		"lint": "eslint . && prettier --check .",
-		"test:unit": "vitest",
-		"test": "npm run test:unit -- --run",
+		"format:check": "prettier --check .",
 		"grammar:build": "npx lezer-generator src/lib/editor/glsl/glsl.grammar -o src/lib/editor/glsl/parser.js"
 	},
 	"files": [
@@ -36,19 +38,19 @@
 		"svelte": "^5.0.0"
 	},
 	"devDependencies": {
-		"@eslint/compat": "^1.4.1",
+		"@eslint/compat": "^2.0.0",
 		"@eslint/js": "^9.39.1",
 		"@fontsource-variable/inter": "^5.2.8",
 		"@fontsource/iosevka": "^5.2.5",
 		"@iconify/json": "^2.2.406",
 		"@lezer/generator": "^1.8.0",
-		"@sveltejs/adapter-static": "^0.0.17",
+		"@sveltejs/adapter-static": "^3.0.10",
 		"@sveltejs/kit": "^2.48.5",
 		"@sveltejs/package": "^2.5.4",
 		"@sveltejs/vite-plugin-svelte": "^6.2.1",
 		"@tailwindcss/forms": "^0.5.10",
 		"@tailwindcss/vite": "^4.1.17",
-		"@types/node": "^22.19.1",
+		"@types/node": "^24.10.1",
 		"assimpts": "^0.1.0",
 		"codemirror": "^6.0.2",
 		"eslint": "^9.39.1",
@@ -59,7 +61,7 @@
 		"iconify-icon": "^3.0.2",
 		"prettier": "^3.6.2",
 		"prettier-plugin-svelte": "^3.4.0",
-		"prettier-plugin-tailwindcss": "^0.6.14",
+		"prettier-plugin-tailwindcss": "^0.7.1",
 		"publint": "^0.3.15",
 		"svelte": "^5.43.6",
 		"svelte-check": "^4.3.4",
@@ -68,7 +70,7 @@
 		"typescript": "^5.9.3",
 		"typescript-eslint": "^8.46.4",
 		"vite": "^7.2.2",
-		"vitest": "^3.2.4"
+		"vitest": "^4.0.9"
 	},
 	"keywords": [
 		"svelte"

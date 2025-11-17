@@ -106,18 +106,18 @@ function convertAssimpMesh(mesh: AssimpMesh, transform: mat4): Mesh {
 
 	for (let vertIndex = 0; vertIndex < vertexCount; vertIndex++) {
 		const position: [number, number, number] = [
-			mesh.vertices[vertIndex * 3]!,
-			mesh.vertices[vertIndex * 3 + 1]!,
-			mesh.vertices[vertIndex * 3 + 2]!,
+			mesh.vertices[vertIndex * 3],
+			mesh.vertices[vertIndex * 3 + 1],
+			mesh.vertices[vertIndex * 3 + 2],
 		];
 		vec3.transformMat4(position, position, transform);
 
 		let normal: [number, number, number] = [0, 1, 0];
 		if (mesh.normals) {
 			normal = [
-				mesh.normals[vertIndex * 3]!,
-				mesh.normals[vertIndex * 3 + 1]!,
-				mesh.normals[vertIndex * 3 + 2]!,
+				mesh.normals[vertIndex * 3],
+				mesh.normals[vertIndex * 3 + 1],
+				mesh.normals[vertIndex * 3 + 2],
 			];
 		}
 

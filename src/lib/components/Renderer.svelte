@@ -151,15 +151,15 @@
 		console.debug("Updated projection matrix with aspect ratio", aspectRatio);
 	});
 
-	let previousTextureCount: number = 0;
-	let texturesChanged: boolean = false;
+	let previousTextureCount = 0;
+	let texturesChanged = false;
 	$effect(() => {
 		[glContext, textures]; // React when either changes
 		texturesChanged = true;
 	});
 
 	let frameNumber: GLuint = 0;
-	let time: number = 0;
+	let time = 0;
 	let mouseData = { x: 0, y: 0, left: false, right: false };
 
 	function paint(deltaTime: number) {

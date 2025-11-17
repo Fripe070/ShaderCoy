@@ -3,13 +3,11 @@ import FragmentTab from "./FragmentTab.svelte";
 import TextureTab from "./TextureTab.svelte";
 import VertexTab from "./VertexTab.svelte";
 
-const tabs: {
-	[id: string]: {
+const tabs: Record<string, {
 		component: Component;
 		label: string;
 		icon: string;
-	};
-} = {
+	}> = {
 	fragment: {
 		component: FragmentTab,
 		label: "Fragment",
