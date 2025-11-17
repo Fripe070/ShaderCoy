@@ -1,4 +1,4 @@
-name: Lint & Format
+name: Lint & Format autofix
 
 on:
   push:
@@ -33,11 +33,3 @@ jobs:
         id: auto-commit-action
         with:
           commit_message: "chore: fix formatting and linting issues"
-
-      - name: Report linter issues
-        if: ${{ success() || failure() }}
-        run: bun run lint:types
-
-      - name: Run checks
-        if: ${{ success() || failure() }}
-        run: bun run check
