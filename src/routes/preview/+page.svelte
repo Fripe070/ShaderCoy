@@ -4,6 +4,7 @@
 	import initAssimp from "assimpts";
 	import PreviewPanel from "$lib/components/PreviewPanel.svelte";
 	import ThemePicker from "$lib/components/ThemePicker.svelte";
+	import SaveStateMessageListener from "$lib/components/SaveStateMessageListener.svelte";
 
 	onMount(() => {
 		initAssimp()
@@ -24,10 +25,8 @@
 	<title>ShaderCoy</title>
 </svelte:head>
 
+<SaveStateMessageListener />
+
 <div class="h-full w-full">
-	<PreviewPanel>
-		{#snippet toolbarChildren()}
-			<ThemePicker />
-		{/snippet}
-	</PreviewPanel>
+	<PreviewPanel standalone={true} />
 </div>

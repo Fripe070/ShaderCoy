@@ -7,6 +7,7 @@
 	import EditingPanel from "$lib/components/EditingPanel.svelte";
 	import { isSmallScreen } from "$lib/utils.svelte.js";
 	import { loadModelPrimitive } from "$lib/components/ModelSelector.svelte";
+	import SaveStateMessageListener from "$lib/components/SaveStateMessageListener.svelte";
 
 	const setup = async () => {
 		appState.ephemeral.assimpInstance = await initAssimp();
@@ -30,6 +31,8 @@
 <svelte:head>
 	<title>ShaderCoy</title>
 </svelte:head>
+
+<SaveStateMessageListener />
 
 <div class="h-full w-full">
 	<DragPanes
