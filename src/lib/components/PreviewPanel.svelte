@@ -13,12 +13,13 @@
 	import ViewController from "./ViewControlls/ViewController.svelte";
 	import { mat4 } from "gl-matrix";
 	import type { CameraController } from "./ViewControlls/ViewController.js";
+	import ThemePicker from "./ThemePicker.svelte";
 
 	// TODO: Decouple preview from appState
 	let {
-		toolbarChildren = undefined,
+		standalone = false,
 	}: {
-		toolbarChildren?: Snippet | undefined;
+		standalone?: boolean;
 	} = $props();
 
 	let shader: CoyShader | CoyErrorReport[] | null = $derived.by(() => {
@@ -79,7 +80,9 @@
 		/>
 		<div class="flex flex-row">
 			<ViewModePicker />
-			<ModelSelector bind:model={appState.save.model} />
+			{#if !standalone}
+				<ModelSelector bind:model={appState.save.model} />
+			{/if}
 			{#if canFullscreen}
 				<button
 					class={[
@@ -94,10 +97,8 @@
 					<iconify-icon icon="material-symbols:fullscreen"></iconify-icon>
 				</button>
 			{/if}
+			<ThemePicker />
 		</div>
-		{#if toolbarChildren}
-			{@render toolbarChildren()}
-		{/if}
 	</div>
 	<div class="relative grow bg-background-tertiary" bind:this={fullscreenHandle}>
 		<ViewController mode={appState.save.viewMode} bind:controller={cameraController}>

@@ -29,3 +29,20 @@
 		}
 	});
 </script>
+
+<svelte:window
+	onmessage={(event) => {
+		// Allow iframe host to set theme
+		if (event.data?.type === "setTheme" && event.data?.theme) {
+			const themeId = event.data.theme;
+			if (THEMES[themeId]) {
+				appState.persistent.theme = themeId;
+			} else {
+				console.warn(
+					`Received invalid theme ID: "${themeId}". ` +
+						`Available themes: ${Object.keys(THEMES).join(", ")}`,
+				);
+			}
+		}
+	}}
+/>
