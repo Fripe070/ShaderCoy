@@ -97,7 +97,9 @@
 					<iconify-icon icon="material-symbols:fullscreen"></iconify-icon>
 				</button>
 			{/if}
-			<ThemePicker />
+			{#if standalone}
+				<ThemePicker />
+			{/if}
 		</div>
 	</div>
 	<div class="relative grow bg-background-tertiary" bind:this={fullscreenHandle}>

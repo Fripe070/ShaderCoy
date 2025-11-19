@@ -2,7 +2,7 @@
 	import { appState } from "$lib/state.svelte.js";
 	import { onMount } from "svelte";
 	import initAssimp from "assimpts";
-	import DragPanes from "$lib/components/DragPanes.svelte";
+	import DragPanes from "$lib/components/generic/DragPanes.svelte";
 	import PreviewPanel from "$lib/components/PreviewPanel.svelte";
 	import EditingPanel from "$lib/components/EditingPanel.svelte";
 	import { isSmallScreen } from "$lib/utils.svelte.js";

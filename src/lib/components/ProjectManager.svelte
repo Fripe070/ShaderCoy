@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { appState, defaultSaveState } from "$lib/state.svelte.js";
 	import { deepClone } from "$lib/utils.svelte.js";
-	import DropdownPicker, { type DropdownElement } from "./DropdownPicker.svelte";
+	import DropdownPicker, { type DropdownElement } from "./generic/DropdownPicker.svelte";
 
 	const elements: DropdownElement[] = [
 		{

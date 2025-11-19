@@ -24,7 +24,7 @@
 	import { type Mesh, type Model } from "$lib/resources/model/datatypes.js";
 	import { fileToAssimpFile, loadModel, stringToAssimpFile } from "$lib/resources/model/load.js";
 	import { appState } from "$lib/state.svelte.js";
-	import DropdownPicker from "./DropdownPicker.svelte";
+	import DropdownPicker, { type DropdownElement } from "./generic/DropdownPicker.svelte";
 
 	let { model: loadedModel = $bindable() }: { model: Model | null } = $props();
 
@@ -37,45 +37,43 @@
 	} as const satisfies Record<modelPrimitive, { name: string; icon: string }>;
 
 	let loading: boolean = $state(false);
+	let showing: boolean = $state(false);
 
-	let dropdownElement: HTMLElement | null = $state<HTMLElement | null>(null);
-
-	const elements = [
+	const elements: DropdownElement[] = [
 		...Object.entries(modelPrimitiveData).map(([id, primitive]) => ({
 			icon: primitive.icon,
 			name: primitive.name,
 			callback: async () => {
 				loadedModel = await loadModelPrimitive(id as modelPrimitive);
-				return true;
 			},
 		})),
 		{
 			icon: "material-symbols:upload-2",
 			name: "Custom",
-			callback: async (event: MouseEvent): Promise<boolean> => {
+			callback: async (event: MouseEvent) => {
 				// Return true if a file was selected and loaded successfully, false otherwise.
-				return await new Promise<boolean>((resolver) => {
+				await new Promise<void>((resolver) => {
 					const fileInput = document.createElement("input");
 					fileInput.type = "file";
 					fileInput.accept = ".obj,.gltf,.glb,.fbx";
 					fileInput.style.display = "none";
 					(event.currentTarget as Node).parentElement!.appendChild(fileInput);
 
-					const resolve = (val: boolean) => {
+					const resolve = () => {
 						fileInput.remove();
-						resolver(val);
+						resolver();
 					};
 					fileInput.onchange = async () => {
 						const files = fileInput.files;
 						if (!files || files.length === 0) {
-							resolve(false);
+							resolve();
 							return;
 						}
 
 						const assimp = appState.ephemeral.assimpInstance;
 						if (!assimp) {
 							console.error("Assimp instance not initialized");
-							resolve(false);
+							resolve();
 							return;
 						}
 
@@ -85,14 +83,14 @@
 						}
 						try {
 							loadedModel = loadModel(assimp, assimpFiles);
-							resolve(true);
+							resolve();
 						} catch (error) {
 							console.error("Failed to load model from user file", error);
-							resolve(false);
+							resolve();
 						}
 					};
-					fileInput.onabort = () => resolve(false);
-					fileInput.oncancel = () => resolve(false);
+					fileInput.onabort = () => resolve();
+					fileInput.oncancel = () => resolve();
 
 					fileInput.click();
 				});
@@ -101,19 +99,19 @@
 	];
 </script>
 
-<!-- FIXME: Not closing when view mode dropdown is clicked -->
 <DropdownPicker
-	bind:dropdownElement
-	class="min-w-14"
+	bind:showing
+	placement="bottom-end"
 	icon="material-symbols:interests-outline"
-	title={loadedModel?.name ?? "Model"}
+	label={loadedModel?.name ?? "Model"}
 	elements={elements.map((element) => ({
 		...element,
 		callback: async (event: MouseEvent) => {
+			console.log("Loading model...");
 			loading = true;
-			const result = await element.callback(event);
+			await element.callback(event);
 			loading = false;
-			return result;
+			showing = false;
 		},
 	}))}
 >

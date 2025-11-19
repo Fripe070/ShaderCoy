@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { appState, type SaveData } from "$lib/state.svelte.js";
-	import DropdownPicker from "./DropdownPicker.svelte";
+	import DropdownPicker from "./generic/DropdownPicker.svelte";
 
 	const elements = {
 		"2d": {

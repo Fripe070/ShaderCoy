@@ -1,5 +1,5 @@
 <script lang="ts">
-	import DynamicInput from "./DynamicInput.svelte";
+	import DynamicInput from "./generic/DynamicInput.svelte";
 
 	let {
 		allowNulls = false,

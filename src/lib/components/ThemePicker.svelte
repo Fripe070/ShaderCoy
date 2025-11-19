@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { appState } from "$lib/state.svelte.js";
 	import { canUseLocalStorage } from "$lib/utils.svelte.js";
-	import DropdownPicker from "./DropdownPicker.svelte";
+	import DropdownPicker from "./generic/DropdownPicker.svelte";
 	import { THEMES, type ThemeElement } from "./ThemeLoader.svelte";
 
 	let elements: ThemeElement[] = Object.entries(THEMES).map(([id, name]) => ({
@@ -20,7 +20,7 @@
 	<div
 		class={[
 			"flex h-full w-full flex-row items-center gap-1 px-1",
-			"bg-background-primary text-foreground-primary",
+			"bg-background-primary text-foreground-primary hover:bg-background-selected",
 			element.themeId === appState.persistent.theme ? "border-l-3 border-accent" : "",
 		]}
 		data-theme={/* Used for preview styling */ element.themeId}
