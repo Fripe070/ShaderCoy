@@ -66,4 +66,5 @@ State managed via Svelte 5 runes in `src/lib/state.svelte.ts`, with interfaces f
 - **UI**: TailwindCSS, Iconify for icons
 
 ## Deployment
+
 Static site via SvelteKit adapter-static; served from `build/` directory.

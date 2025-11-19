@@ -1,5 +1,5 @@
 <script lang="ts" module>
-	let dropdownIdCounter: number = 0;
+	let dropdownIdCounter = 0;
 </script>
 
 <script lang="ts">
