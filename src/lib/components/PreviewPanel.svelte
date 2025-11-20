@@ -10,9 +10,9 @@
 	import DimensionsSelector from "./DimensionsSelector.svelte";
 	import ModelSelector from "./ModelSelector.svelte";
 	import type { Snippet } from "svelte";
-	import ViewController from "./ViewControlls/ViewController.svelte";
+	import ViewController from "./view_controls/ViewController.svelte";
 	import { mat4 } from "gl-matrix";
-	import type { CameraController } from "./ViewControlls/ViewController.js";
+	import type { CameraController } from "./view_controls/ViewController.js";
 	import ThemePicker from "./ThemePicker.svelte";
 
 	// TODO: Decouple preview from appState
