@@ -11,5 +11,6 @@ export interface CameraController {
 	handlePointerDown?(event: PointerEvent): void;
 	handlePointerUp?(event: PointerEvent): void;
 	handlePointerMove?(event: PointerEvent): void;
+	handleDoubleClick?(event: MouseEvent): void;
 	handleWheel?(event: WheelEvent): void;
 }

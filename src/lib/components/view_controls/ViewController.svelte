@@ -43,6 +43,7 @@
 	onpointerdown={(event) => controller?.handlePointerDown?.(event)}
 	onpointerup={(event) => controller?.handlePointerUp?.(event)}
 	onpointermove={(event) => controller?.handlePointerMove?.(event)}
+	ondblclick={(event) => controller?.handleDoubleClick?.(event)}
 >
 	{@render children()}
 </div>

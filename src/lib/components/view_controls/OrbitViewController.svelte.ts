@@ -17,7 +17,6 @@ const PointerButton = {
 	Middle: 4,
 	Secondary: 2,
 } as const;
-const DOUBLE_CLICK_DELTA = 300; // ms
 
 const SPEEDS: Record<string, number> = {
 	ROTATION: 4,
@@ -77,7 +76,6 @@ const FAR = 100.0;
 
 let orbitState: CameraOrbitState = $state({ ...DEFAULT_ORBIT_STATE });
 let cursorState: string = $state(cursors.default);
-let lastClickTime: DOMHighResTimeStamp = -Infinity;
 const trackedPointers = new SvelteMap<number, vec2>();
 
 export default function orbitCameraController(
@@ -102,20 +100,13 @@ export default function orbitCameraController(
 	}
 
 	return {
+		handleDoubleClick() {
+			orbitState = { ...DEFAULT_ORBIT_STATE }; // Reset
+		},
 		handlePointerDown(event: PointerEvent) {
 			trackedPointers.set(event.pointerId, [event.clientX, event.clientY]);
 			(event.target as HTMLElement).setPointerCapture(event.pointerId);
 			cursorState = cursors.grabbing;
-
-			if (
-				trackedPointers.size == 1 &&
-				event.buttons & PointerButton.Primary &&
-				performance.now() - lastClickTime < DOUBLE_CLICK_DELTA
-			) {
-				// Reset on double click
-				orbitState = { ...DEFAULT_ORBIT_STATE };
-			}
-			lastClickTime = performance.now();
 		},
 		handlePointerUp(event: PointerEvent) {
 			trackedPointers.delete(event.pointerId);
@@ -133,12 +124,6 @@ export default function orbitCameraController(
 			trackedPointers.set(event.pointerId, currentPos);
 
 			const windowDelta = vec2.subtract(vec2.create(), currentPos, previousPos);
-
-			// If the pointer moved a significant (non-noise) amount, we did not mean to double-click
-			const doubleTapThreshold = 5; // css pixels
-			if (vec2.length(windowDelta) < doubleTapThreshold) {
-				lastClickTime = -Infinity;
-			}
 
 			const elementBounds = (event.target as HTMLElement).getBoundingClientRect();
 			const maxSide = Math.max(elementBounds.width, elementBounds.height);
