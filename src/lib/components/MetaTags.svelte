@@ -1,14 +1,31 @@
-<script lang="ts">
+<script lang="ts" module>
 	import { resolve } from "$app/paths";
+
+	export const prerender = true;
 
 	const title = "ShaderCoy";
 	const description = "A web-based shader editor with a powerful live preview.";
-
-	const favicon = resolve("/favicon.svg", {});
 	const canonical = resolve("/", {});
+
+	const icons = [192, 512, 1024].map((size) => {
+		const uri = `$static/icon-${size}.webp`;
+		return {
+			src: resolve(uri, {}),
+			type: "image/webp",
+			sizes: `${size}x${size}`,
+		};
+	});
+	export const webManifest = {
+		short_name: title,
+		name: "ShaderCoy Shader Editor",
+		description: description,
+		icons,
+		display: "standalone",
+		background_color: "#21252b",
+	};
 </script>
 
-<link rel="icon" type="image/svg+xml" href={favicon} />
+<link rel="icon" type="image/svg+xml" href={resolve("/favicon.svg", {})} />
 
 <title>{title}</title>
 <meta name="description" content={description} />

@@ -8,6 +8,9 @@ const config = {
 	preprocess: vitePreprocess(),
 
 	kit: {
+		alias: {
+			$static: "static",
+		},
 		adapter: staticAdapter({
 			fallback: "404.html",
 		}),
