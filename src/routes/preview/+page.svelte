@@ -21,10 +21,6 @@
 	// TODO: Allow passing in a shader/model through an iframe
 </script>
 
-<svelte:head>
-	<title>ShaderCoy</title>
-</svelte:head>
-
 <SaveStateMessageListener />
 
 <div class="h-full w-full">

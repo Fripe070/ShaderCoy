@@ -6,6 +6,7 @@
 	import type { Attachment } from "svelte/attachments";
 	import { appState } from "$lib/state.svelte.js";
 	import ThemeLoader from "$lib/components/ThemeLoader.svelte";
+	import MetaTags from "$lib/components/MetaTags.svelte";
 
 	let { children } = $props();
 
@@ -14,6 +15,10 @@
 		return () => {};
 	};
 </script>
+
+<svelte:head>
+	<MetaTags />
+</svelte:head>
 
 <svelte:body {@attach themeAttachment} />
 
