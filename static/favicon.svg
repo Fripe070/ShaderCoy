@@ -2,15 +2,15 @@
 <svg viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
   <style>
     .left { fill: #111; }
-    .right { fill: #333; }
-    .top { fill: #222; }
+    .right { fill: #222; }
+    .top { fill: #333; }
     @media (prefers-color-scheme: dark) {
-    .left { fill: #ddd; }
-    .right { fill: #fff; }
-    .top { fill: #aaa; }
+      .left { fill: #aaa; }
+      .right { fill: #ddd; }
+      .top { fill: #fff; }
     }
   </style>
-  <path class="left" d="M 64,126 64,29 0,11.5 7,92 Z" />
-  <path class="right" d="M 64,126 64,29 128,11.5 121,92 Z" />
-  <path class="top" d="M 64,2 0,11.5 64,29 128,11.5 Z" />
+  <path class="left" d="M 13.658207,93.064848 63.999899,122.12952 64,64 13.658308,34.935328 Z" />
+  <path class="right" d="m 63.999898,64.000013 1.03e-4,58.129497 50.341689,-29.064655 -1e-4,-58.129514 z" />
+  <path class="top" d="M 64,5.870304 13.658409,34.935152 64,64 114.34159,34.935152 Z" />
 </svg>
