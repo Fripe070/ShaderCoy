@@ -3,8 +3,8 @@
 	import { flip } from "svelte/animate";
 	import TextureEditModal from "./TextureEditModal.svelte";
 	import type { Texture } from "$lib/resources/texture/datatypes.js";
+import TextureRenderer from "../TextureRenderer.svelte";
 
-	// TODO: This component should not directly depend on appState
 	const maxFragTextures: number = $derived.by(() => {
 		if (!appState.ephemeral.glCtx!) return 0;
 		appState.save.fragmentSource; // Recompute when shader changes
@@ -88,8 +88,6 @@
 	$effect(() => {
 		if (!isEditingModalOpen) editingTexture = null;
 	});
-	// TODO: Render textures with a canvas instead to make them more accurately
-	//  display like they will when used in the shader?
 </script>
 
 <!-- Texture editing modal -->
@@ -164,12 +162,8 @@
 
 {#snippet textureCard(index: number, texture: Texture)}
 	<div class="flex flex-col bg-background-secondary">
-		<div class="flex h-34 w-34 items-center justify-center">
-			<img
-				class="checkerboard h-full max-w-full border border-foreground-muted/20 object-contain"
-				src={texture.dataUri}
-				alt={`Texture ${index}`}
-			/>
+		<div class="@container-[size] flex size-34 items-center justify-center">
+			<TextureRenderer {texture} alt={`Texture ${index}`} />
 		</div>
 
 		<div class="flex w-full flex-row items-center border-t border-accent bg-background-tertiary">

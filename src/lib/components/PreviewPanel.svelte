@@ -9,7 +9,6 @@
 	import ViewModePicker from "./ViewModePicker.svelte";
 	import DimensionsSelector from "./DimensionsSelector.svelte";
 	import ModelSelector from "./ModelSelector.svelte";
-	import type { Snippet } from "svelte";
 	import ViewController from "./view_controls/ViewController.svelte";
 	import { mat4 } from "gl-matrix";
 	import type { CameraController } from "./view_controls/ViewController.js";
