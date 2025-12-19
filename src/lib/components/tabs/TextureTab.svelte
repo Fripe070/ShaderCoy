@@ -1,9 +1,8 @@
 <script lang="ts">
 	import { appState } from "$lib/state.svelte.js";
 	import { flip } from "svelte/animate";
-	import TextureEditModal from "./TextureEditModal.svelte";
 	import type { Texture } from "$lib/resources/texture/datatypes.js";
-import TextureRenderer from "../TextureRenderer.svelte";
+	import TextureRenderer from "../TextureRenderer.svelte";
 
 	const maxFragTextures: number = $derived.by(() => {
 		if (!appState.ephemeral.glCtx!) return 0;
@@ -90,11 +89,6 @@ import TextureRenderer from "../TextureRenderer.svelte";
 	});
 </script>
 
-<!-- Texture editing modal -->
-{#if editingTexture}
-	<TextureEditModal bind:isEditingModalOpen texture={editingTexture} />
-{/if}
-
 <ul
 	class="min-h-full"
 	ondragover={(event) => {
@@ -171,20 +165,6 @@ import TextureRenderer from "../TextureRenderer.svelte";
 			<button
 				class={[
 					"flex size-6 items-center justify-center",
-					"cursor-pointer hover:bg-background-selected",
-				]}
-				title="Edit Texture"
-				onclick={() => {
-					editingTexture = texture;
-					isEditingModalOpen = !isEditingModalOpen;
-				}}
-			>
-				<iconify-icon icon="material-symbols:edit"></iconify-icon>
-			</button>
-
-			<button
-				class={[
-					"flex h-6 w-4 items-center justify-center",
 					index == 0
 						? "cursor-not-allowed text-foreground-primary/20"
 						: "cursor-pointer hover:bg-background-selected",
@@ -203,7 +183,7 @@ import TextureRenderer from "../TextureRenderer.svelte";
 
 			<input
 				type="text"
-				class="h-6 w-14 appearance-none border-none bg-background-secondary text-center text-xl font-semibold"
+				class="h-6 w-14 grow appearance-none border-none bg-background-secondary text-center text-xl font-semibold"
 				required
 				value={index.toString()}
 				oninput={(event) => {
@@ -220,8 +200,18 @@ import TextureRenderer from "../TextureRenderer.svelte";
 			/>
 
 			<button
+				class="flex size-6 cursor-pointer items-center justify-center bg-negative/30 hover:bg-negative/50"
+				title="Delete Texture"
+				onclick={() => {
+					appState.save.textures.splice(index, 1);
+				}}
+			>
+				<iconify-icon icon="material-symbols:delete"></iconify-icon>
+			</button>
+
+			<button
 				class={[
-					"flex h-6 w-4 items-center justify-center",
+					"flex size-6 items-center justify-center",
 					index == appState.save.textures.length - 1
 						? "cursor-not-allowed text-foreground-primary/20"
 						: "cursor-pointer hover:bg-background-selected",
@@ -236,16 +226,6 @@ import TextureRenderer from "../TextureRenderer.svelte";
 				}}
 			>
 				<iconify-icon icon="material-symbols:arrow-forward-ios"></iconify-icon>
-			</button>
-
-			<button
-				class="flex size-6 cursor-pointer items-center justify-center bg-negative/30 hover:bg-negative/50"
-				title="Delete Texture"
-				onclick={() => {
-					appState.save.textures.splice(index, 1);
-				}}
-			>
-				<iconify-icon icon="material-symbols:delete"></iconify-icon>
 			</button>
 		</div>
 	</div>
