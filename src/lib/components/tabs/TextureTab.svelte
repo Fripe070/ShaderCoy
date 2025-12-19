@@ -3,7 +3,7 @@
 	import { flip } from "svelte/animate";
 	import TextureEditModal from "./TextureEditModal.svelte";
 	import type { Texture } from "$lib/resources/texture/datatypes.js";
-import TextureRenderer from "../TextureRenderer.svelte";
+	import TextureRenderer from "../TextureRenderer.svelte";
 
 	const maxFragTextures: number = $derived.by(() => {
 		if (!appState.ephemeral.glCtx!) return 0;
