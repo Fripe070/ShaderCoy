@@ -17,6 +17,15 @@ export class CoyReportedError extends Error {
 		message: string,
 		public reports: CoyErrorReport[],
 	) {
-		super(message);
+		// We need to flatten it so that we can get an actual message in our error output
+		const errorMessage =
+			`${message}\n` +
+			reports
+				.map(
+					(report, index) =>
+						`Error #${index + 1} caused by: ${report.cause}\n${report.description}`,
+				)
+				.join("\n");
+		super(errorMessage);
 	}
 }

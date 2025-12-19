@@ -6,12 +6,10 @@
 
 	let {
 		texture,
-		currentInstance = $bindable<TextureInstance | null>(null),
 		class: className = "",
 		...rest
 	}: {
 		texture: Texture;
-		currentInstance?: TextureInstance | null;
 		class?: string | string[];
 		[key: string]: any;
 	} = $props();
@@ -52,7 +50,6 @@
 		const currentTimestamp = (lastUpdateTimestamp = performance.now());
 		loadTexture2D(glCtx, texture).then((instance: TextureInstance) => {
 			if (currentTimestamp < lastUpdateTimestamp) return; // Outdated
-			currentInstance = instance;
 			draw(instance);
 		});
 	});

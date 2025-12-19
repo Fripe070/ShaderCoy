@@ -1,4 +1,4 @@
-import type { Mesh, Model } from "$lib/resources/model/datatypes.js";
+import type { Model } from "$lib/resources/model/datatypes.js";
 import type { MainModule as AssimpTSModule } from "assimpts";
 
 import defaultVertSource from "$lib/shaders//defaultVert.glsl?raw";
@@ -56,6 +56,7 @@ export const appState: AppState = $state({
 });
 
 const textureInstanceMap = new SvelteMap<Texture["id"], TextureInstance>();
+let textureUpdatedTimestamp: DOMHighResTimeStamp = 0;
 $effect.root(() => {
 	$effect(() => {
 		const glCtx = appState.ephemeral.glCtx;
@@ -80,6 +81,8 @@ $effect.root(() => {
 		// Make sure the sveltw compiler tracks these correctly
 		const instanceMap = textureInstanceMap;
 		const textures = appState.save.textures;
+		// Make sure we don't overwrite more recent updates
+		const thisDispatchTTimestamp = (textureUpdatedTimestamp = performance.now());
 		Promise.all(
 			textures.map(async (texture) => {
 				if (instanceMap.has(texture.id)) return;
@@ -87,6 +90,7 @@ $effect.root(() => {
 				instanceMap.set(texture.id, textureInstance);
 			}),
 		).then(() => {
+			if (thisDispatchTTimestamp > textureUpdatedTimestamp) return;
 			// To array in the correct order
 			appState.ephemeral.textureInstances = appState.save.textures.map(
 				(tex) => instanceMap.get(tex.id)!,
