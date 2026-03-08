@@ -1,7 +1,9 @@
 # ShaderCoy
-A powerful shader-editor for the web. 
+
+A powerful shader-editor for the web.
 
 Features:
+
 - Real-time GLSL shader compilation and preview, both for vertex and fragment shaders.
 - A full 3D viewport.
   - Lots of default primitives to pick from.
